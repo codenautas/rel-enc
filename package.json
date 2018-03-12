@@ -21,7 +21,7 @@
   "scripts": {
     "test": "mocha --reporter spec --bail --check-leaks test/",
     "test-cov": "istanbul cover node_modules/mocha/bin/_mocha -- --reporter dot --check-leaks test/",
-    "start": "node server/server-meta-enc.js",
+    "start": "node server/server-meta-enc.js"
   },
   "qa-control": {
     "package-version": "0.3.0",
