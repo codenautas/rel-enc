@@ -1,0 +1,34 @@
+{
+  "name": "rel-enc",
+  "description": "Relativo a encuestas",
+  "version": "0.1.0",
+  "author": "Codenautas <codenautas@googlegroups.com>",
+  "license": "MIT",
+  "main": "server/server-meta-enc.js",
+  "files": [
+    "client",
+    "install",
+    "server",
+    "unlogged"
+  ],
+  "dependencies": {
+    "backend-plus": "~0.20.16"
+  },
+  "devDependencies": {},
+  "engines": {
+    "node": ">= 8.0.0"
+  },
+  "scripts": {
+    "test": "mocha --reporter spec --bail --check-leaks test/",
+    "test-cov": "istanbul cover node_modules/mocha/bin/_mocha -- --reporter dot --check-leaks test/",
+    "start": "node server/server-meta-enc.js",
+  },
+  "qa-control": {
+    "package-version": "0.3.0",
+    "coverage": 90,
+    "run-in": "server",
+    "stability": "extending",
+    "type": "lib",
+    "ecmaVersion": 6
+  }
+}
