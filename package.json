@@ -4,7 +4,7 @@
   "version": "0.1.0",
   "author": "Codenautas <codenautas@googlegroups.com>",
   "license": "MIT",
-  "main": "server/server-meta-enc.js",
+  "main": "lib/rel-enc.js",
   "files": [
     "client",
     "install",
@@ -12,6 +12,7 @@
     "unlogged"
   ],
   "dependencies": {
+    "@types/node": "~9.4.7",
     "backend-plus": "~0.20.16"
   },
   "devDependencies": {},
