@@ -123,7 +123,7 @@ class tipoc_Base{ // clase base de los tipos de casilleros
             this.data.tipovar && !this.inTable?this.displayInput():null
         ]
     }
-    displayTopElements(){
+    displayTopElements(special=false){
         return html[this.inTable?'tr':'div']({class:"propios"},[].concat(
             this.displayRef(),
             this.displayMainText(),
@@ -152,7 +152,7 @@ class tipoc_Base{ // clase base de los tipos de casilleros
     displayBottomElement(){
         return [];
     } 
-    display(){
+    display(special=false){
         this.createVariable();
         var content=[].concat(
             this.displayTopElements(),
@@ -316,8 +316,13 @@ class FormStructure{
             Base:tipoc_Base,
             F:tipoc_F,
             B:tipoc_B,
-            TEXTO:tipoc_B,
+            TEXTO:tipoc_TEXTO,
             MATRIZ:tipoc_MATRIZ,
+            CONS: tipoc_CONS,
+            PMATRIZ: tipoc_PMATRIZ,
+            P: tipoc_P,
+            O:tipoc_O,
+            OM: tipoc_OM
         }
     }
     newInstance(infoCasillero:InfoCasillero):tipoc_Base{
@@ -432,7 +437,7 @@ class tipoc_TEXTO extends tipoc_Base{}
 class tipoc_CONS extends tipoc_Base{}
 
 class tipoc_P extends tipoc_Base{
-    displayTopElements(){
+    displayTopElements(special=false){
         var input = null;
         if(this.myForm.esModoIngreso && this.childs.length && this.childs[0].data.tipoc == 'O'){
             input = this.displayInputForOptions();
@@ -488,72 +493,60 @@ class tipoc_PMATRIZ extends tipoc_Base{
     }
 }
 
-
-FormStructure.factory.O = function tipoc_O(){
-    FormStructure.factory.Base.call(this);
-}
-FormStructure.factory.O.prototype = Object.create(FormStructure.factory.Base.prototype);
-FormStructure.factory.O.constructor = FormStructure.factory.O;
-
-FormStructure.factory.O.prototype.display = function display(special){
-    return [this.displayTopElements(special)].concat(
-        Array.prototype.concat.apply([],this.childs.map(function(child){
-            child.inTable=true;
-            return child.display(special);
-        }))
-    );
-}
-
-FormStructure.factory.O.prototype.displayTopElements = function displayTopElements(special){
-    var content=[].concat(
-        html.td({class:'casillero'},this.displayRef({forValue:this.data.casillero})),
-        html.td([html.input({type:'radio', value:this.data.casillero,tabindex:'-1'})]),
-        html.td({class:'nombre'},this.displayMainText({forValue:this.data.casillero})),
-        (this.data.salto?html.td({class:"salto"},this.data.salto):null)
-    );
-    if(special){
-        return {tds:content};
+class tipoc_O extends tipoc_Base{
+    display(special=false){
+        return [this.displayTopElements(special)].concat(
+            Array.prototype.concat.apply([],this.childs.map(function(child){
+                child.inTable=true;
+                return child.display(special);
+            }))
+        );
     }
-    return html.tr({class:"tipoc_O"},content);
-};
-
-FormStructure.factory.OM = function tipoc_OM(){
-    FormStructure.factory.O.call(this);
-}
-FormStructure.factory.OM.prototype = Object.create(FormStructure.factory.O.prototype);
-FormStructure.factory.OM.constructor = FormStructure.factory.OM;
-
-FormStructure.factory.OM.prototype.display = function display(){
-    var input = null;
-    if(this.myForm.esModoIngreso){
-        input = this.displayInputForOptions();
+    displayTopElements(special=false):any{
+        var content=[].concat(
+            html.td({class:'casillero'},this.displayRef({forValue:this.data.casillero})),
+            html.td([html.input({type:'radio', value:this.data.casillero,tabindex:'-1'})]),
+            html.td({class:'nombre'},this.displayMainText({forValue:this.data.casillero})),
+            (this.data.salto?html.td({class:"salto"},this.data.salto):null)
+        );
+        if(special){
+            return {tds:content};
+        }
+        return html.tr({class:"tipoc_O"},content);
     }
-    this.createVariable();
-    var trOM=html.tr({class:"tipoc_OM"},[].concat(
-        html.td({class:'casillero'},this.displayRef()),
-        html.td({class:'vacio'}),
-        html.td({class:'nombre'},this.displayMainText())
-    ).concat(
-        input,
-        Array.prototype.concat.apply([],this.childs.map(function(child){
-            return child.display({})[0].tds;
-        }))
-    )).create();
-    this.adaptOptionInput(trOM);
-    return [trOM].concat(
-        Array.prototype.concat.apply([],this.childs.map(function(child){
-            child.inTable=true;
-            return child.display({}).slice(1);
-        }))
-    );
-};
-
-FormStructure.factory.OM.prototype.displayChilds = function displayChilds(){
-    return [this.childs?html.table({class:"hijos"},Array.prototype.concat.apply([],this.childs.map(function(child){
-        return child.display();
-    }))):null];
 }
 
+class tipoc_OM extends tipoc_Base{
+    display(){
+        var input = null;
+        if(this.myForm.esModoIngreso){
+            input = this.displayInputForOptions();
+        }
+        this.createVariable();
+        var trOM=html.tr({class:"tipoc_OM"},[].concat(
+            html.td({class:'casillero'},this.displayRef()),
+            html.td({class:'vacio'}),
+            html.td({class:'nombre'},this.displayMainText())
+        ).concat(
+            input,
+            Array.prototype.concat.apply([],this.childs.map(function(child){
+                return child.display(true)[0].tds;
+            }))
+        )).create();
+        this.adaptOptionInput(trOM);
+        return [trOM].concat(
+            Array.prototype.concat.apply([],this.childs.map(function(child){
+                child.inTable=true;
+                return child.display(true).slice(1);
+            }))
+        );
+    }
+    displayChilds(){
+        return [this.childs?html.table({class:"hijos"},Array.prototype.concat.apply([],this.childs.map(function(child){
+            return child.display();
+        }))):null];
+    }
+}
 FormStructure.prototype.completeCalculatedVars=function(){
     var row=this.depot.row;
     var controls=this.controls;
