@@ -42,6 +42,10 @@ type DisplayOpts={
     forValue?:any
 }
 
+type SurveyStructure={
+    [key:string]:InfoCasillero
+}
+
 class tipoc_Base{ // clase base de los tipos de casilleros
     childs:tipoc_Base[]=[]
     data:InfoCasilleroRegistro
@@ -279,6 +283,8 @@ class FormStructure{
     elements:{[key:string]:ExtendedHTMLElement}={}
     controlBox:{[key:string]:ExtendedHTMLElement}={}
     back:{
+        formId?: string,
+        row?: any[]
         pilaDeRetroceso:{
             UAdelForm:string
             iPosicional:number
@@ -291,6 +297,7 @@ class FormStructure{
         surveyContent:any
         idCaso:string
     }
+    surveyStructure: SurveyStructure
     constructor (formStructureInfo:InfoCasillero){
         this.content = this.newInstance(formStructureInfo);
         /*
@@ -305,7 +312,8 @@ class FormStructure{
     }
     get factory(){
         return {
-            Base:tipoc_Base
+            Base:tipoc_Base,
+            F:tipoc_F
         }
     }
     newInstance(infoCasillero:InfoCasillero):tipoc_Base{
@@ -397,25 +405,22 @@ class FormStructure{
         return true;
     }
 }
-FormStructure.factory.F = function tipoc_F(){
-    FormStructure.factory.Base.call(this);
-}
-FormStructure.factory.F.prototype = Object.create(FormStructure.factory.Base.prototype);
-FormStructure.factory.F.constructor = FormStructure.factory.F;
 
-FormStructure.factory.F.prototype.displayRef = function displayRef(opts){
-    var myForm = this.myForm;
-    if(myForm.back){
-        var button = html.button({class:'boton-formulario'}, "Volver al "+myForm.back.formId).create();
-        button.onclick=function(){
-            var mainForm=document.getElementById('main-form');
-            mainForm.innerHTML='';
-            mainForm.appendChild(my.displayForm(myForm.surveyStructure,myForm.back.row,myForm.back.formId,myForm.back.pilaDeRetroceso.slice(1)));
-            window.scrollTo(0,0);
-        };
-    }
-    return FormStructure.factory.Base.prototype.displayRef.call(this).concat(button);
-};
+class tipoc_F extends tipoc_Base{
+    displayRef(opts:DisplayOpts={}):any[]{
+        var myForm = this.myForm;
+        if(myForm.back.pilaDeRetroceso.length){
+            var button = html.button({class:'boton-formulario'}, "Volver al "+myForm.back.formId).create();
+            button.onclick=function(){
+                var mainForm=document.getElementById('main-form');
+                mainForm.innerHTML='';
+                mainForm.appendChild(my.displayForm(myForm.surveyStructure,myForm.back.row,myForm.back.formId,myForm.back.pilaDeRetroceso.slice(1)));
+                window.scrollTo(0,0);
+            };
+        }
+        return this.displayRef().concat(button);
+    };
+}
 
 FormStructure.factory.B = function tipoc_B(){
     FormStructure.factory.Base.call(this);
