@@ -31,6 +31,7 @@ type InfoCasilleroRegistro={
     nombre:string
     tipoe:string
     aclaracion:string
+    padre:string
 }
 
 type InfoCasillero={
@@ -106,7 +107,7 @@ class tipoc_Base{ // clase base de los tipos de casilleros
         if(direct){
             return control;
         }
-        return html[this.inTable?'td':'span'](attr,[control]);
+        return html[this.inTable?'td':'span'](attr,[control]).create();
     }
     displayMainText(opts:DisplayOpts={}){
         var attr={class:"nombre"};
@@ -298,13 +299,13 @@ class FormStructure{
         idCaso:string
     }
     surveyStructure: SurveyStructure
+    esModoIngreso: boolean=true
     constructor (formStructureInfo:InfoCasillero){
         this.content = this.newInstance(formStructureInfo);
         /*
         this.controlBox={};
         this.formsButtonZone={};
         this.elements={};
-        this.esModoIngreso = true;
         this.showShadow=true;
         this.back=false;
         this.formStructure = formStructure;
@@ -313,7 +314,10 @@ class FormStructure{
     get factory(){
         return {
             Base:tipoc_Base,
-            F:tipoc_F
+            F:tipoc_F,
+            B:tipoc_B,
+            TEXTO:tipoc_B,
+            MATRIZ:tipoc_MATRIZ,
         }
     }
     newInstance(infoCasillero:InfoCasillero):tipoc_Base{
@@ -422,98 +426,68 @@ class tipoc_F extends tipoc_Base{
     };
 }
 
-FormStructure.factory.B = function tipoc_B(){
-    FormStructure.factory.Base.call(this);
-}
-FormStructure.factory.B.prototype = Object.create(FormStructure.factory.Base.prototype);
-FormStructure.factory.B.constructor = FormStructure.factory.B;
+class tipoc_B extends tipoc_Base{}
+class tipoc_MATRIZ extends tipoc_Base{}
+class tipoc_TEXTO extends tipoc_Base{}
+class tipoc_CONS extends tipoc_Base{}
 
-FormStructure.factory.MATRIZ = function tipoc_MATRIZ(){
-    FormStructure.factory.Base.call(this);
-}
-FormStructure.factory.MATRIZ.prototype = Object.create(FormStructure.factory.Base.prototype);
-FormStructure.factory.MATRIZ.constructor = FormStructure.factory.MATRIZ;
-
-FormStructure.factory.TEXTO = function tipoc_B(){
-    FormStructure.factory.Base.call(this);
-}
-FormStructure.factory.TEXTO.prototype = Object.create(FormStructure.factory.Base.prototype);
-FormStructure.factory.TEXTO.constructor = FormStructure.factory.TEXTO;
-
-FormStructure.factory.CONS = function tipoc_CONS(){
-    FormStructure.factory.Base.call(this);
-}
-FormStructure.factory.CONS.prototype = Object.create(FormStructure.factory.Base.prototype);
-FormStructure.factory.CONS.constructor = FormStructure.factory.CONS;
-
-
-FormStructure.factory.P = function tipoc_P(){
-    FormStructure.factory.Base.call(this);
-}
-FormStructure.factory.P.prototype = Object.create(FormStructure.factory.Base.prototype);
-FormStructure.factory.P.constructor = FormStructure.factory.P;
-
-FormStructure.factory.P.prototype.displayTopElements = function displayTopElements(){
-    var input = null;
-    if(this.myForm.esModoIngreso && this.childs.length&&this.childs[0].data.tipoc == 'O'){
-        input = this.displayInputForOptions();
+class tipoc_P extends tipoc_Base{
+    displayTopElements(){
+        var input = null;
+        if(this.myForm.esModoIngreso && this.childs.length && this.childs[0].data.tipoc == 'O'){
+            input = this.displayInputForOptions();
+        }
+        return html[this.inTable?'tr':'div']({class:"propios"},[].concat(
+            this.displayRef(),
+            this.displayMainText(),
+            input,
+            (this.data.tipovar && this.inTable?this.displayInput():null)
+        ));
     }
-    return html[this.inTable?'tr':'div']({class:"propios"},[].concat(
-        this.displayRef(),
-        this.displayMainText(),
-        input,
-        (this.data.tipovar && this.inTable?this.displayInput():null)
-    ));
-};
-
-
-FormStructure.factory.P.prototype.displayChilds = function displayChilds(){
-    return [this.childs?html.table({class:"hijos"},Array.prototype.concat.apply([],this.childs.map(function(child){
-        return child.display();
-    }))):null];
+    displayChilds(){
+        return [this.childs?html.table({class:"hijos"},Array.prototype.concat.apply([],this.childs.map(function(child){
+            return child.display();
+        }))):null];
+    }
+    displayBottomElement(){
+        return [this.data.salto?html.div({class:"salto"},this.data.salto):null];
+    }
 }
 
-FormStructure.factory.P.prototype.displayBottomElement = function displayBottomElement(){
-    return [this.data.salto?html.div({class:"salto"},this.data.salto):null];
-};
-
-FormStructure.factory.PMATRIZ = function tipoc_PMATRIZ(){
-    FormStructure.factory.P.call(this);
-}
-FormStructure.factory.PMATRIZ.prototype = Object.create(FormStructure.factory.P.prototype);
-FormStructure.factory.PMATRIZ.constructor = FormStructure.factory.PMATRIZ;
-
-FormStructure.factory.PMATRIZ.prototype.displayChilds = function displayChilds(){
-    var nextColumn=2;
-    var foundedColumns={};
-    var foundedColumnsArray=[html.td(),html.td()];
-    var dataRow=this.childs.map(function(opcion){
-        var actualRow=html.tr([
-            html.td({class:'casillero'} ,opcion.data.casillero),
-            html.td({class:'nombre'}    ,opcion.data.nombre),
-        ]).create();
-        opcion.childs.forEach(function(pregunta){
-            var actualPos;
-            if(!foundedColumns[pregunta.data.nombre]){
-                foundedColumns[pregunta.data.nombre]={
-                    ubicacion:nextColumn,
-                    html:html.td({class:'pmatriz_titulo_columna', "casillero-id":pregunta.data.padre + '/' + pregunta.data.casillero}, pregunta.data.nombre)
-                };
-                foundedColumnsArray.push(foundedColumns[pregunta.data.nombre].html);
-                nextColumn++;
-            }
-            actualPos=foundedColumns[pregunta.data.nombre].ubicacion;
-            while(actualRow.cells.length<=actualPos){
-                actualRow.insertCell(-1); 
-            }
-            actualRow.cells[actualPos].className='pmatriz_variable';
-            actualRow.cells[actualPos].appendChild(pregunta.displayInput(true));
+class tipoc_PMATRIZ extends tipoc_Base{
+    displayChilds(){
+        var nextColumn=2;
+        var foundedColumns={};
+        var foundedColumnsArray=[html.td(),html.td()];
+        var dataRow=this.childs.map(function(opcion){
+            var actualRow=html.tr([
+                html.td({class:'casillero'} ,opcion.data.casillero),
+                html.td({class:'nombre'}    ,opcion.data.nombre),
+            ]).create();
+            opcion.childs.forEach(function(pregunta){
+                var actualPos;
+                if(!foundedColumns[pregunta.data.nombre]){
+                    foundedColumns[pregunta.data.nombre]={
+                        ubicacion:nextColumn,
+                        html:html.td({class:'pmatriz_titulo_columna', "casillero-id":pregunta.data.padre + '/' + pregunta.data.casillero}, pregunta.data.nombre)
+                    };
+                    foundedColumnsArray.push(foundedColumns[pregunta.data.nombre].html);
+                    nextColumn++;
+                }
+                actualPos=foundedColumns[pregunta.data.nombre].ubicacion;
+                while(actualRow.cells.length<=actualPos){
+                    actualRow.insertCell(-1); 
+                }
+                actualRow.cells[actualPos].className='pmatriz_variable';
+                actualRow.cells[actualPos].appendChild(pregunta.displayInput(true));
+            });
+            return actualRow;
         });
-        return actualRow;
-    });
-    dataRow.unshift(html.tr(foundedColumnsArray));
-    return [html.table(dataRow)];
+        dataRow.unshift(html.tr(foundedColumnsArray).create());
+        return [html.table(dataRow)];
+    }
 }
+
 
 FormStructure.factory.O = function tipoc_O(){
     FormStructure.factory.Base.call(this);

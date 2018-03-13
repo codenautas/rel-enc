@@ -6,14 +6,21 @@ declare module 'backend-plus'{
 }
 
 declare module 'js-to-html'{
-    interface ExtendedHTMLElement extends HTMLElement{
+    interface TypedElement{
         disable(disabled:boolean)
         setTypedValue(any:any, originatedFromUserInteraction?:boolean)
         getTypedValue():any
     }
-    var html:{[key:string]: (attrOrContent:object|any[]|string, content?:any[]|string ) => {
-        create():ExtendedHTMLElement
-    }}
+    interface ExtendedHTMLElement         extends HTMLElement        ,TypedElement{}
+    interface ExtendedHTMLTableRowElement extends HTMLTableRowElement,TypedElement{}
+    var html:{
+        tr: (attrOrContent?:object|any[]|string, content?:any[]|string ) => {
+            create():ExtendedHTMLTableRowElement
+        }
+        [key:string]: (attrOrContent?:object|any[]|string, content?:any[]|string ) => {
+            create():ExtendedHTMLElement
+        },
+    }
     type HtmlAttrs={
         colspan?:number,
     }
