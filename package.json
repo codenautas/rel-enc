@@ -1,10 +1,10 @@
 {
   "name": "rel-enc",
   "description": "Relativo a encuestas",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "author": "Codenautas <codenautas@googlegroups.com>",
   "license": "MIT",
-  "main": "lib/rel-enc.js",
+  "main": "lib/server/rel-enc.js",
   "files": [
     "client",
     "install",
