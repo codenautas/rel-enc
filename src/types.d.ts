@@ -12,6 +12,8 @@ declare module 'js-to-html'{
         getTypedValue():any
     }
     interface ExtendedHTMLElement              extends HTMLElement              ,TypedElement{}
+    interface ExtendedHTMLButtonElement        extends HTMLButtonElement        ,TypedElement{}
+    interface ExtendedHTMLTableElement         extends HTMLTableElement         ,TypedElement{}
     interface ExtendedHTMLTableRowElement      extends HTMLTableRowElement      ,TypedElement{}
     interface ExtendedHTMLTableDataCellElement extends HTMLTableDataCellElement ,TypedElement{}
     var html:{
@@ -20,6 +22,12 @@ declare module 'js-to-html'{
         }
         tr: (attrOrContent?:object|any[]|string, content?:any[]|string ) => {
             create():ExtendedHTMLTableRowElement
+        }
+        table: (attrOrContent?:object|any[]|string, content?:any[]|string ) => {
+            create():ExtendedHTMLTableElement
+        }
+        button: (attrOrContent?:object|any[]|string, content?:any[]|string ) => {
+            create():ExtendedHTMLButtonElement
         }
         [key:string]: (attrOrContent?:object|any[]|string, content?:any[]|string ) => {
             create():ExtendedHTMLElement

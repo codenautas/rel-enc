@@ -2,6 +2,7 @@
 
 import {html,HtmlAttrs} from "js-to-html"
 import * as jsToHtml from "js-to-html"
+import * as likeAr from "like-ar"
 import * as TypedControls from "typed-controls"
 import {alertPromise, miniMenuPromise} from "dialog-promise"
 import {my} from "my-things"
@@ -32,6 +33,8 @@ type InfoCasilleroRegistro={
     tipoe:string
     aclaracion:string
     padre:string
+    unidad_analisis: string
+    con_resumen: boolean
 }
 
 type InfoCasillero={
@@ -46,6 +49,35 @@ type DisplayOpts={
 type SurveyStructure={
     [key:string]:InfoCasillero
 }
+
+type Variable={
+    calculada:boolean
+    optativa:boolean
+    salto:string
+    saltoNsNr:string
+    opciones?:{
+        [key:string]:{
+            salto:string
+        }
+    }
+    tipo:string
+    maximo:string
+    minimo:string
+}
+
+type PilaDeRetroceso = {
+    datosCasoPadreParaRetroceder: any
+    formIdParaRetroceder: string
+    UAdelForm:string
+    iPosicional:number
+}
+
+type FormStructureState = {
+    estados?:any
+    siguientes?:any
+    actual?:any
+    primeraFalla?:any
+};
 
 class tipoc_Base{ // clase base de los tipos de casilleros
     childs:tipoc_Base[]=[]
@@ -272,149 +304,6 @@ class tipoc_Base{ // clase base de los tipos de casilleros
     }
 }
 
-type Variable={
-
-}
-
-class FormStructure{
-    static controlRepetidos:{[key:string]:any}={};
-    content:tipoc_Base; // el elemento raíz
-    variables:{[key:string]:Variable}={}
-    controls:{[key:string]:ExtendedHTMLElement}={}
-    elements:{[key:string]:ExtendedHTMLElement}={}
-    controlBox:{[key:string]:ExtendedHTMLElement}={}
-    back:{
-        formId?: string,
-        row?: any[]
-        pilaDeRetroceso:{
-            UAdelForm:string
-            iPosicional:number
-        }[]
-    }={
-        pilaDeRetroceso:[]
-    }
-    depot:{
-        row:any[]
-        surveyContent:any
-        idCaso:string
-    }
-    surveyStructure: SurveyStructure
-    esModoIngreso: boolean=true
-    constructor (formStructureInfo:InfoCasillero){
-        this.content = this.newInstance(formStructureInfo);
-        /*
-        this.controlBox={};
-        this.formsButtonZone={};
-        this.elements={};
-        this.showShadow=true;
-        this.back=false;
-        this.formStructure = formStructure;
-        */
-    }
-    get factory(){
-        return {
-            Base:tipoc_Base,
-            F:tipoc_F,
-            B:tipoc_B,
-            TEXTO:tipoc_TEXTO,
-            MATRIZ:tipoc_MATRIZ,
-            CONS: tipoc_CONS,
-            PMATRIZ: tipoc_PMATRIZ,
-            P: tipoc_P,
-            O:tipoc_O,
-            OM: tipoc_OM
-        }
-    }
-    newInstance(infoCasillero:InfoCasillero):tipoc_Base{
-        let myForm=this;
-        if(!this.factory[infoCasillero.data.tipoc]){
-            throw new Error("No existe el tipo de casillero "+infoCasillero.data.tipoc);
-        }
-        var newStructure = new this.factory[infoCasillero.data.tipoc]();
-        newStructure.myForm=myForm;
-        return newStructure;
-    }
-    display(){
-        return this.content.display();
-    }
-    irAlSiguiente(var_name:string, scrollScreen:boolean){
-
-    }
-    JsonConcatPath(object1,object2,UAPath){
-        var JsonConcat = function(object1,object2,UAnalisis,posicion){
-            var isArray = function(value) {
-                return Object.prototype.toString.call(value) === '[object Array]';
-            }
-            var isObject = function(value) {
-                return Object.prototype.toString.call(value) === '[object Object]';
-            }
-            var result = {};
-            for (var key in object1) {
-                if (key == UAnalisis && object1.hasOwnProperty(key)) {
-                    if (isArray(object1[key])) {
-                        result[key] = [];
-                        for (var i in object1[key]) {
-                            if(isObject(object1[key][i])){
-                                if (i == posicion){
-                                    result[key].push(object2)
-                                }else{
-                                    result[key].push(object1[key][i])
-                                }
-                            }
-                        } 
-                    }     
-                /*else if (isObject(object1[key])) {
-                    result[key] = {};
-                    for (var key_inner in object1[key]) {
-                        if (object1[key].hasOwnProperty(key_inner) && key_inner == UAnalisis) {
-                            result[key][key_inner] =  object2[key][key_inner];
-                        }
-                    }
-                } else {
-                    result[key] = object1[key];
-                }*/
-                }else if (object1.hasOwnProperty(key)){
-                    result[key] = object1[key];
-                }
-            }
-            return result;
-        }
-        var UAPathLast = UAPath.slice(UAPath.length-1);
-        var object1Porcion = object1;
-        for (var keyUA=0; keyUA<UAPath.length-1; keyUA++){
-            var UAnalisis = UAPath[keyUA][0];
-            var posicion = UAPath[keyUA][1];
-            object1Porcion = object1Porcion[UAnalisis][posicion];
-        };
-        var resultParcial = JsonConcat(object1Porcion,object2,UAPathLast[0][0],UAPathLast[0][1]);
-        var UAPathFirst = UAPath.slice(0,UAPath.length-1);
-        if(UAPathFirst.length>0){
-            return this.JsonConcatPath(object1,resultParcial,UAPathFirst);
-        }else{
-            return resultParcial;
-        }
-    }
-    saveDepot(){
-        if(this.depot){
-            var path = []
-            var datosCaso = this.depot.surveyContent.datosCaso;
-            var id = this.depot.surveyContent.id;
-            var datosCasoParcial = datosCaso;
-            if(this.back.pilaDeRetroceso.length){
-                for(var i= this.back.pilaDeRetroceso.length -1; i>= 0;i--){
-                    path.push([this.back.pilaDeRetroceso[i].UAdelForm, this.back.pilaDeRetroceso[i].iPosicional]);
-                }
-                datosCaso = this.JsonConcatPath(datosCaso,this.depot.row,path);
-            }else{
-                datosCaso = this.depot.row;
-            }
-            var operativo = sessionStorage.getItem('operativo');
-            localStorage.setItem(operativo +'_survey_'+id, JSON.stringify({id:id, datosCaso:datosCaso}));
-        }
-        return true;
-    }
-}
-
 class tipoc_F extends tipoc_Base{
     displayRef(opts:DisplayOpts={}):any[]{
         var myForm = this.myForm;
@@ -547,419 +436,548 @@ class tipoc_OM extends tipoc_Base{
         }))):null];
     }
 }
-FormStructure.prototype.completeCalculatedVars=function(){
-    var row=this.depot.row;
-    var controls=this.controls;
-    var calculatedVars=[];
-    return;
-    if(this.depot.formId=='F1'){
 
-        // si no hay datos de la encuesta actual entonces se pone u1 y u2 con los valores por defecto (sacados de 'verveySetup')
-        var surveyId = sessionStorage.getItem('surveyId');
-        var operativo = sessionStorage.getItem('operativo');
-        var currentSurvey = localStorage.getItem(operativo + '_survey_' + surveyId);
-        if (!currentSurvey){
-            var surveySetup = JSON.parse(localStorage.getItem('surveySetup'));        
-            row.u1 = surveySetup.recorrido;
-            row.u2 = surveySetup.tipo_recorrido;
+class tipoc_BF extends tipoc_Base{
+    adaptOptionInput(groupElement:ExtendedHTMLElement){
+        //groupElement.style='border:1px solid red; height:200px; width:400px;';
+        var UAdelForm=this.data.unidad_analisis;
+        var PuedeAgregarRenglones=true;
+        var conResumen=this.data.con_resumen;
+        var nombreFormulario=this.data.casillero;
+        var myForm=this.myForm;
+        var createFormButton = function createFormButton(formName:string, buttonDescription:string, myForm:FormStructure, rowHijo:any, UAdelForm:string, iPosicional:number):jsToHtml.ExtendedHTMLButtonElement{
+            var button = html.button({class:'boton-formulario'}, buttonDescription).create();
+            button.onclick=function(){
+                loadForm(formName, rowHijo, UAdelForm, iPosicional);
+            };
+            return button;
         }
-
-        var recordables=[
-            {variable: 'u3' },
-            {variable: 'u4' },
-            {variable: 'u21', previa:'u8'},
-            {variable: 'u22', previa:'u8'},
-        ];
-        recordables.forEach(function(recordableDef){
-            var varName=recordableDef.variable;
-            var recordableStorage = localStorage.getItem('recordable_'+varName);
-            if(recordableStorage && !row[varName] && (!recordableDef.previa || row[recordableDef.previa])){
-                row[varName] = JSON.parse(recordableStorage);
+        var loadForm = function loadForm(formName: string, rowHijo: any, UAdelForm: string, iPosicional: number){
+            var mainForm=document.getElementById('main-form');
+            mainForm.innerHTML='';
+            mainForm.appendChild(my.displayForm(myForm.surveyStructure,rowHijo,formName,
+                [
+                    {datosCasoPadreParaRetroceder:myForm.depot.row,formIdParaRetroceder:myForm.depot.formId, UAdelForm: UAdelForm, iPosicional: iPosicional}
+                ].concat(myForm.back.pilaDeRetroceso)
+            ));
+            window.scrollTo(0,0);
+        }
+        var completarTablaResumen = function completarTablaResumen(table: jsToHtml.ExtendedHTMLTableElement, rowHijo: any, navigationButton: jsToHtml.ExtendedHTMLButtonElement){
+            var thArray = [];
+            thArray.push(html.th({class:'col'}, '').create());
+            var tdArray = [];
+            tdArray.push(html.td({class:'col'}, [navigationButton]).create());
+            var searchInfoCasilleroByUAInStructure = function searchInfoCasilleroByUAInStructure(mainStructure: SurveyStructure, UA:string):InfoCasillero{
+                return Object.values(mainStructure).find(function (infoCasillero){
+                    return infoCasillero.data.unidad_analisis === UA;
+                });
             }
-            controls[varName].addEventListener('update',function(){
-                localStorage.setItem('recordable_'+varName, JSON.stringify(this.getTypedValue()));
+            Object.keys(rowHijo).forEach(function(key) {
+                if(Array.isArray(rowHijo[key])){
+                    var buttonsArray = [];
+                    if(rowHijo[key].length){
+                        rowHijo[key].forEach(function(child, index){
+                            var infoCasillero = searchInfoCasilleroByUAInStructure(myForm.surveyStructure, key)
+                            var button = html.button({class:'boton-formulario'}, infoCasillero.data.casillero + ' ' + (index+1)).create();
+                            button.onclick=function(){
+                                loadForm(infoCasillero.data.casillero, rowHijo[key][index], key, index);
+                            };
+                            buttonsArray.push(button);
+                        })
+                        thArray.push(html.th({class:'col'}, key).create());
+                    }
+                    tdArray.push(html.td({class:'col'}, buttonsArray).create());
+                }else{
+                    var infoCasillero = searchInfoCasilleroByUAInStructure(myForm.surveyStructure, UAdelForm);
+                    var id_casillero = key.toString();
+                    var searchCasilleroIntoOtherCasillero = function searchCasilleroIntoOtherCasillero(infoCasillero: InfoCasillero, id_casillero:string): InfoCasillero{
+                        for(var i = 0; i < infoCasillero.childs.length; i++) {
+                            if (typeof infoCasillero.childs[i] !== "function"){
+                                var casillero = infoCasillero.childs[i].data.id_casillero;
+                                if (casillero === id_casillero || casillero === id_casillero.toUpperCase()) {
+                                    return infoCasillero.childs[i];
+                                }
+                            }
+                            var result = searchCasilleroIntoOtherCasillero(infoCasillero.childs[i], id_casillero);
+                            if(result){
+                                return result;
+                            }
+                        }
+                    }
+                    var infoCasillero = searchCasilleroIntoOtherCasillero(infoCasillero, id_casillero);
+                    var respuesta:string;
+                    if(infoCasillero.childs.length){
+                        var result = infoCasillero.childs.find(function(option){
+                            var id_casillero:string = (rowHijo[key] || '').toString();
+                            return option.data.casillero ===  id_casillero || option.data.casillero === id_casillero.toUpperCase();
+                        });
+                        respuesta = result?result.data.nombre:'';
+                    }else{
+                        respuesta = rowHijo[key]?rowHijo[key].toString():'';
+                    }
+                    var pregunta = infoCasillero.data.nombre;
+                    thArray.push(html.th({class:'col'}, pregunta).create());
+                    tdArray.push(html.td({class:'col'}, respuesta).create());
+                }
             });
-        });
-        row.cant14 = Number(row.cant11)+Number(row.cant12)+Number(row.cant13)||null;
-        row.cant24 = Number(row.cant21)+Number(row.cant22)+Number(row.cant23)||null;
-        row.cant34 = Number(row.cant31)+Number(row.cant32)+Number(row.cant33)||null;
-        row.cant44 = Number(row.cant41)+Number(row.cant42)+Number(row.cant43)||null;
-        row.cant51 = Number(row.cant11)+Number(row.cant21)+Number(row.cant31)+Number(row.cant41)||null;
-        row.cant52 = Number(row.cant12)+Number(row.cant22)+Number(row.cant32)+Number(row.cant42)||null;
-        row.cant53 = Number(row.cant13)+Number(row.cant23)+Number(row.cant33)+Number(row.cant43)||null;
-        row.cant54 = Number(row.cant51)+Number(row.cant52)+Number(row.cant53)||null;
-        calculatedVars = [
-            'cant14',
-            'cant24',
-            'cant34',
-            'cant44',
-            'cant51',
-            'cant52',
-            'cant53',
-            'cant54',
-            'gps',
-            'u1',
-            'u2',
-            'u3',
-            'u4',
-            'u21',
-            'u22'
-        ];
-    }
-    if(this.depot.formId=='F2'){
-        row.p0 = this.depot.innerPk.persona+1;
-        if(this.depot.innerPk.persona == 0){
-            row.p1 = 1;
-        }
-        calculatedVars = [ 'p0', 'p1' ];
-    }
-    if(!"gps habilitado"){
-        if(row.u8 != null && (row.gps == null || !(row.gps.charAt(0) == "{"))){
-            row.gps = "Buscando coordenadas...";
-            if (navigator.geolocation) {
-                    navigator.geolocation.getCurrentPosition(function(position) {
-                        row.gps = JSON.stringify({'Lat': position.coords.latitude, ' Long':position.coords.longitude});
-                        controls.gps.setTypedValue(row.gps);
-                    }, 
-                    function(){
-                        row.gps = "Error al obtener el punto";
-                        controls.gps.setTypedValue(row.gps);
-                    }, 
-                    {enableHighAccuracy: true, maximumAge: 0, timeout: 15000 });
-            }else{
-                row.gps = "GPS inactivo";
+            var tr;
+            if(table.children.length === 0){
+                tr = html.tr({class:'row'}, thArray).create();
+                table.appendChild(tr);
             }
+            tr = html.tr({class:'row'}, tdArray).create();
+            table.appendChild(tr);
+            return table
         }
-    }
-    calculatedVars.forEach(function(varName){
-        this.controls[varName].setTypedValue(row[varName]);
-    },this)
+        if(myForm.depot.row[UAdelForm]){
+            if(PuedeAgregarRenglones){
+                var button = html.button({class:'boton-nuevo-formulario'}, "Nuevo " + nombreFormulario).create();
+                var div = html.div({class:'nuevo-formulario'}, [button]).create();
+                groupElement.appendChild(div);
+                button.onclick=function(){
+                    my.ajax.cargar.preguntas_ua({operativo: sessionStorage.getItem('operativo'), unidad_analisis: UAdelForm}).then(function(result){
+                        var object = {};
+                        result.forEach(function(question){
+                            object[question.id_casillero] = question.unidad_analisis?[]:null;
+                        });
+                        myForm.depot.row[UAdelForm].push(object);
+                        myForm.saveDepot();
+                        var iPosicional = myForm.depot.row[UAdelForm].length-1;
+                        loadForm(nombreFormulario, myForm.depot.row[UAdelForm][iPosicional], UAdelForm, iPosicional);
+                    }).catch(function(error){ 
+                        console.log("error: ", error);
+                    });
+                }
+            }
+            if(conResumen){
+                var table = html.table({class:'resumen'}).create();
+            }
+            myForm.depot.row[UAdelForm].forEach(function(rowHijo, iPosicional){
+                var button = createFormButton(nombreFormulario, nombreFormulario + ' ' + (iPosicional+1), myForm, rowHijo, UAdelForm, iPosicional);
+                if(conResumen){
+                    table = completarTablaResumen(table, rowHijo, button);
+                }else{
+                    groupElement.appendChild(button);
+                }
+            });
+            if(conResumen){
+                groupElement.appendChild(table);
+            }
+        }else{ 
+            groupElement.appendChild(createFormButton(nombreFormulario, nombreFormulario, myForm, myForm.depot.row, null, null));
+        }
+        myForm.formsButtonZone[this.data.casillero]=groupElement;
+    }    
 }
 
-FormStructure.prototype.validateDepot=function(){
-    this.completeCalculatedVars();
-    var estructura={variables:this.variables};
-    var depot=this.depot;
-    var rta={estados:{}, siguientes:{}, actual:null, primeraFalla:null};
-    var variableAnterior=null;
-    var yaPasoLaActual=false;
-    var estadoAnterior=null;
-    var enSaltoAVariable=null; // null si no estoy saltando y el destino del salto si estoy dentro de un salto. 
-    var conOmitida=false;
-    var miVariable=null; // variable actual del ciclo
-    var falla=function(estado){
-        rta.estados[miVariable]=estado;
-        if(!rta.primeraFalla){
-            rta.primeraFalla=miVariable;
+class FormStructure{
+    static controlRepetidos:{[key:string]:any}={};
+    content:tipoc_Base; // el elemento raíz
+    variables:{[key:string]:Variable}={}
+    controls:{[key:string]:ExtendedHTMLElement}={}
+    elements:{[key:string]:ExtendedHTMLElement}={}
+    controlBox:{[key:string]:ExtendedHTMLElement}={}
+    back:{
+        pilaDeRetroceso:PilaDeRetroceso[]
+        formId?: string,
+        row?: any[]
+    }={
+        pilaDeRetroceso:[]
+    }
+    depot:{
+        formId: string
+        row:any
+        surveyContent:any
+        idCaso:string
+    }
+    surveyStructure: SurveyStructure
+    esModoIngreso: boolean=true
+    formsButtonZone:{[key:string]:ExtendedHTMLElement}={}
+    state:FormStructureState={}
+    constructor (formStructureInfo:InfoCasillero){
+        this.content = this.newInstance(formStructureInfo);
+        /*
+        this.showShadow=true;
+        this.formStructure = formStructure;
+        */
+    }
+    get factory(){
+        return {
+            Base: tipoc_Base,
+            F: tipoc_F,
+            B: tipoc_B,
+            TEXTO: tipoc_TEXTO,
+            MATRIZ: tipoc_MATRIZ,
+            CONS: tipoc_CONS,
+            PMATRIZ: tipoc_PMATRIZ,
+            P: tipoc_P,
+            O: tipoc_O,
+            OM: tipoc_OM,
+            BF: tipoc_BF
         }
-    };
-    for(var miVariable in estructura.variables){
-        var revisar_saltos_especiales= false;
-        var valor=depot.row[miVariable];
-        if(conOmitida){
-            falla('fuera_de_flujo_por_omitida');
-        }else if(enSaltoAVariable && miVariable!=enSaltoAVariable){
-            // estoy dentro de un salto válido, no debería haber datos ingresados.
-            if(valor===null){
-                rta.estados[miVariable]='salteada';
-            }else{
-                falla('fuera_de_flujo_por_salto');
+    }
+    newInstance(infoCasillero:InfoCasillero):tipoc_Base{
+        let myForm=this;
+        if(!this.factory[infoCasillero.data.tipoc]){
+            throw new Error("No existe el tipo de casillero "+infoCasillero.data.tipoc);
+        }
+        var newStructure = new this.factory[infoCasillero.data.tipoc]();
+        newStructure.myForm=myForm;
+        return newStructure;
+    }
+    display(){
+        return this.content.display();
+    }
+    JsonConcatPath(object1,object2,UAPath){
+        var JsonConcat = function(object1,object2,UAnalisis,posicion){
+            var isArray = function(value) {
+                return Object.prototype.toString.call(value) === '[object Array]';
             }
-        }else if(yaPasoLaActual){
-            if(valor===null){
-                rta.estados[miVariable]='todavia_no';
-            }else{
-                conOmitida=true;
-                if(!rta.primeraFalla){
-                    rta.primeraFalla=rta.actual;
+            var isObject = function(value) {
+                return Object.prototype.toString.call(value) === '[object Object]';
+            }
+            var result = {};
+            for (var key in object1) {
+                if (key == UAnalisis && object1.hasOwnProperty(key)) {
+                    if (isArray(object1[key])) {
+                        result[key] = [];
+                        for (var i in object1[key]) {
+                            if(isObject(object1[key][i])){
+                                if (i == posicion){
+                                    result[key].push(object2)
+                                }else{
+                                    result[key].push(object1[key][i])
+                                }
+                            }
+                        } 
+                    }     
+                /*else if (isObject(object1[key])) {
+                    result[key] = {};
+                    for (var key_inner in object1[key]) {
+                        if (object1[key].hasOwnProperty(key_inner) && key_inner == UAnalisis) {
+                            result[key][key_inner] =  object2[key][key_inner];
+                        }
+                    }
+                } else {
+                    result[key] = object1[key];
+                }*/
+                }else if (object1.hasOwnProperty(key)){
+                    result[key] = object1[key];
                 }
-                falla('fuera_de_flujo_por_omitida');
             }
+            return result;
+        }
+        var UAPathLast = UAPath.slice(UAPath.length-1);
+        var object1Porcion = object1;
+        for (var keyUA=0; keyUA<UAPath.length-1; keyUA++){
+            var UAnalisis = UAPath[keyUA][0];
+            var posicion = UAPath[keyUA][1];
+            object1Porcion = object1Porcion[UAnalisis][posicion];
+        };
+        var resultParcial = JsonConcat(object1Porcion,object2,UAPathLast[0][0],UAPathLast[0][1]);
+        var UAPathFirst = UAPath.slice(0,UAPath.length-1);
+        if(UAPathFirst.length>0){
+            return this.JsonConcatPath(object1,resultParcial,UAPathFirst);
         }else{
-            // no estoy en una variable salteada y estoy dentro del flujo normal (no hubo omitidas hasta ahora). 
-            enSaltoAVariable=null; // si estaba en un salto acá se acaba
-            if(estructura.variables[miVariable].calculada){
-                rta.estados[miVariable]='calculada';
-            }else if(valor===null){
-                if(!estructura.variables[miVariable].optativa){
-                    rta.estados[miVariable]='actual';
-                    rta.actual=miVariable;
-                    yaPasoLaActual=miVariable;
+            return resultParcial;
+        }
+    }
+    saveDepot(){
+        if(this.depot){
+            var path = []
+            var datosCaso = this.depot.surveyContent.datosCaso;
+            var id = this.depot.surveyContent.id;
+            var datosCasoParcial = datosCaso;
+            if(this.back.pilaDeRetroceso.length){
+                for(var i= this.back.pilaDeRetroceso.length -1; i>= 0;i--){
+                    path.push([this.back.pilaDeRetroceso[i].UAdelForm, this.back.pilaDeRetroceso[i].iPosicional]);
+                }
+                datosCaso = this.JsonConcatPath(datosCaso,this.depot.row,path);
+            }else{
+                datosCaso = this.depot.row;
+            }
+            var operativo = sessionStorage.getItem('operativo');
+            localStorage.setItem(operativo +'_survey_'+id, JSON.stringify({id:id, datosCaso:datosCaso}));
+        }
+        return true;
+    }
+    completeCalculatedVars(){
+        var row=this.depot.row;
+        var controls=this.controls;
+        var calculatedVars=[];
+        return;
+        /*if(this.depot.formId=='F1'){
+
+            // si no hay datos de la encuesta actual entonces se pone u1 y u2 con los valores por defecto (sacados de 'verveySetup')
+            var surveyId = sessionStorage.getItem('surveyId');
+            var operativo = sessionStorage.getItem('operativo');
+            var currentSurvey = localStorage.getItem(operativo + '_survey_' + surveyId);
+            if (!currentSurvey){
+                var surveySetup = JSON.parse(localStorage.getItem('surveySetup'));        
+                row.u1 = surveySetup.recorrido;
+                row.u2 = surveySetup.tipo_recorrido;
+            }
+
+            var recordables=[
+                {variable: 'u3' },
+                {variable: 'u4' },
+                {variable: 'u21', previa:'u8'},
+                {variable: 'u22', previa:'u8'},
+            ];
+            recordables.forEach(function(recordableDef){
+                var varName=recordableDef.variable;
+                var recordableStorage = localStorage.getItem('recordable_'+varName);
+                if(recordableStorage && !row[varName] && (!recordableDef.previa || row[recordableDef.previa])){
+                    row[varName] = JSON.parse(recordableStorage);
+                }
+                controls[varName].addEventListener('update',function(){
+                    localStorage.setItem('recordable_'+varName, JSON.stringify(this.getTypedValue()));
+                });
+            });
+            row.cant14 = Number(row.cant11)+Number(row.cant12)+Number(row.cant13)||null;
+            row.cant24 = Number(row.cant21)+Number(row.cant22)+Number(row.cant23)||null;
+            row.cant34 = Number(row.cant31)+Number(row.cant32)+Number(row.cant33)||null;
+            row.cant44 = Number(row.cant41)+Number(row.cant42)+Number(row.cant43)||null;
+            row.cant51 = Number(row.cant11)+Number(row.cant21)+Number(row.cant31)+Number(row.cant41)||null;
+            row.cant52 = Number(row.cant12)+Number(row.cant22)+Number(row.cant32)+Number(row.cant42)||null;
+            row.cant53 = Number(row.cant13)+Number(row.cant23)+Number(row.cant33)+Number(row.cant43)||null;
+            row.cant54 = Number(row.cant51)+Number(row.cant52)+Number(row.cant53)||null;
+            calculatedVars = [
+                'cant14',
+                'cant24',
+                'cant34',
+                'cant44',
+                'cant51',
+                'cant52',
+                'cant53',
+                'cant54',
+                'gps',
+                'u1',
+                'u2',
+                'u3',
+                'u4',
+                'u21',
+                'u22'
+            ];
+        }
+        if(this.depot.formId=='F2'){
+            row.p0 = this.depot.innerPk.persona+1;
+            if(this.depot.innerPk.persona == 0){
+                row.p1 = 1;
+            }
+            calculatedVars = [ 'p0', 'p1' ];
+        }
+        if(!"gps habilitado"){
+            if(row.u8 != null && (row.gps == null || !(row.gps.charAt(0) == "{"))){
+                row.gps = "Buscando coordenadas...";
+                if (navigator.geolocation) {
+                        navigator.geolocation.getCurrentPosition(function(position) {
+                            row.gps = JSON.stringify({'Lat': position.coords.latitude, ' Long':position.coords.longitude});
+                            controls.gps.setTypedValue(row.gps);
+                        }, 
+                        function(){
+                            row.gps = "Error al obtener el punto";
+                            controls.gps.setTypedValue(row.gps);
+                        }, 
+                        {enableHighAccuracy: true, maximumAge: 0, timeout: 15000 });
                 }else{
-                    rta.estados[miVariable]='optativa_sd';
+                    row.gps = "GPS inactivo";
+                }
+            }
+        }
+        calculatedVars.forEach(function(varName){
+            this.controls[varName].setTypedValue(row[varName]);
+        },this)*/
+    }
+    validateDepot(){
+        this.completeCalculatedVars();
+        var estructura={variables:this.variables};
+        var depot=this.depot;
+        var rta:FormStructureState={estados:{}, siguientes:{}, actual:null, primeraFalla:null};
+        var variableAnterior=null;
+        var yaPasoLaActual=false;
+        var estadoAnterior=null;
+        var enSaltoAVariable=null; // null si no estoy saltando y el destino del salto si estoy dentro de un salto. 
+        var conOmitida=false;
+        var miVariable:string=null; // variable actual del ciclo
+        var falla=function(estado){
+            rta.estados[miVariable]=estado;
+            if(!rta.primeraFalla){
+                rta.primeraFalla=miVariable;
+            }
+        };
+        for(var miVariable in estructura.variables){
+            var revisar_saltos_especiales= false;
+            var valor=depot.row[miVariable];
+            if(conOmitida){
+                falla('fuera_de_flujo_por_omitida');
+            }else if(enSaltoAVariable && miVariable!=enSaltoAVariable){
+                // estoy dentro de un salto válido, no debería haber datos ingresados.
+                if(valor===null){
+                    rta.estados[miVariable]='salteada';
+                }else{
+                    falla('fuera_de_flujo_por_salto');
+                }
+            }else if(yaPasoLaActual){
+                if(valor===null){
+                    rta.estados[miVariable]='todavia_no';
+                }else{
+                    conOmitida=true;
+                    if(!rta.primeraFalla){
+                        rta.primeraFalla=rta.actual;
+                    }
+                    falla('fuera_de_flujo_por_omitida');
+                }
+            }else{
+                // no estoy en una variable salteada y estoy dentro del flujo normal (no hubo omitidas hasta ahora). 
+                enSaltoAVariable=null; // si estaba en un salto acá se acaba
+                if(estructura.variables[miVariable].calculada){
+                    rta.estados[miVariable]='calculada';
+                }else if(valor===null){
+                    if(!estructura.variables[miVariable].optativa){
+                        rta.estados[miVariable]='actual';
+                        rta.actual=miVariable;
+                        yaPasoLaActual=miVariable!==null;
+                    }else{
+                        rta.estados[miVariable]='optativa_sd';
+                        if(estructura.variables[miVariable].salto){
+                            enSaltoAVariable=estructura.variables[miVariable].salto;
+                        }
+                    }
+                }else if(valor==-9){
+                    rta.estados[miVariable]='valida';
+                    if(estructura.variables[miVariable].saltoNsNr){
+                        enSaltoAVariable=estructura.variables[miVariable].saltoNsNr;
+                    }
+                    revisar_saltos_especiales=true;
+                }else{
+                    // hay algo ingresado hay que validarlo
+                    if(estructura.variables[miVariable].tipo=='opciones'){
+                        if(estructura.variables[miVariable].opciones[valor]){
+                            rta.estados[miVariable]='valida'; 
+                            if(estructura.variables[miVariable].opciones[valor].salto){
+                                enSaltoAVariable=estructura.variables[miVariable].opciones[valor].salto;
+                            }
+                        }else{
+                            falla('invalida'); 
+                        }
+                    }else if(estructura.variables[miVariable].tipo=='numerico'){
+                        valor=Number(valor);
+                        if(estructura.variables[miVariable].maximo && valor > estructura.variables[miVariable].maximo
+                            || 'minimo' in estructura.variables[miVariable] && valor < estructura.variables[miVariable].minimo){
+                            falla('fuera_de_rango'); 
+                        }else{
+                            rta.estados[miVariable]='valida'; 
+                        }
+                    }else if(estructura.variables[miVariable].tipo=='hora'){
+                        valor=this.completarHora(valor);
+                        depot.row[miVariable]=valor;
+                        var v1_item=document.getElementById('var_'+miVariable) as HTMLInputElement;
+                        if(v1_item!=null){
+                            v1_item.value=valor;
+                        }
+                        if(!(/^(1[3-9]|2[0-2])(:[0-5][0-9])?$/.test(valor))){
+                            falla('fuera_de_rango'); 
+                        }else{
+                            rta.estados[miVariable]='valida'; 
+                        }
+                    }else{
+                        // las de texto o de ingreso libre son válidas si no se invalidaron antes por problemas de flujo
+                        rta.estados[miVariable]='valida'; 
+                    }
                     if(estructura.variables[miVariable].salto){
                         enSaltoAVariable=estructura.variables[miVariable].salto;
                     }
+                    revisar_saltos_especiales=true;
                 }
-            }else if(valor==-9){
-                rta.estados[miVariable]='valida';
-                if(estructura.variables[miVariable].saltoNsNr){
-                    enSaltoAVariable=estructura.variables[miVariable].saltoNsNr;
-                }
-                revisar_saltos_especiales=true;
-            }else{
-                // hay algo ingresado hay que validarlo
-                if(estructura.variables[miVariable].tipo=='opciones'){
-                    if(estructura.variables[miVariable].opciones[valor]){
-                        rta.estados[miVariable]='valida'; 
-                        if(estructura.variables[miVariable].opciones[valor].salto){
-                            enSaltoAVariable=estructura.variables[miVariable].opciones[valor].salto;
-                        }
-                    }else{
-                        falla('invalida'); 
-                    }
-                }else if(estructura.variables[miVariable].tipo=='numerico'){
-                    valor=Number(valor);
-                    if(estructura.variables[miVariable].maximo && valor > estructura.variables[miVariable].maximo
-                        || 'minimo' in estructura.variables[miVariable] && valor < estructura.variables[miVariable].minimo){
-                        falla('fuera_de_rango'); 
-                    }else{
-                        rta.estados[miVariable]='valida'; 
-                    }
-                }else if(estructura.variables[miVariable].tipo=='hora'){
-                    valor=completarHora(valor);
-                    depot.row[miVariable]=valor;
-                    var v1_item=document.getElementById('var_'+miVariable);
-                    if(v1_item!=null){
-                        v1_item.value=valor;
-                    }
-                    if(!(/^(1[3-9]|2[0-2])(:[0-5][0-9])?$/.test(valor))){
-                        falla('fuera_de_rango'); 
-                    }else{
-                        rta.estados[miVariable]='valida'; 
-                    }
-                }else{
-                    // las de texto o de ingreso libre son válidas si no se invalidaron antes por problemas de flujo
-                    rta.estados[miVariable]='valida'; 
-                }
-                if(estructura.variables[miVariable].salto){
-                    enSaltoAVariable=estructura.variables[miVariable].salto;
-                }
-                revisar_saltos_especiales=true;
+                if (revisar_saltos_especiales){
+                }    
             }
-            if (revisar_saltos_especiales){
-            }    
-        }
-        if(rta.estados[miVariable]==null){
-            this.lanzarExcepcion('No se pudo validar la variable '+miVariable);
-        }
-        if(!estructura.variables[miVariable].calculada){
-            if(variableAnterior && !rta.siguientes[variableAnterior]){
-                rta.siguientes[variableAnterior]=miVariable;
+            if(rta.estados[miVariable]==null){
+                throw ('No se pudo validar la variable '+miVariable);
             }
-            variableAnterior=miVariable;
+            if(!estructura.variables[miVariable].calculada){
+                if(variableAnterior && !rta.siguientes[variableAnterior]){
+                    rta.siguientes[variableAnterior]=miVariable;
+                }
+                variableAnterior=miVariable;
+            }
+            rta.siguientes[miVariable]=enSaltoAVariable; // es null si no hay salto (o sea sigue con la próxima o es la última)
         }
-        rta.siguientes[miVariable]=enSaltoAVariable; // es null si no hay salto (o sea sigue con la próxima o es la última)
-    }
-    if(conOmitida){
-        for(miVariable in rta.estados){
-            if(rta.estados[miVariable]=='actual'){
-                rta.estados[miVariable]='omitida';
-            }else if(rta.estados[miVariable]=='todavia_no'){
-                rta.estados[miVariable]='fuera_de_flujo_por_omitida';
-            }else if(rta.estados[miVariable]=='fuera_de_flujo_por_omitida'){
-                break;
+        if(conOmitida){
+            for(miVariable in rta.estados){
+                if(rta.estados[miVariable]=='actual'){
+                    rta.estados[miVariable]='omitida';
+                }else if(rta.estados[miVariable]=='todavia_no'){
+                    rta.estados[miVariable]='fuera_de_flujo_por_omitida';
+                }else if(rta.estados[miVariable]=='fuera_de_flujo_por_omitida'){
+                    break;
+                }
             }
         }
+        this.state = rta;
+        this.consistencias();
     }
-    this.state = rta;
-    this.consistencias();
-}
-
-FormStructure.prototype.consistencias=function(){
-    var row=this.depot.row;
-    var myForm=this;
-    function consistir(consistencia, ultima_variable, precondicion, postcondicion){
-        myForm.elements[consistencia].setAttribute(
-            'status-consistencia',
-            !precondicion() || postcondicion()?'consistente':'inconsistente'
-        );
-        // this.state.estados[ultima_variable]='inconsistente';
-    }
-    return;
-    if(myForm.depot.formId=='F1'){
-        consistir('cant_per','cant54',function(){
-            return row.o3_1;
-        },function(){
-            return row.cant54 === row.u8;
-        });
-        consistir('u6_o_u7','u7',function(){
-            return row.u8 != null;
-        },function(){
-            return row.u6 != null || row.u7 != null;
-        });
-    }
-    if(myForm.depot.formId=='F2'){
-        consistir('referente1','p1',function(){
-            return row.p2 && myForm.depot.innerPk.persona;
-        },function(){
-            return row.p1 > 1;
-        });
-    }
-}
-
-FormStructure.prototype.refreshState = function refreshState(){
-    var rta = this.state;
-    var myForm = this;
-    likeAr(rta.estados).forEach(function(estado, variable){
-        if(myForm.controlBox[variable]){
-            myForm.controlBox[variable].setAttribute('state-var','ok');
-            if(rta.estados[variable]){
-                myForm.controlBox[variable].setAttribute('state-var',rta.estados[variable]);
-            }
+    consistencias(){
+        var row=this.depot.row;
+        var myForm=this;
+        /*
+        function consistir(consistencia, ultima_variable, precondicion, postcondicion){
+            myForm.elements[consistencia].setAttribute(
+                'status-consistencia',
+                !precondicion() || postcondicion()?'consistente':'inconsistente'
+            );
+            // this.state.estados[ultima_variable]='inconsistente';
         }
-    });
-};
-FormStructure.prototype.posicionarVentanaVerticalmente = function(control, y){
-    var rect=getRect(control);
-    if(rect.top){
-        window.scrollTo(0,rect.top-y);
-    }
-    return rect.top;
-};
-
-FormStructure.prototype.irAlSiguiente=function(variableActual, scrollScreen){
-    var nuevaVariable=this.state.siguientes[variableActual];
-    var control=this.controls[nuevaVariable];
-    if(scrollScreen){
-        this.posicionarVentanaVerticalmente(control,100);
-    }
-    control.focus();
-}
-
-FormStructure.factory.BF = function tipoc_BF(){
-    FormStructure.factory.Base.call(this);
-}
-FormStructure.factory.BF.prototype = Object.create(FormStructure.factory.Base.prototype);
-FormStructure.factory.BF.constructor = FormStructure.factory.BF;
-
-FormStructure.factory.BF.prototype.adaptOptionInput = function adaptOptionInput(groupElement){
-    //groupElement.style='border:1px solid red; height:200px; width:400px;';
-    var UAdelForm=this.data.unidad_analisis;
-    var PuedeAgregarRenglones=true;
-    var conResumen=this.data.con_resumen;
-    var nombreFormulario=this.data.casillero;
-    var myForm=this.myForm;
-    var createFormButton = function createFormButton(formName, buttonDescription, myForm, rowHijo, UAdelForm, iPosicional){
-        var button = html.button({class:'boton-formulario'}, buttonDescription).create();
-        button.onclick=function(){
-            loadForm(formName, rowHijo, UAdelForm, iPosicional);
-        };
-        return button;
-    }
-    var loadForm = function loadForm(formName, rowHijo, UAdelForm, iPosicional){
-        var mainForm=document.getElementById('main-form');
-        mainForm.innerHTML='';
-        mainForm.appendChild(my.displayForm(myForm.surveyStructure,rowHijo,formName,
-            [
-                {datosCasoPadreParaRetroceder:myForm.depot.row,formIdParaRetroceder:myForm.depot.formId, UAdelForm: UAdelForm, iPosicional: iPosicional}
-            ].concat(myForm.back?myForm.back.pilaDeRetroceso:[])
-        ));
-        window.scrollTo(0,0);
-    }
-    var completarTablaResumen = function completarTablaResumen(table, rowHijo, navigationButton){
-        var thArray = [];
-        thArray.push(html.th({class:'col'}, '').create());
-        var tdArray = [];
-        tdArray.push(html.td({class:'col'}, navigationButton).create());
-        var searchStructureByUAInOtherStructure = function searchStructureByUAInOtherStructure(mainStructure, UA){
-            return Object.values(mainStructure).find(function (structure){
-                return structure.data.unidad_analisis === UA;
+        if(myForm.depot.formId=='F1'){
+            consistir('cant_per','cant54',function(){
+                return row.o3_1;
+            },function(){
+                return row.cant54 === row.u8;
+            });
+            consistir('u6_o_u7','u7',function(){
+                return row.u8 != null;
+            },function(){
+                return row.u6 != null || row.u7 != null;
             });
         }
-        Object.keys(rowHijo).forEach(function(key) {
-            if(Array.isArray(rowHijo[key])){
-                var buttonsArray = [];
-                if(rowHijo[key].length){
-                    rowHijo[key].forEach(function(child, index){
-                        var structure = searchStructureByUAInOtherStructure(myForm.surveyStructure, key)
-                        var button = html.button({class:'boton-formulario'}, structure.data.casillero + ' ' + (index+1)).create();
-                        button.onclick=function(){
-                            loadForm(structure.data.casillero, rowHijo[key][index], key, index);
-                        };
-                        buttonsArray.push(button);
-                    })
-                    thArray.push(html.th({class:'col'}, key).create());
+        if(myForm.depot.formId=='F2'){
+            consistir('referente1','p1',function(){
+                return row.p2 && myForm.depot.innerPk.persona;
+            },function(){
+                return row.p1 > 1;
+            });
+        }*/
+    }
+    refreshState(){
+        var rta = this.state;
+        var myForm = this;
+        likeAr(rta.estados).forEach(function(estado, variable){
+            if(myForm.controlBox[variable]){
+                myForm.controlBox[variable].setAttribute('state-var','ok');
+                if(rta.estados[variable]){
+                    myForm.controlBox[variable].setAttribute('state-var',rta.estados[variable]);
                 }
-                tdArray.push(html.td({class:'col'}, buttonsArray).create());
-            }else{
-                var structure = searchStructureByUAInOtherStructure(myForm.surveyStructure, UAdelForm);
-                var id_casillero = key.toString();
-                var buscarCasilleroEnEstructura = function buscarCasilleroEnEstructura(structure, id_casillero){
-                    for(var i = 0; i < structure.childs.length; i++) {
-                        if (typeof structure.childs[i] !== "function"){
-                            var casillero = structure.childs[i].data.id_casillero;
-                            if (casillero === id_casillero || casillero === id_casillero.toUpperCase()) {
-                                return structure.childs[i];
-                            }
-                        }
-                        var result = buscarCasilleroEnEstructura(structure.childs[i], id_casillero);
-                        if(result){
-                            return result;
-                        }
-                    }
-                }
-                var val = buscarCasilleroEnEstructura(structure, id_casillero);
-                if(val.childs.length){
-                    var result = val.childs.find(function(option){
-                        var casillero = (rowHijo[key] || '').toString();
-                        return option.data.casillero ===  casillero || option.data.casillero === casillero.toUpperCase();
-                    });
-                    var respuesta = result?result.data.nombre:'';
-                }else{
-                    var respuesta = rowHijo[key]?rowHijo[key]:'';
-                }
-                var pregunta = val.data.nombre;
-                thArray.push(html.th({class:'col'}, pregunta).create());
-                tdArray.push(html.td({class:'col'}, respuesta).create());
             }
         });
-        var tr;
-        if(table.children.length === 0){
-            tr = html.tr({class:'row'}, thArray).create();
-            table.appendChild(tr);
-        }
-        tr = html.tr({class:'row'}, tdArray).create();
-        table.appendChild(tr);
-        return table
     }
-    if(myForm.depot.row[UAdelForm]){
-        if(PuedeAgregarRenglones){
-            var button = html.button({class:'boton-nuevo-formulario'}, "Nuevo " + nombreFormulario).create();
-            var div = html.div({class:'nuevo-formulario'}, button).create();
-            groupElement.appendChild(div);
-            button.onclick=function(){
-                my.ajax.cargar.preguntas_ua({operativo: sessionStorage.getItem('operativo'), unidad_analisis: UAdelForm}).then(function(result){
-                    var object = {};
-                    result.forEach(function(question){
-                        object[question.id_casillero] = question.unidad_analisis?[]:null;
-                    });
-                    myForm.depot.row[UAdelForm].push(object);
-                    myForm.saveDepot();
-                    var iPosicional = myForm.depot.row[UAdelForm].length-1;
-                    loadForm(nombreFormulario, myForm.depot.row[UAdelForm][iPosicional], UAdelForm, iPosicional);
-                }).catch(function(error){ 
-                    console.log("error: ", error);
-                });
-            }
+    posicionarVentanaVerticalmente(control, y){
+        var rect=my.getRect(control);
+        if(rect.top){
+            window.scrollTo(0,rect.top-y);
         }
-        if(conResumen){
-            var table = html.table({class:'resumen'}).create();
-        }
-        myForm.depot.row[UAdelForm].forEach(function(rowHijo, iPosicional){
-            var button = createFormButton(nombreFormulario, nombreFormulario + ' ' + (iPosicional+1), myForm, rowHijo, UAdelForm, iPosicional);
-            if(conResumen){
-                table = completarTablaResumen(table, rowHijo, button);
-            }else{
-                groupElement.appendChild(button);
-            }
-        });
-        if(conResumen){
-            groupElement.appendChild(table);
-        }
-    }else{ 
-        groupElement.appendChild(createFormButton(nombreFormulario, nombreFormulario, myForm, myForm.depot.row, null, null));
+        return rect.top;
     }
-    myForm.formsButtonZone[this.data.casillero]=groupElement;
-};
 
+    irAlSiguiente(variableActual, scrollScreen){
+        var nuevaVariable=this.state.siguientes[variableActual];
+        var control=this.controls[nuevaVariable];
+        if(scrollScreen){
+            this.posicionarVentanaVerticalmente(control,100);
+        }
+        control.focus();
+    }
+    completarHora(value){
+        return value //TODO
+    }
+}
