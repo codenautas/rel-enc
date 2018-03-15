@@ -15,7 +15,7 @@ declare module "dialog-promise" {
     }
 }
 
-declare module "my-things"{
+declare module "myOwn"{
     var my:any;
-
+    var myOwn:any;
 }

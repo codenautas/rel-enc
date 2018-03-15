@@ -5,7 +5,7 @@ import * as jsToHtml from "js-to-html"
 import * as likeAr from "like-ar"
 import * as TypedControls from "typed-controls"
 import {alertPromise, miniMenuPromise} from "dialog-promise"
-import {my} from "my-things"
+import {my} from "myOwn"
 
 var formTypes={
     si_no_nn: {htmlType:'number', typeName:'bigint' , validar:'opciones', radio:true},
@@ -15,11 +15,11 @@ var formTypes={
     texto   : {htmlType:'text'  , typeName:'text'   , validar:'texto'   ,           },
 };
 
-interface ExtendedHTMLElement extends jsToHtml.ExtendedHTMLElement{
+export interface ExtendedHTMLElement extends jsToHtml.ExtendedHTMLElement{
     myForm?:FormStructure
 }
 
-type InfoCasilleroRegistro={
+export type InfoCasilleroRegistro={
     tipoc:string
     id_casillero:string
     ver_id:string
@@ -37,20 +37,20 @@ type InfoCasilleroRegistro={
     con_resumen: boolean
 }
 
-type InfoCasillero={
+export type InfoCasillero={
     data:InfoCasilleroRegistro,
     childs:InfoCasillero[]
 }
 
-type DisplayOpts={
+export type DisplayOpts={
     forValue?:any
 }
 
-type SurveyStructure={
+export type SurveyStructure={
     [key:string]:InfoCasillero
 }
 
-type Variable={
+export type Variable={
     calculada:boolean
     optativa:boolean
     salto:string
@@ -65,21 +65,21 @@ type Variable={
     minimo:string
 }
 
-type PilaDeRetroceso = {
+export type PilaDeRetroceso = {
     datosCasoPadreParaRetroceder: any
     formIdParaRetroceder: string
     UAdelForm:string
     iPosicional:number
 }
 
-type FormStructureState = {
+export type FormStructureState = {
     estados?:any
     siguientes?:any
     actual?:any
     primeraFalla?:any
 };
 
-class tipoc_Base{ // clase base de los tipos de casilleros
+export class tipoc_Base{ // clase base de los tipos de casilleros
     childs:tipoc_Base[]=[]
     data:InfoCasilleroRegistro
     inTable:boolean=false
@@ -304,7 +304,7 @@ class tipoc_Base{ // clase base de los tipos de casilleros
     }
 }
 
-class tipoc_F extends tipoc_Base{
+export class tipoc_F extends tipoc_Base{
     displayRef(opts:DisplayOpts={}):any[]{
         var myForm = this.myForm;
         if(myForm.back.pilaDeRetroceso.length){
@@ -320,12 +320,12 @@ class tipoc_F extends tipoc_Base{
     };
 }
 
-class tipoc_B extends tipoc_Base{}
-class tipoc_MATRIZ extends tipoc_Base{}
-class tipoc_TEXTO extends tipoc_Base{}
-class tipoc_CONS extends tipoc_Base{}
+export class tipoc_B extends tipoc_Base{}
+export class tipoc_MATRIZ extends tipoc_Base{}
+export class tipoc_TEXTO extends tipoc_Base{}
+export class tipoc_CONS extends tipoc_Base{}
 
-class tipoc_P extends tipoc_Base{
+export class tipoc_P extends tipoc_Base{
     displayTopElements(special=false){
         var input = null;
         if(this.myForm.esModoIngreso && this.childs.length && this.childs[0].data.tipoc == 'O'){
@@ -348,7 +348,7 @@ class tipoc_P extends tipoc_Base{
     }
 }
 
-class tipoc_PMATRIZ extends tipoc_Base{
+export class tipoc_PMATRIZ extends tipoc_Base{
     displayChilds(){
         var nextColumn=2;
         var foundedColumns={};
@@ -382,7 +382,7 @@ class tipoc_PMATRIZ extends tipoc_Base{
     }
 }
 
-class tipoc_O extends tipoc_Base{
+export class tipoc_O extends tipoc_Base{
     display(special=false){
         return [this.displayTopElements(special)].concat(
             Array.prototype.concat.apply([],this.childs.map(function(child){
@@ -405,7 +405,7 @@ class tipoc_O extends tipoc_Base{
     }
 }
 
-class tipoc_OM extends tipoc_Base{
+export class tipoc_OM extends tipoc_Base{
     display(){
         var input = null;
         if(this.myForm.esModoIngreso){
@@ -437,7 +437,7 @@ class tipoc_OM extends tipoc_Base{
     }
 }
 
-class tipoc_BF extends tipoc_Base{
+export class tipoc_BF extends tipoc_Base{
     adaptOptionInput(groupElement:ExtendedHTMLElement){
         //groupElement.style='border:1px solid red; height:200px; width:400px;';
         var UAdelForm=this.data.unidad_analisis;
@@ -570,7 +570,7 @@ class tipoc_BF extends tipoc_Base{
     }    
 }
 
-class FormStructure{
+export class FormStructure{
     static controlRepetidos:{[key:string]:any}={};
     content:tipoc_Base; // el elemento raíz
     variables:{[key:string]:Variable}={}

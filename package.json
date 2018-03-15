@@ -6,10 +6,7 @@
   "license": "MIT",
   "main": "lib/server/rel-enc.js",
   "files": [
-    "client",
-    "install",
-    "server",
-    "unlogged"
+    "lib"
   ],
   "dependencies": {
     "@types/node": "~9.4.7",
