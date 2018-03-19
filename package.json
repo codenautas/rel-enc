@@ -1,12 +1,13 @@
 {
   "name": "rel-enc",
   "description": "Relativo a encuestas",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "author": "Codenautas <codenautas@googlegroups.com>",
   "license": "MIT",
   "main": "lib/server/rel-enc.js",
   "files": [
-    "lib"
+    "lib",
+    "src/client"
   ],
   "dependencies": {
     "@types/node": "~9.4.7",
@@ -17,6 +18,8 @@
     "node": ">= 8.0.0"
   },
   "scripts": {
+    "prepublish": "tsc || echo \"continue w/error\" && tsc -p src/client",
+    "xprepublish": "tsc && tsc -p src/client",
     "test": "mocha --reporter spec --bail --check-leaks test/",
     "test-cov": "istanbul cover node_modules/mocha/bin/_mocha -- --reporter dot --check-leaks test/",
     "start": "node server/server-rel-enc.js"
