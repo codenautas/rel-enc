@@ -16,6 +16,7 @@ declare module 'js-to-html'{
     interface ExtendedHTMLTableElement         extends HTMLTableElement         ,TypedElement{}
     interface ExtendedHTMLTableRowElement      extends HTMLTableRowElement      ,TypedElement{}
     interface ExtendedHTMLTableDataCellElement extends HTMLTableDataCellElement ,TypedElement{}
+    interface ExtendedHTMLSpanElement          extends HTMLSpanElement          ,TypedElement{}
     var html:{
         td: (attrOrContent?:object|any[]|string, content?:any[]|string ) => {
             create():ExtendedHTMLTableDataCellElement
@@ -28,6 +29,9 @@ declare module 'js-to-html'{
         }
         button: (attrOrContent?:object|any[]|string, content?:any[]|string ) => {
             create():ExtendedHTMLButtonElement
+        }
+        span: (attrOrContent?:object|any[]|string, content?:any[]|string ) => {
+            create():ExtendedHTMLSpanElement
         }
         [key:string]: (attrOrContent?:object|any[]|string, content?:any[]|string ) => {
             create():ExtendedHTMLElement

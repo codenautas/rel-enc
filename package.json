@@ -11,7 +11,7 @@
   ],
   "dependencies": {
     "@types/node": "~9.4.7",
-    "backend-plus": "~0.20.16"
+    "backend-plus": "~0.20.18"
   },
   "devDependencies": {},
   "engines": {

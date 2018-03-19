@@ -109,7 +109,7 @@ export class tipoc_Base{ // clase base de los tipos de casilleros
         )];
     }
     displayInput(direct=false){
-        var attr:HtmlAttrs;
+        var attr:HtmlAttrs={};
         if(this.inTable){
             attr.colspan=90;
         }
@@ -316,7 +316,7 @@ export class tipoc_F extends tipoc_Base{
                 window.scrollTo(0,0);
             };
         }
-        return this.displayRef().concat(button);
+        return super.displayRef().concat(button);
     };
 }
 
@@ -617,13 +617,13 @@ export class FormStructure{
         }
     }
     newInstance(infoCasillero:InfoCasillero):tipoc_Base{
-        let myForm=this;
+        let myForm:FormStructure=this;
         if(!this.factory[infoCasillero.data.tipoc]){
             throw new Error("No existe el tipo de casillero "+infoCasillero.data.tipoc);
         }
-        var newStructure = new this.factory[infoCasillero.data.tipoc]();
-        newStructure.myForm=myForm;
-        return newStructure;
+        return new this.factory[infoCasillero.data.tipoc](infoCasillero, myForm);
+        //newStructure.myForm=myForm;
+        //return newStructure;
     }
     display(){
         return this.content.display();

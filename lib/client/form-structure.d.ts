@@ -63,10 +63,10 @@ export declare class tipoc_Base {
     constructor(infoCasillero: InfoCasillero, myForm: FormStructure);
     setChilds(childsInfo: InfoCasillero[]): void;
     displayRef(opts?: DisplayOpts): any[];
-    displayInput(direct?: boolean): jsToHtml.ExtendedHTMLElement;
-    displayMainText(opts?: DisplayOpts): (jsToHtml.ExtendedHTMLElement | {
+    displayInput(direct?: boolean): jsToHtml.ExtendedHTMLSpanElement;
+    displayMainText(opts?: DisplayOpts): ({
         create(): jsToHtml.ExtendedHTMLElement;
-    })[];
+    } | jsToHtml.ExtendedHTMLSpanElement)[];
     displayTopElements(special?: boolean): {
         create(): jsToHtml.ExtendedHTMLElement;
     };
