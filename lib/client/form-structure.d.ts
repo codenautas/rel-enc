@@ -1,6 +1,9 @@
 import * as jsToHtml from "js-to-html";
-export interface ExtendedHTMLElement extends jsToHtml.ExtendedHTMLElement {
+export interface ExtendedHTMLElement extends HTMLElement {
     myForm?: FormStructure;
+    getTypedValue?: () => any;
+    setTypedValue?: (value: any, fromUserInteraction?: boolean) => void;
+    disable?: (disabled?: boolean) => void;
 }
 export declare type InfoCasilleroRegistro = {
     tipoc: string;
@@ -62,18 +65,14 @@ export declare class tipoc_Base {
     inTable: boolean;
     constructor(infoCasillero: InfoCasillero, myForm: FormStructure);
     setChilds(childsInfo: InfoCasillero[]): void;
-    displayRef(opts?: DisplayOpts): any[];
-    displayInput(direct?: boolean): jsToHtml.ExtendedHTMLSpanElement;
-    displayMainText(opts?: DisplayOpts): ({
-        create(): jsToHtml.ExtendedHTMLElement;
-    } | jsToHtml.ExtendedHTMLSpanElement)[];
-    displayTopElements(special?: boolean): {
-        create(): jsToHtml.ExtendedHTMLElement;
-    };
-    displayInputForOptions(): jsToHtml.ExtendedHTMLElement;
-    displayChilds(): any;
-    displayBottomElement(): any[];
-    display(special?: boolean): any;
+    displayRef(opts?: DisplayOpts): jsToHtml.ArrayContent;
+    displayInput(direct?: boolean): HTMLSpanElement;
+    displayMainText(opts?: DisplayOpts): (HTMLSpanElement | jsToHtml.HtmlTag<HTMLSpanElement>)[];
+    displayTopElements(special?: boolean): jsToHtml.HtmlTag<HTMLDivElement> | jsToHtml.HtmlTag<HTMLTableRowElement>;
+    displayInputForOptions(): HTMLInputElement;
+    displayChilds(): jsToHtml.ArrayContent;
+    displayBottomElement(): jsToHtml.HtmlBase[];
+    display(special?: boolean): jsToHtml.ArrayContent;
     createVariable(): void;
     adaptOptionInput(group: ExtendedHTMLElement): void;
     readonly var_name: string;
@@ -81,7 +80,7 @@ export declare class tipoc_Base {
     connectControl(control: ExtendedHTMLElement): void;
 }
 export declare class tipoc_F extends tipoc_Base {
-    displayRef(opts?: DisplayOpts): any[];
+    displayRef(opts?: DisplayOpts): jsToHtml.ArrayContent;
 }
 export declare class tipoc_B extends tipoc_Base {
 }
@@ -92,30 +91,20 @@ export declare class tipoc_TEXTO extends tipoc_Base {
 export declare class tipoc_CONS extends tipoc_Base {
 }
 export declare class tipoc_P extends tipoc_Base {
-    displayTopElements(special?: boolean): {
-        create(): jsToHtml.ExtendedHTMLElement;
-    };
-    displayChilds(): {
-        create(): jsToHtml.ExtendedHTMLTableElement;
-    }[];
-    displayBottomElement(): {
-        create(): jsToHtml.ExtendedHTMLElement;
-    }[];
+    displayTopElements(special?: boolean): jsToHtml.HtmlTag<HTMLDivElement> | jsToHtml.HtmlTag<HTMLTableRowElement>;
+    displayChilds(): jsToHtml.ArrayContent;
+    displayBottomElement(): jsToHtml.HtmlTag<HTMLDivElement>[];
 }
 export declare class tipoc_PMATRIZ extends tipoc_Base {
-    displayChilds(): {
-        create(): jsToHtml.ExtendedHTMLTableElement;
-    }[];
+    displayChilds(): jsToHtml.HtmlTag<HTMLTableElement>[];
 }
 export declare class tipoc_O extends tipoc_Base {
     display(special?: boolean): any[];
     displayTopElements(special?: boolean): any;
 }
 export declare class tipoc_OM extends tipoc_Base {
-    display(): jsToHtml.ExtendedHTMLTableRowElement[];
-    displayChilds(): {
-        create(): jsToHtml.ExtendedHTMLTableElement;
-    }[];
+    display(): HTMLTableRowElement[];
+    displayChilds(): jsToHtml.HtmlTag<HTMLTableElement>[];
 }
 export declare class tipoc_BF extends tipoc_Base {
     adaptOptionInput(groupElement: ExtendedHTMLElement): void;
@@ -169,7 +158,7 @@ export declare class FormStructure {
         BF: typeof tipoc_BF;
     };
     newInstance(infoCasillero: InfoCasillero): tipoc_Base;
-    display(): any;
+    display(): (string | HTMLElement | jsToHtml.HtmlBase)[];
     JsonConcatPath(object1: any, object2: any, UAPath: any): any;
     saveDepot(): boolean;
     completeCalculatedVars(): void;

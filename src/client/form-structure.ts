@@ -1,22 +1,40 @@
 "use strict";
 
-import {html,HtmlAttrs} from "js-to-html"
 import * as jsToHtml from "js-to-html"
+import {html} from "js-to-html"
 import * as likeAr from "like-ar"
 import * as TypedControls from "typed-controls"
 import {alertPromise, miniMenuPromise} from "dialog-promise"
 import {my} from "myOwn"
 
-var formTypes={
+type HtmlAttrs={
+    class?:string,
+    colspan?:number
+};
+
+interface ExtendedHtmlAttrs extends HtmlAttrs{
+    "for-value"?:string,
+    "tipo-var"?:string,
+    "longitud-var"?:string,
+    "casillero-id"?:string,
+};
+
+var formTypes:{
+    [key:string]:{htmlType:'text'|'number'  , typeName:'bigint'|'text', validar:'texto'|'opciones'|'numerico', radio?:boolean}
+}={
     si_no_nn: {htmlType:'number', typeName:'bigint' , validar:'opciones', radio:true},
     si_no   : {htmlType:'number', typeName:'bigint' , validar:'opciones', radio:true},
     numero  : {htmlType:'number', typeName:'bigint' , validar:'numerico',           },
     opciones: {htmlType:'number', typeName:'bigint' , validar:'opciones', radio:true},
     texto   : {htmlType:'text'  , typeName:'text'   , validar:'texto'   ,           },
+    
 };
 
-export interface ExtendedHTMLElement extends jsToHtml.ExtendedHTMLElement{
-    myForm?:FormStructure
+export interface ExtendedHTMLElement extends HTMLElement{
+    myForm?:FormStructure,
+    getTypedValue?:()=>any,
+    setTypedValue?:(value:any, fromUserInteraction?:boolean)=>void,
+    disable?:(disabled?:boolean)=>void,
 }
 
 export type InfoCasilleroRegistro={
@@ -97,16 +115,19 @@ export class tipoc_Base{ // clase base de los tipos de casilleros
             return this.myForm.newInstance(childInfo);
         },this);
     }
-    displayRef(opts:DisplayOpts={}):any[]{
+    displayRef(opts:DisplayOpts={}):jsToHtml.ArrayContent{
         var opts = opts || {};
         var hasValue=this.data.ver_id!='-';
-        var attr={class:hasValue?"casillero":"vacio"};
+        var attr:jsToHtml.Attr4HTMLElement={class:hasValue?"casillero":"vacio"};
+        var value = hasValue?this.data.ver_id||this.data.casillero:null;
         if(opts.forValue){
-            attr["for-value"]=opts.forValue;
+            (attr as ExtendedHtmlAttrs)["for-value"]=opts.forValue;
+            return [html.label(attr,value)];
         }
-        return [html[opts.forValue?'label':(this.inTable?'td':'span')](attr,
-            hasValue?this.data.ver_id||this.data.casillero:null
-        )];
+        if(this.inTable){
+            return [html.td(attr,value)];
+        }
+        return [html.span(attr,value)];
     }
     displayInput(direct=false){
         var attr:HtmlAttrs={};
@@ -119,11 +140,11 @@ export class tipoc_Base{ // clase base de los tipos de casilleros
         if(formTypes[this.data.tipovar].radio){
             return;
         }
-        var control:ExtendedHTMLElement = html.input({
+        var control = html.input({
             "tipo-var":this.data.tipovar||'unknown', 
             "longitud-var":this.data.longitud||'unknown',
             "type":formTypes[this.data.tipovar].htmlType,
-        }).create();
+        } as ExtendedHtmlAttrs).create();
         TypedControls.adaptElement(control,formTypes[this.data.tipovar]);
         this.assignEnterKey(control);
         this.myForm.variables[this.var_name]={
@@ -135,25 +156,38 @@ export class tipoc_Base{ // clase base de los tipos de casilleros
             minimo:null,
             calculada:this.data.despliegue=='calculada'
         };
-        this.connectControl(control);
+        this.connectControl(control as ExtendedHTMLElement);
         if(direct){
             return control;
         }
-        return html[this.inTable?'td':'span'](attr,[control]).create();
+        if(this.inTable){
+            return html.td(attr,[control]).create();
+        }else{
+            return html.span(attr,[control]).create();
+        }
     }
     displayMainText(opts:DisplayOpts={}){
-        var attr={class:"nombre"};
+        var attr:jsToHtml.Attr4HTMLElement={class:"nombre"};
         if(opts.forValue){
-            attr["for-value"]=opts.forValue;
+            (attr as ExtendedHtmlAttrs)["for-value"]=opts.forValue;
+        }
+        var content = [
+            this.data.nombre,
+            (this.data.tipoe?html.span({class:"tipoe"}, this.data.tipoe):null),
+            (this.data.aclaracion?html.span({class:"aclaracion"}, this.data.aclaracion):null),
+        ]
+        var firstElement;
+        if(opts.forValue){
+            firstElement = html.label(attr,content)
+        }else if(this.inTable){
+            firstElement = html.td(attr,content)
+        }else{
+            firstElement = html.span(attr,content)
         }
         return [
-            html[opts.forValue?'label':(this.inTable?'td':'span')](attr, [
-                this.data.nombre,
-                (this.data.tipoe?html.span({class:"tipoe"}, this.data.tipoe):null),
-                (this.data.aclaracion?html.span({class:"aclaracion"}, this.data.aclaracion):null),
-            ]),
+            firstElement,
             this.data.tipovar && !this.inTable?this.displayInput():null
-        ]
+        ];
     }
     displayTopElements(special=false){
         return html[this.inTable?'tr':'div']({class:"propios"},[].concat(
@@ -163,7 +197,7 @@ export class tipoc_Base{ // clase base de los tipos de casilleros
         ));
     }
     displayInputForOptions(){
-        var inputAttr={
+        var inputAttr:jsToHtml.Attr4HTMLInputElement={
             class:'typed-control-input-for-options',
             "type":formTypes[this.data.tipovar].htmlType,
         }
@@ -176,15 +210,15 @@ export class tipoc_Base{ // clase base de los tipos de casilleros
         // TypedControls.adaptElement(input,formTypes[this.data.tipovar]);
         return input;
     }
-    displayChilds(){
-        return html.div({class:"hijos"},[].concat(this.childs.map(function(child){
+    displayChilds():jsToHtml.ArrayContent{
+        return [html.div({class:"hijos"},[].concat(this.childs.map(function(child){
             return child.display();
-        })));
+        })))];
     }
-    displayBottomElement(){
+    displayBottomElement():jsToHtml.HtmlBase[]{
         return [];
     } 
-    display(special=false){
+    display(special:boolean=false):jsToHtml.ArrayContent{
         this.createVariable();
         var content=[].concat(
             this.displayTopElements(),
@@ -196,14 +230,10 @@ export class tipoc_Base{ // clase base de los tipos de casilleros
         }
         var groupElement = html.div({class:'tipoc_'+this.data.tipoc},content).create();
         this.adaptOptionInput(groupElement);
-        return groupElement;
+        return [groupElement];
     }       
     createVariable(){
-        if((formTypes[this.data.tipovar]||{}).radio){
-            var opciones={};
-            this.childs.forEach(function(child){
-                opciones[child.data.casillero]={salto:(child.data.salto||'').toLowerCase(),};
-            });
+        if((formTypes[this.data.tipovar]||{radio:false}).radio){
             this.myForm.variables[this.var_name]={
                 optativa:false,
                 salto:(this.data.salto||'').toLowerCase(),
@@ -211,7 +241,9 @@ export class tipoc_Base{ // clase base de los tipos de casilleros
                 tipo:formTypes[this.data.tipovar].validar, // numerico, hora
                 maximo:null,
                 minimo:null,
-                opciones:opciones,
+                opciones:likeAr(this.childs).map(function(child){
+                    return {salto:(child.data.salto||'').toLowerCase(),};
+                }) as any,
                 calculada:this.data.despliegue=='calculada'
             };
         }
@@ -222,7 +254,7 @@ export class tipoc_Base{ // clase base de los tipos de casilleros
         if(this.data.tipovar){
             this.myForm.controlBox[this.var_name]=group;
         }
-        if((formTypes[this.data.tipovar]||{}).radio){
+        if((formTypes[this.data.tipovar]||{radio:false}).radio){
             var casillerosElement = group.querySelectorAll('.casillero');
             if(casillerosElement.length==0){
                 if(!FormStructure.controlRepetidos['casillerosElement.length==0']){
@@ -305,7 +337,7 @@ export class tipoc_Base{ // clase base de los tipos de casilleros
 }
 
 export class tipoc_F extends tipoc_Base{
-    displayRef(opts:DisplayOpts={}):any[]{
+    displayRef(opts:DisplayOpts={}):jsToHtml.ArrayContent{
         var myForm = this.myForm;
         if(myForm.back.pilaDeRetroceso.length){
             var button = html.button({class:'boton-formulario'}, "Volver al "+myForm.back.formId).create();
@@ -338,10 +370,10 @@ export class tipoc_P extends tipoc_Base{
             (this.data.tipovar && this.inTable?this.displayInput():null)
         ));
     }
-    displayChilds(){
-        return [this.childs?html.table({class:"hijos"},Array.prototype.concat.apply([],this.childs.map(function(child){
+    displayChilds():jsToHtml.ArrayContent{
+        return this.childs?[html.table({class:"hijos"},Array.prototype.concat.apply([],this.childs.map(function(child){
             return child.display();
-        }))):null];
+        })))]:[];
     }
     displayBottomElement(){
         return [this.data.salto?html.div({class:"salto"},this.data.salto):null];
@@ -351,7 +383,9 @@ export class tipoc_P extends tipoc_Base{
 export class tipoc_PMATRIZ extends tipoc_Base{
     displayChilds(){
         var nextColumn=2;
-        var foundedColumns={};
+        var foundedColumns:{
+            [key:string]:any
+        }={};
         var foundedColumnsArray=[html.td(),html.td()];
         var dataRow=this.childs.map(function(opcion){
             var actualRow=html.tr([
@@ -360,10 +394,11 @@ export class tipoc_PMATRIZ extends tipoc_Base{
             ]).create();
             opcion.childs.forEach(function(pregunta){
                 var actualPos;
+                var attrs:ExtendedHtmlAttrs={class:'pmatriz_titulo_columna', "casillero-id":pregunta.data.padre + '/' + pregunta.data.casillero};
                 if(!foundedColumns[pregunta.data.nombre]){
                     foundedColumns[pregunta.data.nombre]={
                         ubicacion:nextColumn,
-                        html:html.td({class:'pmatriz_titulo_columna', "casillero-id":pregunta.data.padre + '/' + pregunta.data.casillero}, pregunta.data.nombre)
+                        html:html.td(attrs as jsToHtml.Attr4HTMLElement, pregunta.data.nombre)
                     };
                     foundedColumnsArray.push(foundedColumns[pregunta.data.nombre].html);
                     nextColumn++;
@@ -431,9 +466,9 @@ export class tipoc_OM extends tipoc_Base{
         );
     }
     displayChilds(){
-        return [this.childs?html.table({class:"hijos"},Array.prototype.concat.apply([],this.childs.map(function(child){
+        return this.childs?[html.table({class:"hijos"},Array.prototype.concat.apply([],this.childs.map(function(child){
             return child.display();
-        }))):null];
+        })))]:[];
     }
 }
 
@@ -445,7 +480,7 @@ export class tipoc_BF extends tipoc_Base{
         var conResumen=this.data.con_resumen;
         var nombreFormulario=this.data.casillero;
         var myForm=this.myForm;
-        var createFormButton = function createFormButton(formName:string, buttonDescription:string, myForm:FormStructure, rowHijo:any, UAdelForm:string, iPosicional:number):jsToHtml.ExtendedHTMLButtonElement{
+        var createFormButton = function createFormButton(formName:string, buttonDescription:string, myForm:FormStructure, rowHijo:any, UAdelForm:string, iPosicional:number):HTMLButtonElement{
             var button = html.button({class:'boton-formulario'}, buttonDescription).create();
             button.onclick=function(){
                 loadForm(formName, rowHijo, UAdelForm, iPosicional);
@@ -462,10 +497,10 @@ export class tipoc_BF extends tipoc_Base{
             ));
             window.scrollTo(0,0);
         }
-        var completarTablaResumen = function completarTablaResumen(table: jsToHtml.ExtendedHTMLTableElement, rowHijo: any, navigationButton: jsToHtml.ExtendedHTMLButtonElement){
-            var thArray = [];
+        var completarTablaResumen = function completarTablaResumen(table: HTMLTableElement, rowHijo: any, navigationButton: HTMLButtonElement){
+            var thArray:HTMLTableHeaderCellElement[]=[];
             thArray.push(html.th({class:'col'}, '').create());
-            var tdArray = [];
+            var tdArray:HTMLTableCellElement[]=[];
             tdArray.push(html.td({class:'col'}, [navigationButton]).create());
             var searchInfoCasilleroByUAInStructure = function searchInfoCasilleroByUAInStructure(mainStructure: SurveyStructure, UA:string):InfoCasillero{
                 return Object.values(mainStructure).find(function (infoCasillero){
@@ -474,7 +509,7 @@ export class tipoc_BF extends tipoc_Base{
             }
             Object.keys(rowHijo).forEach(function(key) {
                 if(Array.isArray(rowHijo[key])){
-                    var buttonsArray = [];
+                    var buttonsArray:HTMLButtonElement[] = [];
                     if(rowHijo[key].length){
                         rowHijo[key].forEach(function(child, index){
                             var infoCasillero = searchInfoCasilleroByUAInStructure(myForm.surveyStructure, key)
