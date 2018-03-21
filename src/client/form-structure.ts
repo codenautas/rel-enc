@@ -97,6 +97,13 @@ export type FormStructureState = {
     primeraFalla?:any
 };
 
+export type RowPath = {
+    UAdelForm:string
+    position:number
+}
+
+export type RowPathArray = RowPath[]
+
 export class tipoc_Base{ // clase base de los tipos de casilleros
     childs:tipoc_Base[]=[]
     data:InfoCasilleroRegistro
@@ -211,7 +218,7 @@ export class tipoc_Base{ // clase base de los tipos de casilleros
         return input;
     }
     displayChilds():jsToHtml.ArrayContent{
-        return [html.div({class:"hijos"},[].concat(this.childs.map(function(child){
+        return [html.div({class:"hijos"},Array.prototype.concat.apply([],this.childs.map(function(child){
             return child.display();
         })))];
     }
@@ -511,7 +518,7 @@ export class tipoc_BF extends tipoc_Base{
                 if(Array.isArray(rowHijo[key])){
                     var buttonsArray:HTMLButtonElement[] = [];
                     if(rowHijo[key].length){
-                        rowHijo[key].forEach(function(child, index){
+                        rowHijo[key].forEach(function(child:any, index:number){
                             var infoCasillero = searchInfoCasilleroByUAInStructure(myForm.surveyStructure, key)
                             var button = html.button({class:'boton-formulario'}, infoCasillero.data.casillero + ' ' + (index+1)).create();
                             button.onclick=function(){
@@ -587,7 +594,7 @@ export class tipoc_BF extends tipoc_Base{
             if(conResumen){
                 var table = html.table({class:'resumen'}).create();
             }
-            myForm.depot.row[UAdelForm].forEach(function(rowHijo, iPosicional){
+            myForm.depot.row[UAdelForm].forEach(function(rowHijo:any, iPosicional:number){
                 var button = createFormButton(nombreFormulario, nombreFormulario + ' ' + (iPosicional+1), myForm, rowHijo, UAdelForm, iPosicional);
                 if(conResumen){
                     table = completarTablaResumen(table, rowHijo, button);
@@ -663,22 +670,22 @@ export class FormStructure{
     display(){
         return this.content.display();
     }
-    JsonConcatPath(object1,object2,UAPath){
-        var JsonConcat = function(object1,object2,UAnalisis,posicion){
-            var isArray = function(value) {
+    JsonConcatPath(object1:any,object2:any,UAPath:RowPathArray):any{
+        var JsonConcat = function(object1:any,object2:any,UAnalisis:string,posicion:number){
+            var isArray = function(value:any) {
                 return Object.prototype.toString.call(value) === '[object Array]';
             }
-            var isObject = function(value) {
+            var isObject = function(value:any) {
                 return Object.prototype.toString.call(value) === '[object Object]';
             }
-            var result = {};
+            var result:any = {};
             for (var key in object1) {
                 if (key == UAnalisis && object1.hasOwnProperty(key)) {
                     if (isArray(object1[key])) {
                         result[key] = [];
                         for (var i in object1[key]) {
                             if(isObject(object1[key][i])){
-                                if (i == posicion){
+                                if (i == posicion.toString()){
                                     result[key].push(object2)
                                 }else{
                                     result[key].push(object1[key][i])
@@ -705,11 +712,11 @@ export class FormStructure{
         var UAPathLast = UAPath.slice(UAPath.length-1);
         var object1Porcion = object1;
         for (var keyUA=0; keyUA<UAPath.length-1; keyUA++){
-            var UAnalisis = UAPath[keyUA][0];
-            var posicion = UAPath[keyUA][1];
+            var UAnalisis = UAPath[keyUA].UAdelForm;
+            var posicion = UAPath[keyUA].position;
             object1Porcion = object1Porcion[UAnalisis][posicion];
         };
-        var resultParcial = JsonConcat(object1Porcion,object2,UAPathLast[0][0],UAPathLast[0][1]);
+        var resultParcial = JsonConcat(object1Porcion,object2,UAPathLast[0].UAdelForm,UAPathLast[0].position);
         var UAPathFirst = UAPath.slice(0,UAPath.length-1);
         if(UAPathFirst.length>0){
             return this.JsonConcatPath(object1,resultParcial,UAPathFirst);
@@ -719,13 +726,12 @@ export class FormStructure{
     }
     saveDepot(){
         if(this.depot){
-            var path = []
+            var path:RowPathArray = []
             var datosCaso = this.depot.surveyContent.datosCaso;
             var id = this.depot.surveyContent.id;
-            var datosCasoParcial = datosCaso;
             if(this.back.pilaDeRetroceso.length){
                 for(var i= this.back.pilaDeRetroceso.length -1; i>= 0;i--){
-                    path.push([this.back.pilaDeRetroceso[i].UAdelForm, this.back.pilaDeRetroceso[i].iPosicional]);
+                    path.push({UAdelForm: this.back.pilaDeRetroceso[i].UAdelForm, position:this.back.pilaDeRetroceso[i].iPosicional});
                 }
                 datosCaso = this.JsonConcatPath(datosCaso,this.depot.row,path);
             }else{

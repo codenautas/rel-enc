@@ -58,6 +58,11 @@ export declare type FormStructureState = {
     actual?: any;
     primeraFalla?: any;
 };
+export declare type RowPath = {
+    UAdelForm: string;
+    position: number;
+};
+export declare type RowPathArray = RowPath[];
 export declare class tipoc_Base {
     myForm: FormStructure;
     childs: tipoc_Base[];
@@ -159,7 +164,7 @@ export declare class FormStructure {
     };
     newInstance(infoCasillero: InfoCasillero): tipoc_Base;
     display(): (string | HTMLElement | jsToHtml.HtmlBase)[];
-    JsonConcatPath(object1: any, object2: any, UAPath: any): any;
+    JsonConcatPath(object1: any, object2: any, UAPath: RowPathArray): any;
     saveDepot(): boolean;
     completeCalculatedVars(): void;
     validateDepot(): void;
