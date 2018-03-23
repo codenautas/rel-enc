@@ -68,6 +68,13 @@ export type SurveyStructure={
     [key:string]:InfoCasillero
 }
 
+export type StructureDepot={
+    formId: string
+    row:any
+    surveyContent:any
+    idCaso:string
+}
+
 export type Variable={
     calculada:boolean
     optativa:boolean
@@ -347,11 +354,32 @@ export class tipoc_F extends tipoc_Base{
     displayRef(opts:DisplayOpts={}):jsToHtml.ArrayContent{
         var myForm = this.myForm;
         if(myForm.back.pilaDeRetroceso.length){
-            var button = html.button({class:'boton-formulario'}, "Volver al "+myForm.back.formId).create();
+            var button = html.button({class:'boton-formulario'}, "Volver al "+myForm.back.pilaDeRetroceso[0].formIdParaRetroceder).create();
             button.onclick=function(){
-                var mainForm=document.getElementById('main-form');
+                var mainForm=document.getElementById(myForm.mainFormId);
+                var structureDepot=myForm.depot;
+                structureDepot.formId = myForm.back.pilaDeRetroceso[0].formIdParaRetroceder;
+                structureDepot.row = myForm.back.pilaDeRetroceso[0].datosCasoPadreParaRetroceder;
+                var structure = new FormStructure(myForm.surveyStructure, structureDepot, myForm.mainFormId, myForm.back.pilaDeRetroceso.slice(1));
+                var toDisplay = structure.display();
+                structure.validateDepot();
+                structure.refreshState();
                 mainForm.innerHTML='';
-                mainForm.appendChild(my.displayForm(myForm.surveyStructure,myForm.back.row,myForm.back.formId,myForm.back.pilaDeRetroceso.slice(1)));
+                mainForm.appendChild(toDisplay);
+                /*
+                var mainForm=document.getElementById(myForm.mainFormId);
+                mainForm.innerHTML='';
+                
+                var structure=new FormStructure(myForm.surveyStructure[myForm.back.row,myForm.back.formId]);
+                structure.depot = structure.getSurveyData();
+                structure.depot.formId = myForm.back.formId;
+                structure.depot.row = myForm.back.row;
+                structure.surveyStructure=myForm.surveyStructure;
+                var toDisplay = structure.display();
+                structure.validateDepot();
+                structure.refreshState();
+                mainForm.appendChild(toDisplay);
+                */
                 window.scrollTo(0,0);
             };
         }
@@ -490,18 +518,31 @@ export class tipoc_BF extends tipoc_Base{
         var createFormButton = function createFormButton(formName:string, buttonDescription:string, myForm:FormStructure, rowHijo:any, UAdelForm:string, iPosicional:number):HTMLButtonElement{
             var button = html.button({class:'boton-formulario'}, buttonDescription).create();
             button.onclick=function(){
-                loadForm(formName, rowHijo, UAdelForm, iPosicional);
+                var pilaDeRetroceso = [
+                    {datosCasoPadreParaRetroceder:myForm.depot.row,formIdParaRetroceder:myForm.depot.formId, UAdelForm: UAdelForm, iPosicional: iPosicional}
+                ].concat(myForm.back.pilaDeRetroceso);
+                loadForm(formName, rowHijo, UAdelForm, iPosicional, pilaDeRetroceso);
+                
             };
             return button;
         }
-        var loadForm = function loadForm(formName: string, rowHijo: any, UAdelForm: string, iPosicional: number){
-            var mainForm=document.getElementById('main-form');
+        var loadForm = function loadForm(formName: string, rowHijo: any, UAdelForm: string, iPosicional: number, pilaDeRetroceso:PilaDeRetroceso[]){
+            var mainForm=document.getElementById(myForm.mainFormId);
+            var structureDepot=myForm.depot;
+            structureDepot.formId = formName;
+            structureDepot.row = rowHijo;
+            var structure = new FormStructure(myForm.surveyStructure, structureDepot, myForm.mainFormId, pilaDeRetroceso);
+            var toDisplay = structure.display();
+            structure.validateDepot();
+            structure.refreshState();
             mainForm.innerHTML='';
+            mainForm.appendChild(toDisplay);
+            /*
             mainForm.appendChild(my.displayForm(myForm.surveyStructure,rowHijo,formName,
                 [
                     {datosCasoPadreParaRetroceder:myForm.depot.row,formIdParaRetroceder:myForm.depot.formId, UAdelForm: UAdelForm, iPosicional: iPosicional}
                 ].concat(myForm.back.pilaDeRetroceso)
-            ));
+            ));*/
             window.scrollTo(0,0);
         }
         var completarTablaResumen = function completarTablaResumen(table: HTMLTableElement, rowHijo: any, navigationButton: HTMLButtonElement){
@@ -620,28 +661,17 @@ export class FormStructure{
     elements:{[key:string]:ExtendedHTMLElement}={}
     controlBox:{[key:string]:ExtendedHTMLElement}={}
     back:{
-        pilaDeRetroceso:PilaDeRetroceso[]
+        pilaDeRetroceso?:PilaDeRetroceso[]
         formId?: string,
         row?: any[]
-    }={
-        pilaDeRetroceso:[]
-    }
-    depot:{
-        formId: string
-        row:any
-        surveyContent:any
-        idCaso:string
-    }
-    surveyStructure: SurveyStructure
+    }={}
     esModoIngreso: boolean=true
     formsButtonZone:{[key:string]:ExtendedHTMLElement}={}
     state:FormStructureState={}
-    constructor (formStructureInfo:InfoCasillero){
-        this.content = this.newInstance(formStructureInfo);
-        /*
-        this.showShadow=true;
-        this.formStructure = formStructure;
-        */
+    constructor (public surveyStructure: SurveyStructure, public depot:StructureDepot, public mainFormId:string, pilaDeRetroceso:PilaDeRetroceso[]){
+        this.content = this.newInstance(surveyStructure[depot.formId]);
+        console.log("pila: ", pilaDeRetroceso)
+        this.back.pilaDeRetroceso = pilaDeRetroceso;
     }
     get factory(){
         return {
@@ -668,7 +698,7 @@ export class FormStructure{
         //return newStructure;
     }
     display(){
-        return this.content.display();
+        return html.div({class:'form-content'}, this.content.display()).create()
     }
     JsonConcatPath(object1:any,object2:any,UAPath:RowPathArray):any{
         var JsonConcat = function(object1:any,object2:any,UAnalisis:string,posicion:number){

@@ -32,6 +32,12 @@ export declare type DisplayOpts = {
 export declare type SurveyStructure = {
     [key: string]: InfoCasillero;
 };
+export declare type StructureDepot = {
+    formId: string;
+    row: any;
+    surveyContent: any;
+    idCaso: string;
+};
 export declare type Variable = {
     calculada: boolean;
     optativa: boolean;
@@ -115,6 +121,9 @@ export declare class tipoc_BF extends tipoc_Base {
     adaptOptionInput(groupElement: ExtendedHTMLElement): void;
 }
 export declare class FormStructure {
+    surveyStructure: SurveyStructure;
+    depot: StructureDepot;
+    mainFormId: string;
     static controlRepetidos: {
         [key: string]: any;
     };
@@ -132,23 +141,16 @@ export declare class FormStructure {
         [key: string]: ExtendedHTMLElement;
     };
     back: {
-        pilaDeRetroceso: PilaDeRetroceso[];
+        pilaDeRetroceso?: PilaDeRetroceso[];
         formId?: string;
         row?: any[];
     };
-    depot: {
-        formId: string;
-        row: any;
-        surveyContent: any;
-        idCaso: string;
-    };
-    surveyStructure: SurveyStructure;
     esModoIngreso: boolean;
     formsButtonZone: {
         [key: string]: ExtendedHTMLElement;
     };
     state: FormStructureState;
-    constructor(formStructureInfo: InfoCasillero);
+    constructor(surveyStructure: SurveyStructure, depot: StructureDepot, mainFormId: string, pilaDeRetroceso: PilaDeRetroceso[]);
     readonly factory: {
         Base: typeof tipoc_Base;
         F: typeof tipoc_F;
@@ -163,7 +165,7 @@ export declare class FormStructure {
         BF: typeof tipoc_BF;
     };
     newInstance(infoCasillero: InfoCasillero): tipoc_Base;
-    display(): (string | HTMLElement | jsToHtml.HtmlBase)[];
+    display(): HTMLDivElement;
     JsonConcatPath(object1: any, object2: any, UAPath: RowPathArray): any;
     saveDepot(): boolean;
     completeCalculatedVars(): void;
