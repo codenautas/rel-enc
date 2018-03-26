@@ -150,7 +150,7 @@ export declare class FormStructure {
         [key: string]: ExtendedHTMLElement;
     };
     state: FormStructureState;
-    constructor(surveyStructure: SurveyStructure, depot: StructureDepot, mainFormId: string, pilaDeRetroceso: PilaDeRetroceso[]);
+    constructor(surveyStructure: SurveyStructure, depot: StructureDepot, mainFormId: string, pilaDeRetroceso?: PilaDeRetroceso[]);
     readonly factory: {
         Base: typeof tipoc_Base;
         F: typeof tipoc_F;

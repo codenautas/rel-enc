@@ -563,7 +563,10 @@ export class tipoc_BF extends tipoc_Base{
                             var infoCasillero = searchInfoCasilleroByUAInStructure(myForm.surveyStructure, key)
                             var button = html.button({class:'boton-formulario'}, infoCasillero.data.casillero + ' ' + (index+1)).create();
                             button.onclick=function(){
-                                loadForm(infoCasillero.data.casillero, rowHijo[key][index], key, index);
+                                var pilaDeRetroceso = [
+                                    {datosCasoPadreParaRetroceder:myForm.depot.row,formIdParaRetroceder:myForm.depot.formId, UAdelForm: UAdelForm, iPosicional: index}
+                                ].concat(myForm.back.pilaDeRetroceso);
+                                loadForm(infoCasillero.data.casillero, rowHijo[key][index], key, index, pilaDeRetroceso);
                             };
                             buttonsArray.push(button);
                         })
@@ -626,7 +629,10 @@ export class tipoc_BF extends tipoc_Base{
                         myForm.depot.row[UAdelForm].push(object);
                         myForm.saveDepot();
                         var iPosicional = myForm.depot.row[UAdelForm].length-1;
-                        loadForm(nombreFormulario, myForm.depot.row[UAdelForm][iPosicional], UAdelForm, iPosicional);
+                        var pilaDeRetroceso = [
+                            {datosCasoPadreParaRetroceder:myForm.depot.row,formIdParaRetroceder:myForm.depot.formId, UAdelForm: UAdelForm, iPosicional: iPosicional}
+                        ].concat(myForm.back.pilaDeRetroceso);
+                        loadForm(nombreFormulario, myForm.depot.row[UAdelForm][iPosicional], UAdelForm, iPosicional, pilaDeRetroceso);
                     }).catch(function(error){ 
                         console.log("error: ", error);
                     });
@@ -668,9 +674,8 @@ export class FormStructure{
     esModoIngreso: boolean=true
     formsButtonZone:{[key:string]:ExtendedHTMLElement}={}
     state:FormStructureState={}
-    constructor (public surveyStructure: SurveyStructure, public depot:StructureDepot, public mainFormId:string, pilaDeRetroceso:PilaDeRetroceso[]){
+    constructor (public surveyStructure: SurveyStructure, public depot:StructureDepot, public mainFormId:string, pilaDeRetroceso:PilaDeRetroceso[] = []){
         this.content = this.newInstance(surveyStructure[depot.formId]);
-        console.log("pila: ", pilaDeRetroceso)
         this.back.pilaDeRetroceso = pilaDeRetroceso;
     }
     get factory(){
