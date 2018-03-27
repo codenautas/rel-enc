@@ -570,8 +570,8 @@ export class tipoc_BF extends tipoc_Base{
                             };
                             buttonsArray.push(button);
                         })
-                        thArray.push(html.th({class:'col'}, key).create());
                     }
+                    thArray.push(html.th({class:'col'}, key).create());
                     tdArray.push(html.td({class:'col'}, buttonsArray).create());
                 }else{
                     var infoCasillero = searchInfoCasilleroByUAInStructure(myForm.surveyStructure, UAdelForm);
@@ -621,21 +621,21 @@ export class tipoc_BF extends tipoc_Base{
                 var div = html.div({class:'nuevo-formulario'}, [button]).create();
                 groupElement.appendChild(div);
                 button.onclick=function(){
-                    my.ajax.cargar.preguntas_ua({operativo: sessionStorage.getItem('operativo'), unidad_analisis: UAdelForm}).then(function(result){
-                        var object = {};
-                        result.forEach(function(question){
-                            object[question.id_casillero] = question.unidad_analisis?[]:null;
-                        });
-                        myForm.depot.row[UAdelForm].push(object);
-                        myForm.saveDepot();
-                        var iPosicional = myForm.depot.row[UAdelForm].length-1;
-                        var pilaDeRetroceso = [
-                            {datosCasoPadreParaRetroceder:myForm.depot.row,formIdParaRetroceder:myForm.depot.formId, UAdelForm: UAdelForm, iPosicional: iPosicional}
-                        ].concat(myForm.back.pilaDeRetroceso);
-                        loadForm(nombreFormulario, myForm.depot.row[UAdelForm][iPosicional], UAdelForm, iPosicional, pilaDeRetroceso);
-                    }).catch(function(error){ 
-                        console.log("error: ", error);
+                    var UAsInfo = JSON.parse(sessionStorage.getItem('UAInfo'));
+                    var UAInfo = UAsInfo.find(function(ua){
+                        return ua.unidad_analisis === UAdelForm;
+                    })
+                    var object = {};
+                    UAInfo.preguntas.forEach(function(pregunta){
+                        object[pregunta.id_casillero] = pregunta.es_unidad_analisis?[]:null;
                     });
+                    myForm.depot.row[UAdelForm].push(object);
+                    myForm.saveDepot();
+                    var iPosicional = myForm.depot.row[UAdelForm].length-1;
+                    var pilaDeRetroceso = [
+                        {datosCasoPadreParaRetroceder:myForm.depot.row,formIdParaRetroceder:myForm.depot.formId, UAdelForm: UAdelForm, iPosicional: iPosicional}
+                    ].concat(myForm.back.pilaDeRetroceso);
+                    loadForm(nombreFormulario, myForm.depot.row[UAdelForm][iPosicional], UAdelForm, iPosicional, pilaDeRetroceso);
                 }
             }
             if(conResumen){
