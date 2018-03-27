@@ -69,6 +69,16 @@ export declare type RowPath = {
     position: number;
 };
 export declare type RowPathArray = RowPath[];
+export declare type UAsInfo = {
+    unidad_analisis: string;
+    unidad_analisis_principal: boolean;
+    unidad_analisis_padre: string;
+    preguntas: {
+        orden: number;
+        id_casillero: string;
+        es_unidad_analisis: boolean;
+    }[];
+}[];
 export declare class tipoc_Base {
     myForm: FormStructure;
     childs: tipoc_Base[];
@@ -142,8 +152,6 @@ export declare class FormStructure {
     };
     back: {
         pilaDeRetroceso?: PilaDeRetroceso[];
-        formId?: string;
-        row?: any[];
     };
     esModoIngreso: boolean;
     formsButtonZone: {
@@ -165,6 +173,7 @@ export declare class FormStructure {
         BF: typeof tipoc_BF;
     };
     newInstance(infoCasillero: InfoCasillero): tipoc_Base;
+    addToStack(pilaDeRetroceso: PilaDeRetroceso): void;
     display(): HTMLDivElement;
     JsonConcatPath(object1: any, object2: any, UAPath: RowPathArray): any;
     saveDepot(): boolean;

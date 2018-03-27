@@ -111,6 +111,17 @@ export type RowPath = {
 
 export type RowPathArray = RowPath[]
 
+export type UAsInfo = {
+    unidad_analisis: string
+    unidad_analisis_principal: boolean
+    unidad_analisis_padre: string
+    preguntas: {
+        orden: number
+        id_casillero: string
+        es_unidad_analisis: boolean
+    }[]
+}[]
+
 export class tipoc_Base{ // clase base de los tipos de casilleros
     childs:tipoc_Base[]=[]
     data:InfoCasilleroRegistro
@@ -366,20 +377,6 @@ export class tipoc_F extends tipoc_Base{
                 structure.refreshState();
                 mainForm.innerHTML='';
                 mainForm.appendChild(toDisplay);
-                /*
-                var mainForm=document.getElementById(myForm.mainFormId);
-                mainForm.innerHTML='';
-                
-                var structure=new FormStructure(myForm.surveyStructure[myForm.back.row,myForm.back.formId]);
-                structure.depot = structure.getSurveyData();
-                structure.depot.formId = myForm.back.formId;
-                structure.depot.row = myForm.back.row;
-                structure.surveyStructure=myForm.surveyStructure;
-                var toDisplay = structure.display();
-                structure.validateDepot();
-                structure.refreshState();
-                mainForm.appendChild(toDisplay);
-                */
                 window.scrollTo(0,0);
             };
         }
@@ -509,41 +506,31 @@ export class tipoc_OM extends tipoc_Base{
 
 export class tipoc_BF extends tipoc_Base{
     adaptOptionInput(groupElement:ExtendedHTMLElement){
-        //groupElement.style='border:1px solid red; height:200px; width:400px;';
         var UAdelForm=this.data.unidad_analisis;
         var PuedeAgregarRenglones=true;
         var conResumen=this.data.con_resumen;
         var nombreFormulario=this.data.casillero;
         var myForm=this.myForm;
-        var createFormButton = function createFormButton(formName:string, buttonDescription:string, myForm:FormStructure, rowHijo:any, UAdelForm:string, iPosicional:number):HTMLButtonElement{
-            var button = html.button({class:'boton-formulario'}, buttonDescription).create();
-            button.onclick=function(){
-                var pilaDeRetroceso = [
-                    {datosCasoPadreParaRetroceder:myForm.depot.row,formIdParaRetroceder:myForm.depot.formId, UAdelForm: UAdelForm, iPosicional: iPosicional}
-                ].concat(myForm.back.pilaDeRetroceso);
-                loadForm(formName, rowHijo, UAdelForm, iPosicional, pilaDeRetroceso);
-                
-            };
-            return button;
-        }
-        var loadForm = function loadForm(formName: string, rowHijo: any, UAdelForm: string, iPosicional: number, pilaDeRetroceso:PilaDeRetroceso[]){
+        var loadForm = function loadForm(formName: string, rowHijo: any, UAdelForm:string, iPosicional:number, myForm:FormStructure){
+            myForm.addToStack({datosCasoPadreParaRetroceder:myForm.depot.row,formIdParaRetroceder:myForm.depot.formId, UAdelForm: UAdelForm, iPosicional: iPosicional})
             var mainForm=document.getElementById(myForm.mainFormId);
             var structureDepot=myForm.depot;
             structureDepot.formId = formName;
             structureDepot.row = rowHijo;
-            var structure = new FormStructure(myForm.surveyStructure, structureDepot, myForm.mainFormId, pilaDeRetroceso);
+            var structure = new FormStructure(myForm.surveyStructure, structureDepot, myForm.mainFormId, myForm.back.pilaDeRetroceso);
             var toDisplay = structure.display();
             structure.validateDepot();
             structure.refreshState();
             mainForm.innerHTML='';
             mainForm.appendChild(toDisplay);
-            /*
-            mainForm.appendChild(my.displayForm(myForm.surveyStructure,rowHijo,formName,
-                [
-                    {datosCasoPadreParaRetroceder:myForm.depot.row,formIdParaRetroceder:myForm.depot.formId, UAdelForm: UAdelForm, iPosicional: iPosicional}
-                ].concat(myForm.back.pilaDeRetroceso)
-            ));*/
             window.scrollTo(0,0);
+        }
+        var createFormButton = function createFormButton(formName:string, buttonDescription:string, myForm:FormStructure, rowHijo:any, UAdelForm:string, iPosicional:number):HTMLButtonElement{
+            var button = html.button({class:'boton-formulario'}, buttonDescription).create();
+            button.onclick=function(){
+                loadForm(formName, rowHijo, UAdelForm, iPosicional, myForm);
+            };
+            return button;
         }
         var completarTablaResumen = function completarTablaResumen(table: HTMLTableElement, rowHijo: any, navigationButton: HTMLButtonElement){
             var thArray:HTMLTableHeaderCellElement[]=[];
@@ -563,10 +550,7 @@ export class tipoc_BF extends tipoc_Base{
                             var infoCasillero = searchInfoCasilleroByUAInStructure(myForm.surveyStructure, key)
                             var button = html.button({class:'boton-formulario'}, infoCasillero.data.casillero + ' ' + (index+1)).create();
                             button.onclick=function(){
-                                var pilaDeRetroceso = [
-                                    {datosCasoPadreParaRetroceder:myForm.depot.row,formIdParaRetroceder:myForm.depot.formId, UAdelForm: UAdelForm, iPosicional: index}
-                                ].concat(myForm.back.pilaDeRetroceso);
-                                loadForm(infoCasillero.data.casillero, rowHijo[key][index], key, index, pilaDeRetroceso);
+                                loadForm(infoCasillero.data.casillero, rowHijo[key][index], UAdelForm, index, myForm);
                             };
                             buttonsArray.push(button);
                         })
@@ -621,21 +605,18 @@ export class tipoc_BF extends tipoc_Base{
                 var div = html.div({class:'nuevo-formulario'}, [button]).create();
                 groupElement.appendChild(div);
                 button.onclick=function(){
-                    var UAsInfo = JSON.parse(sessionStorage.getItem('UAInfo'));
+                    var UAsInfo:UAsInfo = JSON.parse(sessionStorage.getItem('UAInfo'));
                     var UAInfo = UAsInfo.find(function(ua){
                         return ua.unidad_analisis === UAdelForm;
                     })
-                    var object = {};
+                    var newRow:any = {};
                     UAInfo.preguntas.forEach(function(pregunta){
-                        object[pregunta.id_casillero] = pregunta.es_unidad_analisis?[]:null;
+                        newRow[pregunta.id_casillero] = pregunta.es_unidad_analisis?[]:null;
                     });
-                    myForm.depot.row[UAdelForm].push(object);
+                    myForm.depot.row[UAdelForm].push(newRow);
                     myForm.saveDepot();
                     var iPosicional = myForm.depot.row[UAdelForm].length-1;
-                    var pilaDeRetroceso = [
-                        {datosCasoPadreParaRetroceder:myForm.depot.row,formIdParaRetroceder:myForm.depot.formId, UAdelForm: UAdelForm, iPosicional: iPosicional}
-                    ].concat(myForm.back.pilaDeRetroceso);
-                    loadForm(nombreFormulario, myForm.depot.row[UAdelForm][iPosicional], UAdelForm, iPosicional, pilaDeRetroceso);
+                    loadForm(nombreFormulario, myForm.depot.row[UAdelForm][iPosicional],UAdelForm, iPosicional,  myForm);
                 }
             }
             if(conResumen){
@@ -668,8 +649,6 @@ export class FormStructure{
     controlBox:{[key:string]:ExtendedHTMLElement}={}
     back:{
         pilaDeRetroceso?:PilaDeRetroceso[]
-        formId?: string,
-        row?: any[]
     }={}
     esModoIngreso: boolean=true
     formsButtonZone:{[key:string]:ExtendedHTMLElement}={}
@@ -701,6 +680,9 @@ export class FormStructure{
         return new this.factory[infoCasillero.data.tipoc](infoCasillero, myForm);
         //newStructure.myForm=myForm;
         //return newStructure;
+    }
+    addToStack(pilaDeRetroceso:PilaDeRetroceso){
+        this.back.pilaDeRetroceso = [pilaDeRetroceso].concat(this.back.pilaDeRetroceso);
     }
     display(){
         return html.div({class:'form-content'}, this.content.display()).create()
