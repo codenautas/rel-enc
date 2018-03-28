@@ -73,6 +73,7 @@ export declare type RowPath = {
 export declare type RowPathArray = RowPath[];
 export declare type UAsInfo = {
     unidad_analisis: string;
+    casillero_formulario: string;
     unidad_analisis_principal: boolean;
     unidad_analisis_padre: string;
     preguntas: {
