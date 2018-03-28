@@ -59,7 +59,9 @@ export declare type PilaDeRetroceso = {
     iPosicional: number;
 };
 export declare type FormStructureState = {
-    estados?: any;
+    estados?: {
+        [key: string]: string;
+    };
     siguientes?: any;
     actual?: any;
     primeraFalla?: any;
@@ -160,17 +162,7 @@ export declare class FormStructure {
     state: FormStructureState;
     constructor(surveyStructure: SurveyStructure, depot: StructureDepot, mainFormId: string, pilaDeRetroceso?: PilaDeRetroceso[]);
     readonly factory: {
-        Base: typeof tipoc_Base;
-        F: typeof tipoc_F;
-        B: typeof tipoc_B;
-        TEXTO: typeof tipoc_TEXTO;
-        MATRIZ: typeof tipoc_MATRIZ;
-        CONS: typeof tipoc_CONS;
-        PMATRIZ: typeof tipoc_PMATRIZ;
-        P: typeof tipoc_P;
-        O: typeof tipoc_O;
-        OM: typeof tipoc_OM;
-        BF: typeof tipoc_BF;
+        [key: string]: typeof tipoc_Base;
     };
     newInstance(infoCasillero: InfoCasillero): tipoc_Base;
     addToStack(pilaDeRetroceso: PilaDeRetroceso): void;
@@ -181,7 +173,7 @@ export declare class FormStructure {
     validateDepot(): void;
     consistencias(): void;
     refreshState(): void;
-    posicionarVentanaVerticalmente(control: any, y: any): any;
-    irAlSiguiente(variableActual: any, scrollScreen: any): void;
+    posicionarVentanaVerticalmente(control: HTMLElement, y: number): any;
+    irAlSiguiente(variableActual: string, scrollScreen: boolean): void;
     completarHora(value: any): any;
 }

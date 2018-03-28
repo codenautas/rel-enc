@@ -98,7 +98,7 @@ export type PilaDeRetroceso = {
 }
 
 export type FormStructureState = {
-    estados?:any
+    estados?:{[key:string]:string}
     siguientes?:any
     actual?:any
     primeraFalla?:any
@@ -485,7 +485,7 @@ export class tipoc_OM extends tipoc_Base{
             html.td({class:'nombre'},this.displayMainText())
         ).concat(
             input,
-            Array.prototype.concat.apply([],this.childs.map(function(child){
+            Array.prototype.concat.apply([],this.childs.map(function(child:tipoc_O){
                 return child.display(true)[0].tds;
             }))
         )).create();
@@ -657,7 +657,7 @@ export class FormStructure{
         this.content = this.newInstance(surveyStructure[depot.formId]);
         this.back.pilaDeRetroceso = pilaDeRetroceso;
     }
-    get factory(){
+    get factory():{[key:string]:typeof tipoc_Base}{
         return {
             Base: tipoc_Base,
             F: tipoc_F,
@@ -760,9 +760,10 @@ export class FormStructure{
         return true;
     }
     completeCalculatedVars(){
+        /*
         var row=this.depot.row;
         var controls=this.controls;
-        var calculatedVars=[];
+        var calculatedVars=[];*/
         return;
         /*if(this.depot.formId=='F1'){
 
@@ -854,11 +855,10 @@ export class FormStructure{
         var rta:FormStructureState={estados:{}, siguientes:{}, actual:null, primeraFalla:null};
         var variableAnterior=null;
         var yaPasoLaActual=false;
-        var estadoAnterior=null;
         var enSaltoAVariable=null; // null si no estoy saltando y el destino del salto si estoy dentro de un salto. 
         var conOmitida=false;
         var miVariable:string=null; // variable actual del ciclo
-        var falla=function(estado){
+        var falla=function(estado:string){
             rta.estados[miVariable]=estado;
             if(!rta.primeraFalla){
                 rta.primeraFalla=miVariable;
@@ -977,9 +977,9 @@ export class FormStructure{
         this.consistencias();
     }
     consistencias(){
+        /*
         var row=this.depot.row;
         var myForm=this;
-        /*
         function consistir(consistencia, ultima_variable, precondicion, postcondicion){
             myForm.elements[consistencia].setAttribute(
                 'status-consistencia',
@@ -1019,7 +1019,7 @@ export class FormStructure{
             }
         });
     }
-    posicionarVentanaVerticalmente(control, y){
+    posicionarVentanaVerticalmente(control:HTMLElement, y:number){
         var rect=my.getRect(control);
         if(rect.top){
             window.scrollTo(0,rect.top-y);
@@ -1027,7 +1027,7 @@ export class FormStructure{
         return rect.top;
     }
 
-    irAlSiguiente(variableActual, scrollScreen){
+    irAlSiguiente(variableActual: string, scrollScreen:boolean){
         var nuevaVariable=this.state.siguientes[variableActual];
         var control=this.controls[nuevaVariable];
         if(scrollScreen){
@@ -1035,7 +1035,7 @@ export class FormStructure{
         }
         control.focus();
     }
-    completarHora(value){
+    completarHora(value:any){
         return value //TODO
     }
 }
