@@ -90,10 +90,10 @@ export declare class tipoc_Base {
     constructor(infoCasillero: InfoCasillero, myForm: FormStructure);
     setChilds(childsInfo: InfoCasillero[]): void;
     displayRef(opts?: DisplayOpts): jsToHtml.ArrayContent;
-    displayInput(direct?: boolean): HTMLSpanElement;
-    displayMainText(opts?: DisplayOpts): (HTMLSpanElement | jsToHtml.HtmlTag<HTMLSpanElement>)[];
-    displayTopElements(special?: boolean): jsToHtml.HtmlTag<HTMLDivElement> | jsToHtml.HtmlTag<HTMLTableRowElement>;
-    displayInputForOptions(): HTMLInputElement;
+    displayInput(direct?: boolean): any;
+    displayMainText(opts?: DisplayOpts): any[];
+    displayTopElements(special?: boolean): any;
+    displayInputForOptions(): any;
     displayChilds(): jsToHtml.ArrayContent;
     displayBottomElement(): jsToHtml.HtmlBase[];
     display(special?: boolean): jsToHtml.ArrayContent;
@@ -115,20 +115,20 @@ export declare class tipoc_TEXTO extends tipoc_Base {
 export declare class tipoc_CONS extends tipoc_Base {
 }
 export declare class tipoc_P extends tipoc_Base {
-    displayTopElements(special?: boolean): jsToHtml.HtmlTag<HTMLDivElement> | jsToHtml.HtmlTag<HTMLTableRowElement>;
+    displayTopElements(special?: boolean): any;
     displayChilds(): jsToHtml.ArrayContent;
-    displayBottomElement(): jsToHtml.HtmlTag<HTMLDivElement>[];
+    displayBottomElement(): any[];
 }
 export declare class tipoc_PMATRIZ extends tipoc_Base {
-    displayChilds(): jsToHtml.HtmlTag<HTMLTableElement>[];
+    displayChilds(): any[];
 }
 export declare class tipoc_O extends tipoc_Base {
     display(special?: boolean): any[];
     displayTopElements(special?: boolean): any;
 }
 export declare class tipoc_OM extends tipoc_Base {
-    display(): HTMLTableRowElement[];
-    displayChilds(): jsToHtml.HtmlTag<HTMLTableElement>[];
+    display(): any[];
+    displayChilds(): any[];
 }
 export declare class tipoc_BF extends tipoc_Base {
     adaptOptionInput(groupElement: ExtendedHTMLElement): void;
@@ -167,7 +167,7 @@ export declare class FormStructure {
     };
     newInstance(infoCasillero: InfoCasillero): tipoc_Base;
     addToStack(pilaDeRetroceso: PilaDeRetroceso): void;
-    display(): HTMLDivElement;
+    display(): any;
     JsonConcatPath(object1: any, object2: any, UAPath: RowPathArray): any;
     saveDepot(): boolean;
     completeCalculatedVars(): void;
