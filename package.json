@@ -11,7 +11,7 @@
   ],
   "dependencies": {
     "@types/node": "~9.4.7",
-    "backend-plus": "~0.20.18",
+    "backend-plus": "~0.20.20",
     "js-to-html": "~1.0.0",
     "types.d.ts": "~0.1.0"
   },
