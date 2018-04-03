@@ -104,13 +104,6 @@ export type FormStructureState = {
     primeraFalla?:any
 };
 
-export type RowPath = {
-    UAdelForm:string
-    position:number
-}
-
-export type RowPathArray = RowPath[]
-
 export type UAsInfo = {
     unidad_analisis: string
     casillero_formulario: string
@@ -710,60 +703,7 @@ export class FormManager{
     display(){
         return html.div({class:'form-content'}, this.content.display()).create()
     }
-    JsonConcatPath(object1:any,object2:any,UAPath:RowPathArray):any{
-        var JsonConcat = function(object1:any,object2:any,UAnalisis:string,posicion:number){
-            var isArray = function(value:any) {
-                return Object.prototype.toString.call(value) === '[object Array]';
-            }
-            var isObject = function(value:any) {
-                return Object.prototype.toString.call(value) === '[object Object]';
-            }
-            var result:any = {};
-            for (var key in object1) {
-                if (key == UAnalisis && object1.hasOwnProperty(key)) {
-                    if (isArray(object1[key])) {
-                        result[key] = [];
-                        for (var i in object1[key]) {
-                            if(isObject(object1[key][i])){
-                                if (i == posicion.toString()){
-                                    result[key].push(object2)
-                                }else{
-                                    result[key].push(object1[key][i])
-                                }
-                            }
-                        } 
-                    }     
-                /*else if (isObject(object1[key])) {
-                    result[key] = {};
-                    for (var key_inner in object1[key]) {
-                        if (object1[key].hasOwnProperty(key_inner) && key_inner == UAnalisis) {
-                            result[key][key_inner] =  object2[key][key_inner];
-                        }
-                    }
-                } else {
-                    result[key] = object1[key];
-                }*/
-                }else if (object1.hasOwnProperty(key)){
-                    result[key] = object1[key];
-                }
-            }
-            return result;
-        }
-        var UAPathLast = UAPath.slice(UAPath.length-1);
-        var object1Porcion = object1;
-        for (var keyUA=0; keyUA<UAPath.length-1; keyUA++){
-            var UAnalisis = UAPath[keyUA].UAdelForm;
-            var posicion = UAPath[keyUA].position;
-            object1Porcion = object1Porcion[UAnalisis][posicion];
-        };
-        var resultParcial = JsonConcat(object1Porcion,object2,UAPathLast[0].UAdelForm,UAPathLast[0].position);
-        var UAPathFirst = UAPath.slice(0,UAPath.length-1);
-        if(UAPathFirst.length>0){
-            return this.JsonConcatPath(object1,resultParcial,UAPathFirst);
-        }else{
-            return resultParcial;
-        }
-    }
+
     saveSurvey():Promise<void>{
         return this.surveyManager.saveSurvey();
     }

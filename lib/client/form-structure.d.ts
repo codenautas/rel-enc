@@ -65,11 +65,6 @@ export declare type FormStructureState = {
     actual?: any;
     primeraFalla?: any;
 };
-export declare type RowPath = {
-    UAdelForm: string;
-    position: number;
-};
-export declare type RowPathArray = RowPath[];
 export declare type UAsInfo = {
     unidad_analisis: string;
     casillero_formulario: string;
@@ -181,7 +176,6 @@ export declare class FormManager {
     removeFirstFromStack(): void;
     stackLength(): number;
     display(): HTMLDivElement;
-    JsonConcatPath(object1: any, object2: any, UAPath: RowPathArray): any;
     saveSurvey(): Promise<void>;
     completeCalculatedVars(): void;
     validateDepot(): void;
