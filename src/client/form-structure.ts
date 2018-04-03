@@ -75,13 +75,6 @@ export type SurveyStructure={
     [key:string]:InfoCasillero
 }
 
-export type StructureDepot={
-    formId: string
-    row:any
-    surveyContent:any
-    idCaso:string
-}
-
 export type Variable={
     calculada:boolean
     optativa:boolean
@@ -347,42 +340,39 @@ export class tipoc_Base{ // clase base de los tipos de casilleros
         if(this.data.despliegue=='calculada'){
             control.disable(true);
         }
-        if(this.myForm.depot){
-            var actualValue=this.myForm.depot.row[this.var_name];
-            if(actualValue === undefined){
-                actualValue=null;
-                this.myForm.depot.row[this.var_name]=null;
-            }
-            this.myForm.controls[this.var_name] = control;
-            control.setTypedValue(actualValue);
-            control.myForm=this.myForm;
-            control.addEventListener('update', function(var_name){
-                return function(){
-                    var value = this.getTypedValue();
-                    this.myForm.depot.row[var_name] = value;
-                    this.myForm.validateDepot();
-                    this.myForm.refreshState();
-                    this.myForm.saveDepot();
-                }
-            }(this.var_name));
+        var actualValue=this.myForm.formData[this.var_name];
+        if(actualValue === undefined){
+            actualValue=null;
+            this.myForm.formData[this.var_name]=null;
         }
+        this.myForm.controls[this.var_name] = control;
+        control.setTypedValue(actualValue);
+        control.myForm=this.myForm;
+        control.addEventListener('update', function(var_name){
+            return function(){
+                var value = this.getTypedValue();
+                this.myForm.formData[var_name] = value;
+                this.myForm.validateDepot();
+                this.myForm.refreshState();
+                this.myForm.saveSurvey();
+            }
+        }(this.var_name));
     }
 }
 
 export class tipoc_F extends tipoc_Base{
     displayRef(opts:DisplayOpts={}):jsToHtml.ArrayContent{
         var myForm = this.myForm;
-        if(myForm.stack.length){
-            var button = html.button({class:'boton-formulario'}, "Volver al "+myForm.stack[0].formIdParaRetroceder).create();
+        if(myForm.stackLength()){
+            var button = html.button({class:'boton-formulario'}, "Volver al "+myForm.getFirstFromStack().formIdParaRetroceder).create();
             button.onclick=function(){
-                var mainForm=document.getElementById(myForm.mainFormId);
-                var structureDepot=myForm.depot;
-                structureDepot.formId = myForm.stack[0].formIdParaRetroceder;
-                structureDepot.row = myForm.stack[0].datosCasoPadreParaRetroceder;
-                var structure = new FormManager(myForm.surveyStructure, structureDepot, myForm.mainFormId, myForm.stack.slice(1));
-                var toDisplay = structure.display();
-                structure.validateDepot();
-                structure.refreshState();
+                var mainForm=document.getElementById(myForm.mainFormHTMLId);
+                var firstFromStack = myForm.getFirstFromStack();
+                myForm.removeFirstFromStack();
+                var formManager = new FormManager(myForm.surveyManager, firstFromStack.formIdParaRetroceder, firstFromStack.datosCasoPadreParaRetroceder, myForm.stack);
+                var toDisplay = formManager.display();
+                formManager.validateDepot();
+                formManager.refreshState();
                 mainForm.innerHTML='';
                 mainForm.appendChild(toDisplay);
                 window.scrollTo(0,0);
@@ -519,16 +509,13 @@ export class tipoc_BF extends tipoc_Base{
         var conResumen=this.data.con_resumen;
         var nombreFormulario=this.data.casillero;
         var myForm=this.myForm;
-        var loadForm = function loadForm(formName: string, rowHijo: any, UAdelForm:string, iPosicional:number, myForm:FormManager){
-            myForm.addToStack({datosCasoPadreParaRetroceder:myForm.depot.row,formIdParaRetroceder:myForm.depot.formId, UAdelForm: UAdelForm, iPosicional: iPosicional})
-            var mainForm=document.getElementById(myForm.mainFormId);
-            var structureDepot=myForm.depot;
-            structureDepot.formId = formName;
-            structureDepot.row = rowHijo;
-            var structure = new FormManager(myForm.surveyStructure, structureDepot, myForm.mainFormId, myForm.stack);
-            var toDisplay = structure.display();
-            structure.validateDepot();
-            structure.refreshState();
+        var loadForm = function loadForm(formId: string, formData: any, UAdelForm:string, iPosicional:number, myForm:FormManager){
+            myForm.addToStack({datosCasoPadreParaRetroceder:myForm.formData,formIdParaRetroceder:myForm.formId, UAdelForm: UAdelForm, iPosicional: iPosicional})
+            var mainForm=document.getElementById(myForm.mainFormHTMLId);
+            var formManager = new FormManager(myForm.surveyManager, formId, formData, myForm.stack);
+            var toDisplay = formManager.display();
+            formManager.validateDepot();
+            formManager.refreshState();
             mainForm.innerHTML='';
             mainForm.appendChild(toDisplay);
             window.scrollTo(0,0);
@@ -540,7 +527,7 @@ export class tipoc_BF extends tipoc_Base{
             };
             return button;
         }
-        var completarTablaResumen = function completarTablaResumen(table: HTMLTableElement, rowHijo: any, navigationButton: HTMLButtonElement){
+        var completarTablaResumen = function completarTablaResumen(table: HTMLTableElement, formData: any, navigationButton: HTMLButtonElement){
             var thArray:HTMLTableHeaderCellElement[]=[];
             thArray.push(html.th({class:'col'}, '').create());
             var tdArray:HTMLTableCellElement[]=[];
@@ -550,15 +537,15 @@ export class tipoc_BF extends tipoc_Base{
                     return infoCasillero.data.unidad_analisis === UA;
                 });
             }
-            Object.keys(rowHijo).forEach(function(key) {
-                if(Array.isArray(rowHijo[key])){
+            Object.keys(formData).forEach(function(key) {
+                if(Array.isArray(formData[key])){
                     var buttonsArray:HTMLButtonElement[] = [];
-                    if(rowHijo[key].length){
-                        rowHijo[key].forEach(function(child:any, index:number){
-                            var infoCasillero = searchInfoCasilleroByUAInStructure(myForm.surveyStructure, key)
+                    if(formData[key].length){
+                        formData[key].forEach(function(child:any, index:number){
+                            var infoCasillero = searchInfoCasilleroByUAInStructure(myForm.surveyManager.surveyMetadata.structure, key)
                             var button = html.button({class:'boton-formulario'}, infoCasillero.data.casillero + ' ' + (index+1)).create();
                             button.onclick=function(){
-                                loadForm(infoCasillero.data.casillero, rowHijo[key][index], UAdelForm, index, myForm);
+                                loadForm(infoCasillero.data.casillero, formData[key][index], UAdelForm, index, myForm);
                             };
                             buttonsArray.push(button);
                         })
@@ -566,7 +553,7 @@ export class tipoc_BF extends tipoc_Base{
                     thArray.push(html.th({class:'col'}, key).create());
                     tdArray.push(html.td({class:'col'}, buttonsArray).create());
                 }else{
-                    var infoCasillero = searchInfoCasilleroByUAInStructure(myForm.surveyStructure, UAdelForm);
+                    var infoCasillero = searchInfoCasilleroByUAInStructure(myForm.surveyManager.surveyMetadata.structure, UAdelForm);
                     var id_casillero = key.toString();
                     var searchCasilleroIntoOtherCasillero = function searchCasilleroIntoOtherCasillero(infoCasillero: InfoCasillero, id_casillero:string): InfoCasillero{
                         for(var i = 0; i < infoCasillero.childs.length; i++) {
@@ -586,12 +573,12 @@ export class tipoc_BF extends tipoc_Base{
                     var respuesta:string;
                     if(infoCasillero.childs.length){
                         var result = infoCasillero.childs.find(function(option){
-                            var id_casillero:string = (rowHijo[key] || '').toString();
+                            var id_casillero:string = (formData[key] || '').toString();
                             return option.data.casillero ===  id_casillero || option.data.casillero === id_casillero.toUpperCase();
                         });
                         respuesta = result?result.data.nombre:'';
                     }else{
-                        respuesta = rowHijo[key]?rowHijo[key].toString():'';
+                        respuesta = formData[key]?formData[key].toString():'';
                     }
                     var pregunta = infoCasillero.data.nombre;
                     thArray.push(html.th({class:'col'}, pregunta).create());
@@ -607,7 +594,7 @@ export class tipoc_BF extends tipoc_Base{
             table.appendChild(tr);
             return table
         }
-        if(myForm.depot.row[UAdelForm]){
+        if(myForm.formData[UAdelForm]){
             if(PuedeAgregarRenglones){
                 var button = html.button({class:'boton-nuevo-formulario'}, "Nuevo " + nombreFormulario).create();
                 var div = html.div({class:'nuevo-formulario'}, [button]).create();
@@ -621,16 +608,16 @@ export class tipoc_BF extends tipoc_Base{
                     UAInfo.preguntas.forEach(function(pregunta){
                         newRow[pregunta.id_casillero] = pregunta.es_unidad_analisis?[]:null;
                     });
-                    myForm.depot.row[UAdelForm].push(newRow);
+                    myForm.formData[UAdelForm].push(newRow);
                     myForm.saveSurvey();
-                    var iPosicional = myForm.depot.row[UAdelForm].length-1;
-                    loadForm(nombreFormulario, myForm.depot.row[UAdelForm][iPosicional],UAdelForm, iPosicional,  myForm);
+                    var iPosicional = myForm.formData[UAdelForm].length-1;
+                    loadForm(nombreFormulario, myForm.formData[UAdelForm][iPosicional],UAdelForm, iPosicional,  myForm);
                 }
             }
             if(conResumen){
                 var table = html.table({class:'resumen'}).create();
             }
-            myForm.depot.row[UAdelForm].forEach(function(rowHijo:any, iPosicional:number){
+            myForm.formData[UAdelForm].forEach(function(rowHijo:any, iPosicional:number){
                 var button = createFormButton(nombreFormulario, nombreFormulario + ' ' + (iPosicional+1), myForm, rowHijo, UAdelForm, iPosicional);
                 if(conResumen){
                     table = completarTablaResumen(table, rowHijo, button);
@@ -642,20 +629,21 @@ export class tipoc_BF extends tipoc_Base{
                 groupElement.appendChild(table);
             }
         }else{ 
-            groupElement.appendChild(createFormButton(nombreFormulario, nombreFormulario, myForm, myForm.depot.row, null, null));
+            groupElement.appendChild(createFormButton(nombreFormulario, nombreFormulario, myForm, myForm.formData, null, null));
         }
         myForm.formsButtonZone[this.data.casillero]=groupElement;
     }    
 }
 
 export type SurveyData=any;
+export type FormData=any;
 export type SurveyId=any;
 
 export class SurveyManager{
     constructor(public surveyMetadata:SurveyMetadata, public surveyId:SurveyId, public surveyData:SurveyData){
     }
-    displayMainForm():Promise<FormManager>{
-        return new FormManager(this, this.surveyMetadata.mainForm, []);
+    async displayMainForm():Promise<FormManager>{
+        return new FormManager(this, this.surveyMetadata.mainForm, this.surveyData, []);
     }
     get surveyStructure(){
         return this.surveyMetadata.structure;
@@ -665,7 +653,7 @@ export class SurveyManager{
             this.surveyMetadata.operative +'_survey_'+this.surveyId, 
             JSON.stringify(this.surveyData)
         );
-        return ;
+        return;
     }
 }
 
@@ -679,7 +667,8 @@ export class FormManager{
     esModoIngreso: boolean=true
     formsButtonZone:{[key:string]:ExtendedHTMLElement}={}
     state:FormStructureState={}
-    constructor (private surveyManager:SurveyManager, formId:string, private stack:NavigationStack[]){
+    mainFormHTMLId = 'main-form'; //Quitar generalizacion
+    constructor (public surveyManager:SurveyManager, public formId:string, public formData:FormData, public stack:NavigationStack[]){
         this.content = this.newInstance(surveyManager.surveyStructure[formId]);
     }
     get factory():{[key:string]:typeof tipoc_Base}{
@@ -706,8 +695,17 @@ export class FormManager{
         //newStructure.myForm=myForm;
         //return newStructure;
     }
+    getFirstFromStack(){
+        return this.stack[0];
+    }
     addToStack(navigationStack:NavigationStack){
         this.stack = [navigationStack].concat(this.stack);
+    }
+    removeFirstFromStack(){
+        this.stack = this.stack.slice(1);
+    }
+    stackLength(){
+        return this.stack.length;
     }
     display(){
         return html.div({class:'form-content'}, this.content.display()).create()
@@ -861,7 +859,7 @@ export class FormManager{
     validateDepot(){
         this.completeCalculatedVars();
         var estructura={variables:this.variables};
-        var depot=this.depot;
+        var formData=this.formData;
         var rta:FormStructureState={estados:{}, siguientes:{}, actual:null, primeraFalla:null};
         var variableAnterior=null;
         var yaPasoLaActual=false;
@@ -876,7 +874,7 @@ export class FormManager{
         };
         for(var miVariable in estructura.variables){
             var revisar_saltos_especiales= false;
-            var valor=depot.row[miVariable];
+            var valor=formData[miVariable];
             if(conOmitida){
                 falla('fuera_de_flujo_por_omitida');
             }else if(enSaltoAVariable && miVariable!=enSaltoAVariable){
@@ -939,7 +937,7 @@ export class FormManager{
                         }
                     }else if(estructura.variables[miVariable].tipo=='hora'){
                         valor=this.completarHora(valor);
-                        depot.row[miVariable]=valor;
+                        formData[miVariable]=valor;
                         var v1_item=document.getElementById('var_'+miVariable) as HTMLInputElement;
                         if(v1_item!=null){
                             v1_item.value=valor;

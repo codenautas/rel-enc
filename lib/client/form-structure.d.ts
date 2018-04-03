@@ -1,6 +1,6 @@
 import * as jsToHtml from "js-to-html";
 export interface ExtendedHTMLElement extends HTMLElement {
-    myForm?: FormStructure;
+    myForm?: FormManager;
     getTypedValue?: () => any;
     setTypedValue?: (value: any, fromUserInteraction?: boolean) => void;
     disable?: (disabled?: boolean) => void;
@@ -29,14 +29,13 @@ export declare type InfoCasillero = {
 export declare type DisplayOpts = {
     forValue?: any;
 };
+export declare type SurveyMetadata = {
+    operative: string;
+    structure: SurveyStructure;
+    mainForm: string;
+};
 export declare type SurveyStructure = {
     [key: string]: InfoCasillero;
-};
-export declare type StructureDepot = {
-    formId: string;
-    row: any;
-    surveyContent: any;
-    idCaso: string;
 };
 export declare type Variable = {
     calculada: boolean;
@@ -52,7 +51,7 @@ export declare type Variable = {
     maximo: string;
     minimo: string;
 };
-export declare type PilaDeRetroceso = {
+export declare type NavigationStack = {
     datosCasoPadreParaRetroceder: any;
     formIdParaRetroceder: string;
     UAdelForm: string;
@@ -83,17 +82,17 @@ export declare type UAsInfo = {
     }[];
 }[];
 export declare class tipoc_Base {
-    myForm: FormStructure;
+    myForm: FormManager;
     childs: tipoc_Base[];
     data: InfoCasilleroRegistro;
     inTable: boolean;
-    constructor(infoCasillero: InfoCasillero, myForm: FormStructure);
+    constructor(infoCasillero: InfoCasillero, myForm: FormManager);
     setChilds(childsInfo: InfoCasillero[]): void;
     displayRef(opts?: DisplayOpts): jsToHtml.ArrayContent;
-    displayInput(direct?: boolean): any;
-    displayMainText(opts?: DisplayOpts): any[];
-    displayTopElements(special?: boolean): any;
-    displayInputForOptions(): any;
+    displayInput(direct?: boolean): HTMLSpanElement;
+    displayMainText(opts?: DisplayOpts): (HTMLSpanElement | jsToHtml.HtmlTag<HTMLSpanElement>)[];
+    displayTopElements(special?: boolean): jsToHtml.HtmlTag<HTMLDivElement> | jsToHtml.HtmlTag<HTMLTableRowElement>;
+    displayInputForOptions(): HTMLInputElement;
     displayChilds(): jsToHtml.ArrayContent;
     displayBottomElement(): jsToHtml.HtmlBase[];
     display(special?: boolean): jsToHtml.ArrayContent;
@@ -115,28 +114,41 @@ export declare class tipoc_TEXTO extends tipoc_Base {
 export declare class tipoc_CONS extends tipoc_Base {
 }
 export declare class tipoc_P extends tipoc_Base {
-    displayTopElements(special?: boolean): any;
+    displayTopElements(special?: boolean): jsToHtml.HtmlTag<HTMLDivElement> | jsToHtml.HtmlTag<HTMLTableRowElement>;
     displayChilds(): jsToHtml.ArrayContent;
-    displayBottomElement(): any[];
+    displayBottomElement(): jsToHtml.HtmlTag<HTMLDivElement>[];
 }
 export declare class tipoc_PMATRIZ extends tipoc_Base {
-    displayChilds(): any[];
+    displayChilds(): jsToHtml.HtmlTag<HTMLTableElement>[];
 }
 export declare class tipoc_O extends tipoc_Base {
     display(special?: boolean): any[];
     displayTopElements(special?: boolean): any;
 }
 export declare class tipoc_OM extends tipoc_Base {
-    display(): any[];
-    displayChilds(): any[];
+    display(): HTMLTableRowElement[];
+    displayChilds(): jsToHtml.HtmlTag<HTMLTableElement>[];
 }
 export declare class tipoc_BF extends tipoc_Base {
     adaptOptionInput(groupElement: ExtendedHTMLElement): void;
 }
-export declare class FormStructure {
-    surveyStructure: SurveyStructure;
-    depot: StructureDepot;
-    mainFormId: string;
+export declare type SurveyData = any;
+export declare type FormData = any;
+export declare type SurveyId = any;
+export declare class SurveyManager {
+    surveyMetadata: SurveyMetadata;
+    surveyId: SurveyId;
+    surveyData: SurveyData;
+    constructor(surveyMetadata: SurveyMetadata, surveyId: SurveyId, surveyData: SurveyData);
+    displayMainForm(): Promise<FormManager>;
+    readonly surveyStructure: SurveyStructure;
+    saveSurvey(): Promise<void>;
+}
+export declare class FormManager {
+    surveyManager: SurveyManager;
+    formId: string;
+    formData: FormData;
+    stack: NavigationStack[];
     static controlRepetidos: {
         [key: string]: any;
     };
@@ -153,23 +165,24 @@ export declare class FormStructure {
     controlBox: {
         [key: string]: ExtendedHTMLElement;
     };
-    back: {
-        pilaDeRetroceso?: PilaDeRetroceso[];
-    };
     esModoIngreso: boolean;
     formsButtonZone: {
         [key: string]: ExtendedHTMLElement;
     };
     state: FormStructureState;
-    constructor(surveyStructure: SurveyStructure, depot: StructureDepot, mainFormId: string, pilaDeRetroceso?: PilaDeRetroceso[]);
+    mainFormHTMLId: string;
+    constructor(surveyManager: SurveyManager, formId: string, formData: FormData, stack: NavigationStack[]);
     readonly factory: {
         [key: string]: typeof tipoc_Base;
     };
     newInstance(infoCasillero: InfoCasillero): tipoc_Base;
-    addToStack(pilaDeRetroceso: PilaDeRetroceso): void;
-    display(): any;
+    getFirstFromStack(): NavigationStack;
+    addToStack(navigationStack: NavigationStack): void;
+    removeFirstFromStack(): void;
+    stackLength(): number;
+    display(): HTMLDivElement;
     JsonConcatPath(object1: any, object2: any, UAPath: RowPathArray): any;
-    saveDepot(): boolean;
+    saveSurvey(): Promise<void>;
     completeCalculatedVars(): void;
     validateDepot(): void;
     consistencias(): void;
