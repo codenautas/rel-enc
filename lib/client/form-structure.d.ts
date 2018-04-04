@@ -53,10 +53,10 @@ export declare type Variable = {
     minimo: string;
 };
 export declare type NavigationStack = {
-    datosCasoPadreParaRetroceder: any;
-    formIdParaRetroceder: string;
-    UAdelForm: string;
-    iPosicional: number;
+    formData: any;
+    formId: string;
+    analysisUnit: string;
+    iPosition: number;
 };
 export declare type FormStructureState = {
     estados?: {

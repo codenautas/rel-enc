@@ -91,10 +91,10 @@ export type Variable={
 }
 
 export type NavigationStack = {
-    datosCasoPadreParaRetroceder: any
-    formIdParaRetroceder: string
-    UAdelForm:string
-    iPosicional:number
+    formData: any
+    formId: string
+    analysisUnit:string
+    iPosition:number
 }
 
 export type FormStructureState = {
@@ -357,12 +357,12 @@ export class tipoc_F extends tipoc_Base{
     displayRef(opts:DisplayOpts={}):jsToHtml.ArrayContent{
         var myForm = this.myForm;
         if(myForm.stackLength()){
-            var button = html.button({class:'boton-formulario'}, "Volver al "+myForm.getFirstFromStack().formIdParaRetroceder).create();
+            var firstFromStack = myForm.getFirstFromStack();
+            var button = html.button({class:'boton-formulario'}, "Volver al "+ firstFromStack.formId).create();
             button.onclick=function(){
                 var mainForm=document.getElementById(myForm.mainFormHTMLId);
-                var firstFromStack = myForm.getFirstFromStack();
                 myForm.removeFirstFromStack();
-                var formManager = new FormManager(myForm.surveyManager, firstFromStack.formIdParaRetroceder, firstFromStack.datosCasoPadreParaRetroceder, myForm.stack);
+                var formManager = new FormManager(myForm.surveyManager, firstFromStack.formId, firstFromStack.formData, myForm.stack);
                 var toDisplay = formManager.display();
                 formManager.validateDepot();
                 formManager.refreshState();
@@ -497,13 +497,13 @@ export class tipoc_OM extends tipoc_Base{
 
 export class tipoc_BF extends tipoc_Base{
     adaptOptionInput(groupElement:ExtendedHTMLElement){
-        var UAdelForm=this.data.unidad_analisis;
+        var formAnalysisUnit=this.data.unidad_analisis;
         var PuedeAgregarRenglones=true;
         var conResumen=this.data.con_resumen;
         var nombreFormulario=this.data.casillero;
         var myForm=this.myForm;
-        var loadForm = function loadForm(formId: string, formData: any, UAdelForm:string, iPosicional:number, myForm:FormManager){
-            myForm.addToStack({datosCasoPadreParaRetroceder:myForm.formData,formIdParaRetroceder:myForm.formId, UAdelForm: UAdelForm, iPosicional: iPosicional})
+        var loadForm = function loadForm(formId: string, formData: any, formAnalysisUnit:string, iPosition:number, myForm:FormManager){
+            myForm.addToStack({formData:myForm.formData,formId:myForm.formId, analysisUnit: formAnalysisUnit, iPosition: iPosition})
             var mainForm=document.getElementById(myForm.mainFormHTMLId);
             var formManager = new FormManager(myForm.surveyManager, formId, formData, myForm.stack);
             var toDisplay = formManager.display();
@@ -513,10 +513,10 @@ export class tipoc_BF extends tipoc_Base{
             mainForm.appendChild(toDisplay);
             window.scrollTo(0,0);
         }
-        var createFormButton = function createFormButton(formName:string, buttonDescription:string, myForm:FormManager, rowHijo:any, UAdelForm:string, iPosicional:number):HTMLButtonElement{
+        var createFormButton = function createFormButton(formName:string, buttonDescription:string, myForm:FormManager, rowHijo:any, formAnalysisUnit:string, iPosition:number):HTMLButtonElement{
             var button = html.button({class:'boton-formulario'}, buttonDescription).create();
             button.onclick=function(){
-                loadForm(formName, rowHijo, UAdelForm, iPosicional, myForm);
+                loadForm(formName, rowHijo, formAnalysisUnit, iPosition, myForm);
             };
             return button;
         }
@@ -534,11 +534,11 @@ export class tipoc_BF extends tipoc_Base{
                 if(Array.isArray(formData[key])){
                     var buttonsArray:HTMLButtonElement[] = [];
                     if(formData[key].length){
-                        formData[key].forEach(function(child:any, index:number){
+                    formData[key].forEach(function(child:any, index:number){
                             var infoCasillero = searchInfoCasilleroByUAInStructure(myForm.surveyManager.surveyMetadata.structure, key)
                             var button = html.button({class:'boton-formulario'}, infoCasillero.data.casillero + ' ' + (index+1)).create();
                             button.onclick=function(){
-                                loadForm(infoCasillero.data.casillero, formData[key][index], UAdelForm, index, myForm);
+                                loadForm(infoCasillero.data.casillero, formData[key][index], formAnalysisUnit, index, myForm);
                             };
                             buttonsArray.push(button);
                         })
@@ -546,7 +546,7 @@ export class tipoc_BF extends tipoc_Base{
                     thArray.push(html.th({class:'col'}, key).create());
                     tdArray.push(html.td({class:'col'}, buttonsArray).create());
                 }else{
-                    var infoCasillero = searchInfoCasilleroByUAInStructure(myForm.surveyManager.surveyMetadata.structure, UAdelForm);
+                    var infoCasillero = searchInfoCasilleroByUAInStructure(myForm.surveyManager.surveyMetadata.structure, formAnalysisUnit);
                     var id_casillero = key.toString();
                     var searchCasilleroIntoOtherCasillero = function searchCasilleroIntoOtherCasillero(infoCasillero: InfoCasillero, id_casillero:string): InfoCasillero{
                         for(var i = 0; i < infoCasillero.childs.length; i++) {
@@ -587,7 +587,7 @@ export class tipoc_BF extends tipoc_Base{
             table.appendChild(tr);
             return table
         }
-        if(myForm.formData[UAdelForm]){
+        if(myForm.formData[formAnalysisUnit]){
             if(PuedeAgregarRenglones){
                 var button = html.button({class:'boton-nuevo-formulario'}, "Nuevo " + nombreFormulario).create();
                 var div = html.div({class:'nuevo-formulario'}, [button]).create();
@@ -595,23 +595,23 @@ export class tipoc_BF extends tipoc_Base{
                 button.onclick=function(){
                     var aUStructures = myForm.surveyManager.surveyMetadata.analysisUnitStructure;
                     var aUStructure = aUStructures.find(function(au){
-                        return au.unidad_analisis === UAdelForm;
+                        return au.unidad_analisis === formAnalysisUnit;
                     })
                     var newRow:any = {};
                     aUStructure.preguntas.forEach(function(pregunta){
                         newRow[pregunta.id_casillero] = pregunta.es_unidad_analisis?[]:null;
                     });
-                    myForm.formData[UAdelForm].push(newRow);
+                    myForm.formData[formAnalysisUnit].push(newRow);
                     myForm.saveSurvey();
-                    var iPosicional = myForm.formData[UAdelForm].length-1;
-                    loadForm(nombreFormulario, myForm.formData[UAdelForm][iPosicional],UAdelForm, iPosicional,  myForm);
+                    var iPosition = myForm.formData[formAnalysisUnit].length-1;
+                    loadForm(nombreFormulario, myForm.formData[formAnalysisUnit][iPosition],formAnalysisUnit, iPosition,  myForm);
                 }
             }
             if(conResumen){
                 var table = html.table({class:'resumen'}).create();
             }
-            myForm.formData[UAdelForm].forEach(function(rowHijo:any, iPosicional:number){
-                var button = createFormButton(nombreFormulario, nombreFormulario + ' ' + (iPosicional+1), myForm, rowHijo, UAdelForm, iPosicional);
+            myForm.formData[formAnalysisUnit].forEach(function(rowHijo:any, iPosition:number){
+                var button = createFormButton(nombreFormulario, nombreFormulario + ' ' + (iPosition+1), myForm, rowHijo, formAnalysisUnit, iPosition);
                 if(conResumen){
                     table = completarTablaResumen(table, rowHijo, button);
                 }else{
