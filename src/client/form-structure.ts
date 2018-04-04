@@ -157,7 +157,7 @@ export class tipoc_Base{ // clase base de los tipos de casilleros
             throw new Error(this.data.tipovar+' no existe como tipo');
         }
         if(formTypes[this.data.tipovar].radio){
-            return;
+            return undefined;
         }
         var control = html.input({
             "tipo-var":this.data.tipovar||'unknown', 
@@ -534,11 +534,11 @@ export class tipoc_BF extends tipoc_Base{
                 if(Array.isArray(formData[key])){
                     var buttonsArray:HTMLButtonElement[] = [];
                     if(formData[key].length){
-                    formData[key].forEach(function(child:any, index:number){
+                        formData[key].forEach(function(childFormData:any, index:number){
                             var infoCasillero = searchInfoCasilleroByUAInStructure(myForm.surveyManager.surveyMetadata.structure, key)
                             var button = html.button({class:'boton-formulario'}, infoCasillero.data.casillero + ' ' + (index+1)).create();
                             button.onclick=function(){
-                                loadForm(infoCasillero.data.casillero, formData[key][index], formAnalysisUnit, index, myForm);
+                                loadForm(infoCasillero.data.casillero, childFormData, formAnalysisUnit, index, myForm);
                             };
                             buttonsArray.push(button);
                         })
@@ -561,6 +561,7 @@ export class tipoc_BF extends tipoc_Base{
                                 return result;
                             }
                         }
+                        return null
                     }
                     var infoCasillero = searchCasilleroIntoOtherCasillero(infoCasillero, id_casillero);
                     var respuesta:string;
