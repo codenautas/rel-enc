@@ -32,6 +32,7 @@ export declare type DisplayOpts = {
 export declare type SurveyMetadata = {
     operative: string;
     structure: SurveyStructure;
+    analysisUnitStructure: analysisUnitStructure[];
     mainForm: string;
 };
 export declare type SurveyStructure = {
@@ -65,7 +66,7 @@ export declare type FormStructureState = {
     actual?: any;
     primeraFalla?: any;
 };
-export declare type UAsInfo = {
+export declare type analysisUnitStructure = {
     unidad_analisis: string;
     casillero_formulario: string;
     unidad_analisis_principal: boolean;
@@ -75,7 +76,7 @@ export declare type UAsInfo = {
         id_casillero: string;
         es_unidad_analisis: boolean;
     }[];
-}[];
+};
 export declare class tipoc_Base {
     myForm: FormManager;
     childs: tipoc_Base[];

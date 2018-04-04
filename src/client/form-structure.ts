@@ -67,7 +67,7 @@ export type DisplayOpts={
 export type SurveyMetadata={
     operative:string
     structure:SurveyStructure
-    // analysisUnit:AnalysisUnit[]
+    analysisUnitStructure:analysisUnitStructure[]
     mainForm:string
 }
 
@@ -104,7 +104,7 @@ export type FormStructureState = {
     primeraFalla?:any
 };
 
-export type UAsInfo = {
+export type analysisUnitStructure = {
     unidad_analisis: string
     casillero_formulario: string
     unidad_analisis_principal: boolean
@@ -114,7 +114,7 @@ export type UAsInfo = {
         id_casillero: string
         es_unidad_analisis: boolean
     }[]
-}[]
+}
 
 export class tipoc_Base{ // clase base de los tipos de casilleros
     childs:tipoc_Base[]=[]
@@ -593,12 +593,12 @@ export class tipoc_BF extends tipoc_Base{
                 var div = html.div({class:'nuevo-formulario'}, [button]).create();
                 groupElement.appendChild(div);
                 button.onclick=function(){
-                    var UAsInfo:UAsInfo = JSON.parse(sessionStorage.getItem('UAInfo'));
-                    var UAInfo = UAsInfo.find(function(ua){
-                        return ua.unidad_analisis === UAdelForm;
+                    var aUStructures = myForm.surveyManager.surveyMetadata.analysisUnitStructure;
+                    var aUStructure = aUStructures.find(function(au){
+                        return au.unidad_analisis === UAdelForm;
                     })
                     var newRow:any = {};
-                    UAInfo.preguntas.forEach(function(pregunta){
+                    aUStructure.preguntas.forEach(function(pregunta){
                         newRow[pregunta.id_casillero] = pregunta.es_unidad_analisis?[]:null;
                     });
                     myForm.formData[UAdelForm].push(newRow);
