@@ -95,6 +95,7 @@ export type NavigationStack = {
     formId: string
     analysisUnit:string
     iPosition:number
+    scrollY: number
 }
 
 export type FormStructureState = {
@@ -355,6 +356,11 @@ export class tipoc_Base{ // clase base de los tipos de casilleros
 
 export class tipoc_F extends tipoc_Base{
     displayRef(opts:DisplayOpts={}):jsToHtml.ArrayContent{
+        var button = this.createBackButton();
+        return Array.prototype.concat.apply(super.displayRef(),button);
+    };
+    
+    createBackButton():HTMLButtonElement[]{
         var myForm = this.myForm;
         if(myForm.stackLength()){
             var firstFromStack = myForm.getFirstFromStack();
@@ -368,11 +374,18 @@ export class tipoc_F extends tipoc_Base{
                 formManager.refreshState();
                 mainForm.innerHTML='';
                 mainForm.appendChild(toDisplay);
-                window.scrollTo(0,0);
+                window.scrollTo(0,firstFromStack.scrollY);
+                
             };
+            return [button];
         }
-        return super.displayRef().concat(button);
+        return [];
     };
+
+    displayBottomElement():jsToHtml.HtmlBase[]{
+        var button = this.createBackButton();
+        return Array.prototype.concat.apply(super.displayBottomElement(),[html.div({},button).create()]);
+    } 
 }
 
 export class tipoc_B extends tipoc_Base{}
@@ -503,7 +516,7 @@ export class tipoc_BF extends tipoc_Base{
         var nombreFormulario=this.data.casillero;
         var myForm=this.myForm;
         var loadForm = function loadForm(formId: string, formData: any, formAnalysisUnit:string, iPosition:number, myForm:FormManager){
-            myForm.addToStack({formData:myForm.formData,formId:myForm.formId, analysisUnit: formAnalysisUnit, iPosition: iPosition})
+            myForm.addToStack({formData:myForm.formData,formId:myForm.formId, analysisUnit: formAnalysisUnit, iPosition: iPosition, scrollY:window.scrollY})
             var mainForm=document.getElementById(myForm.mainFormHTMLId);
             var formManager = new FormManager(myForm.surveyManager, formId, formData, myForm.stack);
             var toDisplay = formManager.display();
@@ -589,6 +602,20 @@ export class tipoc_BF extends tipoc_Base{
             return table
         }
         if(myForm.formData[formAnalysisUnit]){
+            if(conResumen){
+                var table = html.table({class:'resumen'}).create();
+            }
+            myForm.formData[formAnalysisUnit].forEach(function(rowHijo:any, iPosition:number){
+                var button = createFormButton(nombreFormulario, nombreFormulario + ' ' + (iPosition+1), myForm, rowHijo, formAnalysisUnit, iPosition);
+                if(conResumen){
+                    table = completarTablaResumen(table, rowHijo, button);
+                }else{
+                    groupElement.appendChild(button);
+                }
+            });
+            if(conResumen){
+                groupElement.appendChild(table);
+            }
             if(PuedeAgregarRenglones){
                 var button = html.button({class:'boton-nuevo-formulario'}, "Nuevo " + nombreFormulario).create();
                 var div = html.div({class:'nuevo-formulario'}, [button]).create();
@@ -607,20 +634,6 @@ export class tipoc_BF extends tipoc_Base{
                     var iPosition = myForm.formData[formAnalysisUnit].length-1;
                     loadForm(nombreFormulario, myForm.formData[formAnalysisUnit][iPosition],formAnalysisUnit, iPosition,  myForm);
                 }
-            }
-            if(conResumen){
-                var table = html.table({class:'resumen'}).create();
-            }
-            myForm.formData[formAnalysisUnit].forEach(function(rowHijo:any, iPosition:number){
-                var button = createFormButton(nombreFormulario, nombreFormulario + ' ' + (iPosition+1), myForm, rowHijo, formAnalysisUnit, iPosition);
-                if(conResumen){
-                    table = completarTablaResumen(table, rowHijo, button);
-                }else{
-                    groupElement.appendChild(button);
-                }
-            });
-            if(conResumen){
-                groupElement.appendChild(table);
             }
         }else{ 
             groupElement.appendChild(createFormButton(nombreFormulario, nombreFormulario, myForm, myForm.formData, null, null));

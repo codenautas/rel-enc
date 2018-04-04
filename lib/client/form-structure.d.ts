@@ -57,6 +57,7 @@ export declare type NavigationStack = {
     formId: string;
     analysisUnit: string;
     iPosition: number;
+    scrollY: number;
 };
 export declare type FormStructureState = {
     estados?: {
@@ -100,6 +101,8 @@ export declare class tipoc_Base {
 }
 export declare class tipoc_F extends tipoc_Base {
     displayRef(opts?: DisplayOpts): jsToHtml.ArrayContent;
+    createBackButton(): HTMLButtonElement[];
+    displayBottomElement(): jsToHtml.HtmlBase[];
 }
 export declare class tipoc_B extends tipoc_Base {
 }
