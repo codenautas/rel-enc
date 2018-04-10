@@ -53,6 +53,7 @@ export type InfoCasilleroRegistro={
     padre:string
     unidad_analisis: string
     con_resumen: boolean
+    var_name: string
 }
 
 export type InfoCasillero={
@@ -311,6 +312,9 @@ export class tipoc_Base{ // clase base de los tipos de casilleros
     get var_name():string{
         if(!this.data.tipovar){
             throw new Error(this.data.tipovar+' no es un tipo');
+        }
+        if(this.data.var_name){
+            return this.data.var_name;
         }
         if(this.data.tipoc=='OM'){
             return this.data.id_casillero.replace(/\//g,'_').toLowerCase()
