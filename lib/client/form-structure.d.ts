@@ -21,6 +21,7 @@ export declare type InfoCasilleroRegistro = {
     padre: string;
     unidad_analisis: string;
     con_resumen: boolean;
+    var_name: string;
 };
 export declare type InfoCasillero = {
     data: InfoCasilleroRegistro;
