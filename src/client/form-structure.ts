@@ -140,7 +140,7 @@ export class tipoc_Base{ // clase base de los tipos de casilleros
         var opts = opts || {};
         var hasValue=this.data.ver_id!='-';
         var attr:jsToHtml.Attr4HTMLElement={class:hasValue?"casillero":"vacio"};
-        var value = hasValue?this.data.ver_id||this.data.casillero:null;
+        var value = hasValue?this.data.ver_id||this.data.var_name||this.data.casillero:null;
         if(opts.forValue){
             (attr as ExtendedHtmlAttrs)["for-value"]=opts.forValue;
             return [html.label(attr,value)];
@@ -313,13 +313,7 @@ export class tipoc_Base{ // clase base de los tipos de casilleros
         if(!this.data.tipovar){
             throw new Error(this.data.tipovar+' no es un tipo');
         }
-        if(this.data.var_name){
-            return this.data.var_name;
-        }
-        if(this.data.tipoc=='OM'){
-            return this.data.id_casillero.replace(/\//g,'_').toLowerCase()
-        }
-        return this.data.casillero.toLowerCase();
+        return this.data.var_name;
     }
     assignEnterKey(input:HTMLElement){
         var self = this;
@@ -564,28 +558,28 @@ export class tipoc_BF extends tipoc_Base{
                     tdArray.push(html.td({class:'col'}, buttonsArray).create());
                 }else{
                     var infoCasillero = searchInfoCasilleroByUAInStructure(myForm.surveyManager.surveyMetadata.structure, formAnalysisUnit);
-                    var id_casillero = key.toString();
-                    var searchCasilleroIntoOtherCasillero = function searchCasilleroIntoOtherCasillero(infoCasillero: InfoCasillero, id_casillero:string): InfoCasillero{
+                    var var_name = key.toString();
+                    var searchInfoCasilleroByVarName = function searchInfoCasilleroByVarName(infoCasillero: InfoCasillero, var_name:string): InfoCasillero{
                         for(var i = 0; i < infoCasillero.childs.length; i++) {
                             if (typeof infoCasillero.childs[i] !== "function"){
-                                var casillero = infoCasillero.childs[i].data.id_casillero;
-                                if (casillero === id_casillero || casillero === id_casillero.toUpperCase()) {
+                                var aux = infoCasillero.childs[i].data.var_name;
+                                if (aux && (var_name === aux || var_name === aux.toUpperCase())) {
                                     return infoCasillero.childs[i];
                                 }
                             }
-                            var result = searchCasilleroIntoOtherCasillero(infoCasillero.childs[i], id_casillero);
+                            var result = searchInfoCasilleroByVarName(infoCasillero.childs[i], var_name);
                             if(result){
                                 return result;
                             }
                         }
                         return null
                     }
-                    var infoCasillero = searchCasilleroIntoOtherCasillero(infoCasillero, id_casillero);
+                    var infoCasillero = searchInfoCasilleroByVarName(infoCasillero, var_name);
                     var respuesta:string;
                     if(infoCasillero.childs.length){
                         var result = infoCasillero.childs.find(function(option){
-                            var id_casillero:string = (formData[key] || '').toString();
-                            return option.data.casillero ===  id_casillero || option.data.casillero === id_casillero.toUpperCase();
+                            var var_name:string = (formData[key] || '').toString();
+                            return option.data.casillero === var_name || option.data.casillero === var_name.toUpperCase();
                         });
                         respuesta = result?result.data.nombre:'';
                     }else{
