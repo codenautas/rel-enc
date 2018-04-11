@@ -113,7 +113,7 @@ export type analysisUnitStructure = {
     unidad_analisis_padre: string
     preguntas: {
         orden: number
-        id_casillero: string
+        var_name: string
         es_unidad_analisis: boolean
     }[]
 }
@@ -631,7 +631,7 @@ export class tipoc_BF extends tipoc_Base{
                     })
                     var newRow:any = {};
                     aUStructure.preguntas.forEach(function(pregunta){
-                        newRow[pregunta.id_casillero] = pregunta.es_unidad_analisis?[]:null;
+                        newRow[pregunta.var_name] = pregunta.es_unidad_analisis?[]:null;
                     });
                     myForm.formData[formAnalysisUnit].push(newRow);
                     myForm.saveSurvey();

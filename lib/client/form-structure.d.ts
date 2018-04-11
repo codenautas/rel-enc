@@ -75,7 +75,7 @@ export declare type analysisUnitStructure = {
     unidad_analisis_padre: string;
     preguntas: {
         orden: number;
-        id_casillero: string;
+        var_name: string;
         es_unidad_analisis: boolean;
     }[];
 };
