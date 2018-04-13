@@ -140,7 +140,7 @@ export class tipoc_Base{ // clase base de los tipos de casilleros
         var opts = opts || {};
         var hasValue=this.data.ver_id!='-';
         var attr:jsToHtml.Attr4HTMLElement={class:hasValue?"casillero":"vacio"};
-        var value = hasValue?this.data.ver_id||this.data.var_name||this.data.casillero:null;
+        var value = hasValue?this.data.ver_id||this.data.casillero:null;
         if(opts.forValue){
             (attr as ExtendedHtmlAttrs)["for-value"]=opts.forValue;
             return [html.label(attr,value)];
