@@ -4,8 +4,9 @@ import * as jsToHtml from "js-to-html"
 import {html} from "js-to-html"
 import * as likeAr from "like-ar"
 import * as TypedControls from "typed-controls"
-import {alertPromise, miniMenuPromise} from "dialog-promise"
-import {my} from "myOwn"
+import "dialog-promise"
+
+import * as my from "myOwn";
 
 type HtmlAttrs={
     class?:string,
@@ -89,6 +90,8 @@ export type Variable={
     tipo:string
     maximo:string
     minimo:string
+    subordinadaVar:string
+    subordinadaValor:any
 }
 
 export type NavigationStack = {
@@ -175,7 +178,9 @@ export class tipoc_Base{ // clase base de los tipos de casilleros
             tipo:formTypes[this.data.tipovar].validar, // numerico, hora
             maximo:null,
             minimo:null,
-            calculada:this.data.despliegue=='calculada'
+            calculada:this.data.despliegue=='calculada',
+            subordinadaVar:null,
+            subordinadaValor:null
         };
         this.connectControl(control as ExtendedHTMLElement);
         if(direct){
@@ -255,6 +260,10 @@ export class tipoc_Base{ // clase base de los tipos de casilleros
     }       
     createVariable(){
         if((formTypes[this.data.tipovar]||{radio:false}).radio){
+            var opciones:{
+                [key:string]:{salto:null|string}
+            }={};
+            this.childs.forEach(function(child){ opciones[child.data.casillero]={salto:child.data.salto};});
             this.myForm.variables[this.var_name]={
                 optativa:false,
                 salto:(this.data.salto||'').toLowerCase(),
@@ -262,10 +271,10 @@ export class tipoc_Base{ // clase base de los tipos de casilleros
                 tipo:formTypes[this.data.tipovar].validar, // numerico, hora
                 maximo:null,
                 minimo:null,
-                opciones:likeAr(this.childs).map(function(child){
-                    return {salto:(child.data.salto||'').toLowerCase(),};
-                }) as any,
-                calculada:this.data.despliegue=='calculada'
+                opciones:opciones,
+                calculada:this.data.despliegue=='calculada',
+                subordinadaVar:null,
+                subordinadaValor:null
             };
         }
     }
@@ -397,12 +406,16 @@ export class tipoc_P extends tipoc_Base{
         if(this.myForm.esModoIngreso && this.childs.length && this.childs[0].data.tipoc == 'O'){
             input = this.displayInputForOptions();
         }
-        return html[this.inTable?'tr':'div']({class:"propios"},[].concat(
+        var trOrDiv=html[this.inTable?'tr':'div']({class:"propios"},[].concat(
             this.displayRef(),
             this.displayMainText(),
             input,
             (this.data.tipovar && this.inTable?this.displayInput():null)
-        ));
+        )).create();
+        if(this.inTable){
+            this.adaptOptionInput(trOrDiv);
+        }
+        return trOrDiv;
     }
     displayChilds():jsToHtml.ArrayContent{
         return this.childs?[html.table({class:"hijos"},Array.prototype.concat.apply([],this.childs.map(function(child){
@@ -675,7 +688,9 @@ export class FormManager{
     mainFormHTMLId = 'main-form'; //Quitar generalizacion
     constructor (public surveyManager:SurveyManager, public formId:string, public formData:FormData, public stack:NavigationStack[]){
         this.content = this.newInstance(surveyManager.surveyStructure[formId]);
+        this.adaptStructure();
     }
+    adaptStructure():void{}
     get factory():{[key:string]:typeof tipoc_Base}{
         return {
             Base: tipoc_Base,
@@ -851,6 +866,10 @@ export class FormManager{
                 enSaltoAVariable=null; // si estaba en un salto acá se acaba
                 if(estructura.variables[miVariable].calculada){
                     rta.estados[miVariable]='calculada';
+                }else if(estructura.variables[miVariable].subordinadaVar!=null 
+                    && formData[estructura.variables[miVariable].subordinadaVar]!=estructura.variables[miVariable].subordinadaValor
+                ){
+                    rta.estados[miVariable]='salteada';
                 }else if(valor===null){
                     if(!estructura.variables[miVariable].optativa){
                         rta.estados[miVariable]='actual';
@@ -973,8 +992,8 @@ export class FormManager{
         likeAr(rta.estados).forEach(function(estado, variable){
             if(myForm.controlBox[variable]){
                 myForm.controlBox[variable].setAttribute('state-var','ok');
-                if(rta.estados[variable]){
-                    myForm.controlBox[variable].setAttribute('state-var',rta.estados[variable]);
+                if(estado){
+                    myForm.controlBox[variable].setAttribute('state-var',estado);
                 }
             }
         });

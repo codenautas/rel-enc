@@ -1,4 +1,5 @@
 import * as jsToHtml from "js-to-html";
+import "dialog-promise";
 export interface ExtendedHTMLElement extends HTMLElement {
     myForm?: FormManager;
     getTypedValue?: () => any;
@@ -52,6 +53,8 @@ export declare type Variable = {
     tipo: string;
     maximo: string;
     minimo: string;
+    subordinadaVar: string;
+    subordinadaValor: any;
 };
 export declare type NavigationStack = {
     formData: any;
@@ -114,7 +117,7 @@ export declare class tipoc_TEXTO extends tipoc_Base {
 export declare class tipoc_CONS extends tipoc_Base {
 }
 export declare class tipoc_P extends tipoc_Base {
-    displayTopElements(special?: boolean): jsToHtml.HtmlTag<HTMLDivElement> | jsToHtml.HtmlTag<HTMLTableRowElement>;
+    displayTopElements(special?: boolean): HTMLDivElement | HTMLTableRowElement;
     displayChilds(): jsToHtml.ArrayContent;
     displayBottomElement(): jsToHtml.HtmlTag<HTMLDivElement>[];
 }
@@ -172,6 +175,7 @@ export declare class FormManager {
     state: FormStructureState;
     mainFormHTMLId: string;
     constructor(surveyManager: SurveyManager, formId: string, formData: FormData, stack: NavigationStack[]);
+    adaptStructure(): void;
     readonly factory: {
         [key: string]: typeof tipoc_Base;
     };
@@ -186,7 +190,7 @@ export declare class FormManager {
     validateDepot(): void;
     consistencias(): void;
     refreshState(): void;
-    posicionarVentanaVerticalmente(control: HTMLElement, y: number): any;
+    posicionarVentanaVerticalmente(control: HTMLElement, y: number): number;
     irAlSiguiente(variableActual: string, scrollScreen: boolean): void;
     completarHora(value: any): any;
 }
