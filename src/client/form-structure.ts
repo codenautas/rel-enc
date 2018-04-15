@@ -263,7 +263,7 @@ export class tipoc_Base{ // clase base de los tipos de casilleros
             var opciones:{
                 [key:string]:{salto:null|string}
             }={};
-            this.childs.forEach(function(child){ opciones[child.data.casillero]={salto:child.data.salto};});
+            this.childs.forEach(function(child){ opciones[child.data.casillero]={salto:(child.data.salto||'').toLowerCase()};});
             this.myForm.variables[this.var_name]={
                 optativa:false,
                 salto:(this.data.salto||'').toLowerCase(),
@@ -366,7 +366,7 @@ export class tipoc_F extends tipoc_Base{
         var button = this.createBackButton();
         return Array.prototype.concat.apply(super.displayRef(),button);
     };
-    
+
     createBackButton():HTMLButtonElement[]{
         var myForm = this.myForm;
         if(myForm.stackLength()){
@@ -530,6 +530,7 @@ export class tipoc_BF extends tipoc_Base{
             myForm.addToStack({formData:myForm.formData,formId:myForm.formId, analysisUnit: formAnalysisUnit, iPosition: iPosition, scrollY:window.scrollY})
             var mainForm=document.getElementById(myForm.mainFormHTMLId);
             var formManager = new FormManager(myForm.surveyManager, formId, formData, myForm.stack);
+            formManager.iPosition=iPosition
             var toDisplay = formManager.display();
             formManager.validateDepot();
             formManager.refreshState();
@@ -617,7 +618,7 @@ export class tipoc_BF extends tipoc_Base{
                 var table = html.table({class:'resumen'}).create();
             }
             myForm.formData[formAnalysisUnit].forEach(function(rowHijo:any, iPosition:number){
-                var button = createFormButton(nombreFormulario, nombreFormulario + ' ' + (iPosition+1), myForm, rowHijo, formAnalysisUnit, iPosition);
+                var button = createFormButton(nombreFormulario, nombreFormulario + ' ' + (iPosition+1), myForm, rowHijo, formAnalysisUnit, iPosition+1);
                 if(conResumen){
                     table = completarTablaResumen(table, rowHijo, button);
                 }else{
@@ -643,7 +644,7 @@ export class tipoc_BF extends tipoc_Base{
                     myForm.formData[formAnalysisUnit].push(newRow);
                     myForm.saveSurvey();
                     var iPosition = myForm.formData[formAnalysisUnit].length-1;
-                    loadForm(nombreFormulario, myForm.formData[formAnalysisUnit][iPosition],formAnalysisUnit, iPosition,  myForm);
+                    loadForm(nombreFormulario, myForm.formData[formAnalysisUnit][iPosition],formAnalysisUnit, iPosition+1,  myForm);
                 }
             }
         }else{ 
@@ -686,6 +687,7 @@ export class FormManager{
     formsButtonZone:{[key:string]:ExtendedHTMLElement}={}
     state:FormStructureState={}
     mainFormHTMLId = 'main-form'; //Quitar generalizacion
+    iPosition:number=1
     constructor (public surveyManager:SurveyManager, public formId:string, public formData:FormData, public stack:NavigationStack[]){
         this.content = this.newInstance(surveyManager.surveyStructure[formId]);
         this.adaptStructure();

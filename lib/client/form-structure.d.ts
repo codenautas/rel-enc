@@ -174,6 +174,7 @@ export declare class FormManager {
     };
     state: FormStructureState;
     mainFormHTMLId: string;
+    iPosition: number;
     constructor(surveyManager: SurveyManager, formId: string, formData: FormData, stack: NavigationStack[]);
     adaptStructure(): void;
     readonly factory: {
