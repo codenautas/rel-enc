@@ -100,7 +100,7 @@ export declare class tipoc_Base {
     createVariable(): void;
     adaptOptionInput(group: ExtendedHTMLElement): void;
     readonly var_name: string;
-    assignEnterKey(input: HTMLElement): void;
+    assignEnterKeyAndUpdateEvents(input: HTMLElement): void;
     connectControl(control: ExtendedHTMLElement): void;
 }
 export declare class tipoc_F extends tipoc_Base {

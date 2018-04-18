@@ -170,7 +170,6 @@ export class tipoc_Base{ // clase base de los tipos de casilleros
             "type":formTypes[this.data.tipovar].htmlType,
         } as ExtendedHtmlAttrs).create();
         TypedControls.adaptElement(control,formTypes[this.data.tipovar]);
-        this.assignEnterKey(control);
         this.myForm.variables[this.var_name]={
             optativa:this.data.optativo || /_esp/.test(this.var_name),
             salto:(this.data.salto||'').toLowerCase(),
@@ -183,6 +182,7 @@ export class tipoc_Base{ // clase base de los tipos de casilleros
             subordinadaValor:null
         };
         this.connectControl(control as ExtendedHTMLElement);
+        this.assignEnterKeyAndUpdateEvents(control);
         if(direct){
             return control;
         }
@@ -226,13 +226,14 @@ export class tipoc_Base{ // clase base de los tipos de casilleros
         var inputAttr:jsToHtml.Attr4HTMLInputElement={
             class:'typed-control-input-for-options',
             "type":formTypes[this.data.tipovar].htmlType,
+            "enter-clicks":"internal"
         }
         if(formTypes[this.data.tipovar].htmlType == 'number'){
             inputAttr["min"]='1';
             inputAttr["max"]=this.childs.length.toString();
         }
         var input = html.input(inputAttr).create();
-        this.assignEnterKey(input);
+        // this.assignEnterKeyAndUpdateEvents(input);
         // TypedControls.adaptElement(input,formTypes[this.data.tipovar]);
         return input;
     }
@@ -316,6 +317,7 @@ export class tipoc_Base{ // clase base de los tipos de casilleros
             })};
             TypedControls.adaptElement(group, typeInfo);
             this.connectControl(group);
+            this.assignEnterKeyAndUpdateEvents(group);
         }
     }    
     get var_name():string{
@@ -324,7 +326,7 @@ export class tipoc_Base{ // clase base de los tipos de casilleros
         }
         return this.data.var_name;
     }
-    assignEnterKey(input:HTMLElement){
+    assignEnterKeyAndUpdateEvents(input:HTMLElement){
         var self = this;
         var myForm = this.myForm;
         input.setAttribute('special-enter','true');
@@ -335,6 +337,9 @@ export class tipoc_Base{ // clase base de los tipos de casilleros
                 myForm.irAlSiguiente(self.var_name, false);
                 event.preventDefault();
             }
+        },false);
+        input.addEventListener('update',function(event){
+            myForm.irAlSiguiente(self.var_name, false);
         });
     }
     connectControl(control:ExtendedHTMLElement){
