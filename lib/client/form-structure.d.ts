@@ -100,7 +100,7 @@ export declare class tipoc_Base {
     createVariable(): void;
     adaptOptionInput(group: ExtendedHTMLElement): void;
     readonly var_name: string;
-    assignEnterKeyAndUpdateEvents(input: HTMLElement): void;
+    assignEnterKeyAndUpdateEvents(inputEntereable: HTMLElement, typedControlUpdateable: HTMLElement): void;
     connectControl(control: ExtendedHTMLElement): void;
 }
 export declare class tipoc_F extends tipoc_Base {
@@ -191,7 +191,7 @@ export declare class FormManager {
     validateDepot(): void;
     consistencias(): void;
     refreshState(): void;
-    posicionarVentanaVerticalmente(control: HTMLElement, y: number): any;
+    posicionarVentanaVerticalmente(control: HTMLElement, y: number): number;
     irAlSiguiente(variableActual: string, scrollScreen: boolean): void;
     completarHora(value: any): any;
 }

@@ -182,7 +182,7 @@ export class tipoc_Base{ // clase base de los tipos de casilleros
             subordinadaValor:null
         };
         this.connectControl(control as ExtendedHTMLElement);
-        this.assignEnterKeyAndUpdateEvents(control);
+        this.assignEnterKeyAndUpdateEvents(control, control);
         if(direct){
             return control;
         }
@@ -233,7 +233,7 @@ export class tipoc_Base{ // clase base de los tipos de casilleros
             inputAttr["max"]=this.childs.length.toString();
         }
         var input = html.input(inputAttr).create();
-        // this.assignEnterKeyAndUpdateEvents(input);
+        this.assignEnterKeyAndUpdateEvents(input, null);
         // TypedControls.adaptElement(input,formTypes[this.data.tipovar]);
         return input;
     }
@@ -317,7 +317,7 @@ export class tipoc_Base{ // clase base de los tipos de casilleros
             })};
             TypedControls.adaptElement(group, typeInfo);
             this.connectControl(group);
-            this.assignEnterKeyAndUpdateEvents(group);
+            this.assignEnterKeyAndUpdateEvents(null, group);
         }
     }    
     get var_name():string{
@@ -326,21 +326,25 @@ export class tipoc_Base{ // clase base de los tipos de casilleros
         }
         return this.data.var_name;
     }
-    assignEnterKeyAndUpdateEvents(input:HTMLElement){
+    assignEnterKeyAndUpdateEvents(inputEntereable:HTMLElement, typedControlUpdateable:HTMLElement){
         var self = this;
         var myForm = this.myForm;
-        input.setAttribute('special-enter','true');
-        input.setAttribute('enter-clicks','true');
-        input.addEventListener('keypress',function(event){
-            var tecla = event.which;
-            if(tecla==13 && !event.shiftKey && !event.ctrlKey && !event.altKey){
+        if(inputEntereable!=null){
+            inputEntereable.setAttribute('special-enter','true');
+            inputEntereable.setAttribute('enter-clicks','true');
+            inputEntereable.addEventListener('keypress',function(event){
+                var tecla = event.which;
+                if(tecla==13 && !event.shiftKey && !event.ctrlKey && !event.altKey){
+                    myForm.irAlSiguiente(self.var_name, false);
+                    event.preventDefault();
+                }
+            },false);
+        }
+        if(typedControlUpdateable!=null){
+            typedControlUpdateable.addEventListener('update',function(event){
                 myForm.irAlSiguiente(self.var_name, false);
-                event.preventDefault();
-            }
-        },false);
-        input.addEventListener('update',function(event){
-            myForm.irAlSiguiente(self.var_name, false);
-        });
+            });
+        }
     }
     connectControl(control:ExtendedHTMLElement){
         if(this.data.despliegue=='calculada'){
@@ -847,11 +851,13 @@ export class FormManager{
             }
         };
         for(var miVariable in estructura.variables){
+            let apagada:boolean=false;
             var revisar_saltos_especiales= false;
             var valor=formData[miVariable];
             if(conOmitida){
                 falla('fuera_de_flujo_por_omitida');
             }else if(enSaltoAVariable && miVariable!=enSaltoAVariable){
+                apagada=true;
                 // estoy dentro de un salto válido, no debería haber datos ingresados.
                 if(valor===null){
                     rta.estados[miVariable]='salteada';
@@ -868,15 +874,17 @@ export class FormManager{
                     }
                     falla('fuera_de_flujo_por_omitida');
                 }
+            }else if(estructura.variables[miVariable].subordinadaVar!=null 
+                && formData[estructura.variables[miVariable].subordinadaVar]!=estructura.variables[miVariable].subordinadaValor
+            ){
+                apagada=true;
+                rta.estados[miVariable]='salteada';
             }else{
                 // no estoy en una variable salteada y estoy dentro del flujo normal (no hubo omitidas hasta ahora). 
                 enSaltoAVariable=null; // si estaba en un salto acá se acaba
                 if(estructura.variables[miVariable].calculada){
+                    apagada=true;
                     rta.estados[miVariable]='calculada';
-                }else if(estructura.variables[miVariable].subordinadaVar!=null 
-                    && formData[estructura.variables[miVariable].subordinadaVar]!=estructura.variables[miVariable].subordinadaValor
-                ){
-                    rta.estados[miVariable]='salteada';
                 }else if(valor===null){
                     if(!estructura.variables[miVariable].optativa){
                         rta.estados[miVariable]='actual';
@@ -940,7 +948,7 @@ export class FormManager{
             if(rta.estados[miVariable]==null){
                 throw ('No se pudo validar la variable '+miVariable);
             }
-            if(!estructura.variables[miVariable].calculada){
+            if(!apagada){
                 if(variableAnterior && !rta.siguientes[variableAnterior]){
                     rta.siguientes[variableAnterior]=miVariable;
                 }
