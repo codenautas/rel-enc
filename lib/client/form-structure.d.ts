@@ -1,5 +1,13 @@
 import * as jsToHtml from "js-to-html";
 import "dialog-promise";
+export declare var formTypes: {
+    [key: string]: {
+        htmlType: 'text' | 'number';
+        typeName: 'bigint' | 'text';
+        validar: 'texto' | 'opciones' | 'numerico';
+        radio?: boolean;
+    };
+};
 export interface ExtendedHTMLElement extends HTMLElement {
     myForm?: FormManager;
     getTypedValue?: () => any;
@@ -191,7 +199,7 @@ export declare class FormManager {
     validateDepot(): void;
     consistencias(): void;
     refreshState(): void;
-    posicionarVentanaVerticalmente(control: HTMLElement, y: number): number;
+    posicionarVentanaVerticalmente(control: HTMLElement, y: number): any;
     irAlSiguiente(variableActual: string, scrollScreen: boolean): void;
     completarHora(value: any): any;
 }

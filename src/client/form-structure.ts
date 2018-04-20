@@ -20,7 +20,7 @@ interface ExtendedHtmlAttrs extends HtmlAttrs{
     "casillero-id"?:string,
 };
 
-var formTypes:{
+export var formTypes:{
     [key:string]:{htmlType:'text'|'number'  , typeName:'bigint'|'text', validar:'texto'|'opciones'|'numerico', radio?:boolean}
 }={
     si_no_nn: {htmlType:'number', typeName:'bigint' , validar:'opciones', radio:true},
