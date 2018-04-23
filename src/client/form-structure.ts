@@ -5,6 +5,7 @@ import {html} from "js-to-html"
 import * as likeAr from "like-ar"
 import * as TypedControls from "typed-controls"
 import "dialog-promise"
+import {formTypes} from "./form-types";
 
 import * as my from "myOwn";
 
@@ -18,17 +19,6 @@ interface ExtendedHtmlAttrs extends HtmlAttrs{
     "tipo-var"?:string,
     "longitud-var"?:string,
     "casillero-id"?:string,
-};
-
-export var formTypes:{
-    [key:string]:{htmlType:'text'|'number'  , typeName:'bigint'|'text', validar:'texto'|'opciones'|'numerico', radio?:boolean}
-}={
-    si_no_nn: {htmlType:'number', typeName:'bigint' , validar:'opciones', radio:true},
-    si_no   : {htmlType:'number', typeName:'bigint' , validar:'opciones', radio:true},
-    numero  : {htmlType:'number', typeName:'bigint' , validar:'numerico',           },
-    opciones: {htmlType:'number', typeName:'bigint' , validar:'opciones', radio:true},
-    texto   : {htmlType:'text'  , typeName:'text'   , validar:'texto'   ,           },
-    
 };
 
 export interface ExtendedHTMLElement extends HTMLElement{
