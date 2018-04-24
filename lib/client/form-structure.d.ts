@@ -199,7 +199,7 @@ export declare class FormManager {
     validateDepot(): void;
     consistencias(): void;
     refreshState(): void;
-    posicionarVentanaVerticalmente(control: HTMLElement, y: number): any;
+    posicionarVentanaVerticalmente(control: HTMLElement, y: number): number;
     irAlSiguiente(variableActual: string, scrollScreen: boolean): void;
     completarHora(value: any): any;
 }
