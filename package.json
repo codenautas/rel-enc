@@ -1,7 +1,7 @@
 {
   "name": "rel-enc",
   "description": "Relativo a encuestas",
-  "version": "0.1.19",
+  "version": "0.1.20",
   "author": "Codenautas <codenautas@googlegroups.com>",
   "license": "MIT",
   "main": "lib/server/rel-enc.js",
@@ -11,8 +11,8 @@
     "src/client"
   ],
   "dependencies": {
-    "@types/node": "~10.0.0",
-    "backend-plus": "~0.20.38",
+    "@types/node": "~10.0.2",
+    "backend-plus": "~0.20.42",
     "js-to-html": "~1.0.3",
     "types.d.ts": "~0.1.15"
   },
