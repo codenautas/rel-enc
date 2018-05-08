@@ -29,7 +29,7 @@ export declare type InfoCasilleroRegistro = {
     aclaracion: string;
     padre: string;
     unidad_analisis: string;
-    con_resumen: boolean;
+    cantidad_resumen: number;
     var_name: string;
 };
 export declare type InfoCasillero = {
