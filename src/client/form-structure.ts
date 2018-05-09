@@ -5,6 +5,7 @@ import {html} from "js-to-html"
 import * as likeAr from "like-ar"
 import * as TypedControls from "typed-controls"
 import "dialog-promise"
+import * as bestGlobals from "best-globals"
 
 import * as my from "myOwn";
 
@@ -358,6 +359,9 @@ export class tipoc_Base{ // clase base de los tipos de casilleros
             this.myForm.formData[this.var_name]=null;
         }
         this.myForm.controls[this.var_name] = control;
+        if(this.data.tipovar === 'fecha'){
+            actualValue = bestGlobals.date.iso(actualValue);
+        }
         control.setTypedValue(actualValue);
         control.myForm=this.myForm;
         control.addEventListener('update', function(var_name){
@@ -933,7 +937,7 @@ export class FormManager{
                             }
                             formData[miVariable]=valor;
                             rta.estados[miVariable]='valida'; 
-                        }catch(){
+                        }catch(err){
                             falla('fuera_de_rango'); 
                         }
                     }else if(estructura.variables[miVariable].tipo=='hora'){
