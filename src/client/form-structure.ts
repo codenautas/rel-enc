@@ -716,6 +716,7 @@ export class FormManager{
             P: tipoc_P,
             O: tipoc_O,
             OM: tipoc_OM,
+            CP: tipoc_P,
             BF: tipoc_BF
         }
     }
