@@ -3,7 +3,7 @@ import "dialog-promise";
 export declare var formTypes: {
     [key: string]: {
         htmlType: 'text' | 'number';
-        typeName: 'bigint' | 'text';
+        typeName: 'bigint' | 'text' | 'decimal' | 'date' | 'interval';
         validar: 'texto' | 'opciones' | 'numerico';
         radio?: boolean;
     };
@@ -125,7 +125,7 @@ export declare class tipoc_TEXTO extends tipoc_Base {
 export declare class tipoc_CONS extends tipoc_Base {
 }
 export declare class tipoc_P extends tipoc_Base {
-    displayTopElements(special?: boolean): HTMLDivElement | HTMLTableRowElement;
+    displayTopElements(special?: boolean): any;
     displayChilds(): jsToHtml.ArrayContent;
     displayBottomElement(): jsToHtml.HtmlTag<HTMLDivElement>[];
 }

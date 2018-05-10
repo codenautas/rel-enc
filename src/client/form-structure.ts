@@ -22,7 +22,7 @@ interface ExtendedHtmlAttrs extends HtmlAttrs{
 };
 //GENERALIZAR (sacar de BBDD desde meta-enc)
 export var formTypes:{
-    [key:string]:{htmlType:'text'|'number'  , typeName:'bigint'|'text', validar:'texto'|'opciones'|'numerico', radio?:boolean}
+    [key:string]:{htmlType:'text'|'number'  , typeName:'bigint'|'text'|'decimal'|'date'|'interval', validar:'texto'|'opciones'|'numerico', radio?:boolean}
 }={
     si_no_nn: {htmlType:'number', typeName:'bigint'   , validar:'opciones', radio:true},
     si_no   : {htmlType:'number', typeName:'bigint'   , validar:'opciones', radio:true},
@@ -416,7 +416,7 @@ export class tipoc_TEXTO extends tipoc_Base{}
 export class tipoc_CONS extends tipoc_Base{}
 
 export class tipoc_P extends tipoc_Base{
-    displayTopElements(special=false){
+    displayTopElements(special=false):any{
         var input = null;
         if(this.myForm.esModoIngreso && this.childs.length && this.childs[0].data.tipoc == 'O'){
             input = this.displayInputForOptions();
@@ -560,7 +560,7 @@ export class tipoc_BF extends tipoc_Base{
             };
             return button;
         }
-        var completarTablaResumen = function completarTablaResumen(table: HTMLTableElement, formData: any, navigationButton: HTMLButtonElement, maxFieldsCount: integer){
+        var completarTablaResumen = function completarTablaResumen(table: HTMLTableElement, formData: any, navigationButton: HTMLButtonElement, maxFieldsCount: number){
             var thArray:HTMLTableHeaderCellElement[]=[];
             thArray.push(html.th({class:'col'}, '').create());
             var tdArray:HTMLTableCellElement[]=[];
