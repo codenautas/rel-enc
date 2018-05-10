@@ -359,7 +359,7 @@ export class tipoc_Base{ // clase base de los tipos de casilleros
             this.myForm.formData[this.var_name]=null;
         }
         this.myForm.controls[this.var_name] = control;
-        if(this.data.tipovar === 'fecha'){
+        if(this.data.tipovar === 'fecha' && !(actualValue instanceof Date)){
             actualValue = actualValue?bestGlobals.date.iso(actualValue):null;
         }
         control.setTypedValue(actualValue);
