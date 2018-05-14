@@ -539,6 +539,7 @@ export class tipoc_BF extends tipoc_Base{
         var formAnalysisUnit=this.data.unidad_analisis;
         var PuedeAgregarRenglones=true;
         var cantResumen=this.data.cantidad_resumen;
+        var mostrarUnidadesAnalisisEnResumen=true;
         var nombreFormulario=this.data.casillero;
         var myForm=this.myForm;
         var loadForm = function loadForm(formId: string, formData: any, formAnalysisUnit:string, iPosition:number, myForm:FormManager){
@@ -560,34 +561,31 @@ export class tipoc_BF extends tipoc_Base{
             };
             return button;
         }
-        var completarTablaResumen = function completarTablaResumen(table: HTMLTableElement, formData: any, navigationButton: HTMLButtonElement, maxFieldsCount: number){
+        var completarTablaResumen = function completarTablaResumen(table: HTMLTableElement, formData: any, navigationButton: HTMLButtonElement, maxFieldsCount: number, mostrarUnidadesAnalisisEnResumen: boolean, searchFormId: string){
             var thArray:HTMLTableHeaderCellElement[]=[];
             thArray.push(html.th({class:'col'}, '').create());
             var tdArray:HTMLTableCellElement[]=[];
             tdArray.push(html.td({class:'col'}, [navigationButton]).create());
-            var searchInfoCasilleroByUAInStructure = function searchInfoCasilleroByUAInStructure(mainStructure: SurveyStructure, UA:string):InfoCasillero{
-                return Object.values(mainStructure).find(function (infoCasillero){
-                    return infoCasillero.data.unidad_analisis === UA;
-                });
-            }
             Object.keys(formData).forEach(function(key) {
                 if(Array.isArray(formData[key])){
-                    var buttonsArray:HTMLButtonElement[] = [];
-                    if(formData[key].length){
-                        formData[key].forEach(function(childFormData:any, index:number){
-                            var infoCasillero = searchInfoCasilleroByUAInStructure(myForm.surveyManager.surveyMetadata.structure, key)
-                            var button = html.button({class:'boton-formulario'}, infoCasillero.data.casillero + ' ' + (index+1)).create();
-                            button.onclick=function(){
-                                loadForm(infoCasillero.data.casillero, childFormData, formAnalysisUnit, index, myForm);
-                            };
-                            buttonsArray.push(button);
-                        })
+                    if(mostrarUnidadesAnalisisEnResumen){
+                        var buttonsArray:HTMLButtonElement[] = [];
+                        if(formData[key].length){
+                            formData[key].forEach(function(childFormData:any, index:number){
+                                var infoCasillero = myForm.surveyManager.surveyMetadata.structure[searchFormId];
+                                var button = html.button({class:'boton-formulario'}, infoCasillero.data.casillero + ' ' + (index+1)).create();
+                                button.onclick=function(){
+                                    loadForm(infoCasillero.data.casillero, childFormData, formAnalysisUnit, index, myForm);
+                                };
+                                buttonsArray.push(button);
+                            })
+                        }
+                        thArray.push(html.th({class:'col'}, key).create());
+                        tdArray.push(html.td({class:'col'}, buttonsArray).create());
                     }
-                    thArray.push(html.th({class:'col'}, key).create());
-                    tdArray.push(html.td({class:'col'}, buttonsArray).create());
                 }else{
                     if(thArray.filter(function(th:HTMLTableHeaderCellElement){return th.getAttribute('element-type') === 'question'}).length < maxFieldsCount){
-                        var infoCasillero = searchInfoCasilleroByUAInStructure(myForm.surveyManager.surveyMetadata.structure, formAnalysisUnit);
+                        var infoCasillero = myForm.surveyManager.surveyMetadata.structure[searchFormId];
                         var var_name = key.toString();
                         var searchInfoCasilleroByVarName = function searchInfoCasilleroByVarName(infoCasillero: InfoCasillero, var_name:string): InfoCasillero{
                             for(var i = 0; i < infoCasillero.childs.length; i++) {
@@ -605,19 +603,21 @@ export class tipoc_BF extends tipoc_Base{
                             return null
                         }
                         var infoCasillero = searchInfoCasilleroByVarName(infoCasillero, var_name);
-                        var respuesta:string;
-                        if(infoCasillero.childs.length){
-                            var result = infoCasillero.childs.find(function(option){
-                                var var_name:string = (formData[key] || '').toString();
-                                return option.data.casillero === var_name || option.data.casillero === var_name.toUpperCase();
-                            });
-                            respuesta = result?result.data.nombre:'';
-                        }else{
-                            respuesta = formData[key]?formData[key].toString():'';
+                        if(infoCasillero){
+                            var respuesta:string;
+                            if(infoCasillero.childs.length){
+                                var result = infoCasillero.childs.find(function(option){
+                                    var var_name:string = (formData[key] || '').toString();
+                                    return option.data.casillero === var_name || option.data.casillero === var_name.toUpperCase();
+                                });
+                                respuesta = result?result.data.nombre:'';
+                            }else{
+                                respuesta = formData[key]?formData[key].toString():'';
+                            }
+                            var pregunta = infoCasillero.data.nombre;
+                            thArray.push(html.th({class:'col', "element-type": "question"}, pregunta).create());
+                            tdArray.push(html.td({class:'col'}, respuesta).create());
                         }
-                        var pregunta = infoCasillero.data.nombre;
-                        thArray.push(html.th({class:'col', "element-type": "question"}, pregunta).create());
-                        tdArray.push(html.td({class:'col'}, respuesta).create());
                     }
                 }
             });
@@ -630,6 +630,19 @@ export class tipoc_BF extends tipoc_Base{
             table.appendChild(tr);
             return table
         }
+        var casillero = this.data.casillero;
+        var ua = myForm.surveyManager.surveyMetadata.analysisUnitStructure.find(function(analysisUnitStruct){
+            return analysisUnitStruct.casillero_formulario === casillero;
+        });
+        var uaPadre = myForm.surveyManager.surveyMetadata.analysisUnitStructure.find(function(analysisUnitStruct){
+            return analysisUnitStruct.casillero_formulario === myForm.formId;
+        }).unidad_analisis;
+        if(!formAnalysisUnit){
+            if(ua && ua.unidad_analisis_padre === uaPadre){
+                formAnalysisUnit = ua.unidad_analisis;
+                mostrarUnidadesAnalisisEnResumen = false;
+            }
+        }
         if(myForm.formData[formAnalysisUnit]){
             if(cantResumen){
                 var table = html.table({class:'resumen'}).create();
@@ -637,7 +650,7 @@ export class tipoc_BF extends tipoc_Base{
             myForm.formData[formAnalysisUnit].forEach(function(rowHijo:any, iPosition:number){
                 var button = createFormButton(nombreFormulario, nombreFormulario + ' ' + (iPosition+1), myForm, rowHijo, formAnalysisUnit, iPosition+1);
                 if(cantResumen){
-                    table = completarTablaResumen(table, rowHijo, button, cantResumen);
+                    table = completarTablaResumen(table, rowHijo, button, cantResumen, mostrarUnidadesAnalisisEnResumen, casillero);
                 }else{
                     groupElement.appendChild(button);
                 }
@@ -664,8 +677,12 @@ export class tipoc_BF extends tipoc_Base{
                     loadForm(nombreFormulario, myForm.formData[formAnalysisUnit][iPosition],formAnalysisUnit, iPosition+1,  myForm);
                 }
             }
-        }else{ 
-            groupElement.appendChild(createFormButton(nombreFormulario, nombreFormulario, myForm, myForm.formData, null, null));
+        }else{
+            if(ua && ua.unidad_analisis === uaPadre){
+                groupElement.appendChild(createFormButton(nombreFormulario, nombreFormulario, myForm, myForm.formData, null, null));
+            }else{
+                throw new Error('Casillero BF mal definido en ' + this.data.padre);
+            }
         }
         myForm.formsButtonZone[this.data.casillero]=groupElement;
     }    
