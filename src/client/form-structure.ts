@@ -659,10 +659,11 @@ export class tipoc_BF extends tipoc_Base{
                 groupElement.appendChild(table);
             }
             if(PuedeAgregarRenglones){
-                var button = html.button({class:'boton-nuevo-formulario'}, "Nuevo " + nombreFormulario).create();
-                var div = html.div({class:'nuevo-formulario'}, [button]).create();
-                groupElement.appendChild(div);
-                button.onclick=function(){
+                var newButton = html.button({class:'boton-nuevo-formulario'}, "Nuevo " + nombreFormulario).create();
+                newButton.onclick=function(){
+                    myForm.formData[self.data.var_name] = null;
+                    myForm.validateDepot();
+                    myForm.refreshState();
                     var aUStructures = myForm.surveyManager.surveyMetadata.analysisUnitStructure;
                     var aUStructure = aUStructures.find(function(au){
                         return au.unidad_analisis === formAnalysisUnit;
@@ -676,6 +677,15 @@ export class tipoc_BF extends tipoc_Base{
                     var iPosition = myForm.formData[formAnalysisUnit].length-1;
                     loadForm(nombreFormulario, myForm.formData[formAnalysisUnit][iPosition],formAnalysisUnit, iPosition+1,  myForm);
                 }
+                var readybutton = html.button({class:'boton-listo-formulario'}, "Listo ").create();
+                var self = this;
+                readybutton.onclick=function(){
+                    myForm.formData[self.data.var_name] = 1;
+                    myForm.validateDepot();
+                    myForm.refreshState();
+                }
+                var div = html.div({class:'nuevo-formulario'}, [newButton, readybutton]).create();
+                groupElement.appendChild(div);
             }
         }else{
             if(ua && ua.unidad_analisis === uaPadre){
