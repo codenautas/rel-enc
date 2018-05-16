@@ -362,14 +362,21 @@ export class tipoc_Base{ // clase base de los tipos de casilleros
         if(this.data.tipovar === 'fecha' && !(actualValue instanceof Date)){
             actualValue = actualValue?bestGlobals.date.iso(actualValue):null;
         }
+        //REVISAR
         if(this.data.tipovar === 'hora' && !(actualValue instanceof bestGlobals.timeInterval)){
             actualValue = actualValue?bestGlobals.timeInterval(actualValue.timeInterval):null;
         }
+        /*if(this.data.tipovar === 'hora' && !(actualValue instanceof bestGlobals.timeInterval)){
+            actualValue = actualValue?bestGlobals.timeInterval(actualValue):null;
+        }
+        */
         control.setTypedValue(actualValue);
         control.myForm=this.myForm;
         control.addEventListener('update', function(var_name){
             return function(){
                 var value = this.getTypedValue();
+                //REVISAR
+                //value = (value instanceof bestGlobals.TimeInterval)?value.toString():value;
                 this.myForm.formData[var_name] = value;
                 this.myForm.validateDepot();
                 this.myForm.refreshState();
@@ -400,13 +407,11 @@ export class tipoc_F extends tipoc_Base{
                 mainForm.innerHTML='';
                 mainForm.appendChild(toDisplay);
                 window.scrollTo(0,firstFromStack.scrollY);
-                
             };
             return [button];
         }
         return [];
     };
-
     displayBottomElement():jsToHtml.HtmlBase[]{
         var button = this.createBackButton();
         return Array.prototype.concat.apply(super.displayBottomElement(),[html.div({},button).create()]);
@@ -541,21 +546,36 @@ export class tipoc_BF extends tipoc_Base{
     adaptOptionInput(groupElement:ExtendedHTMLElement){
         var formAnalysisUnit=this.data.unidad_analisis;
         var PuedeAgregarRenglones=true;
+        var openInOtherScreen=true;
         var cantResumen=this.data.cantidad_resumen;
         var mostrarUnidadesAnalisisEnResumen=true;
         var nombreFormulario=this.data.casillero;
         var myForm=this.myForm;
+        var despliegueDiv = (html.div({id:'despliegue-rows-'+nombreFormulario},[]).create());
+        groupElement.appendChild(despliegueDiv);
+        var clearAllOpenForms = function clearAllOpenForms(){
+            myForm.formData[formAnalysisUnit].forEach(function(rowHijo:any, iPosition:number){
+                document.getElementById('despliegue-formulario-'+nombreFormulario+'-'+(iPosition+1).toString()).innerHTML='';
+            });
+            groupElement.scrollIntoView();
+        }
         var loadForm = function loadForm(formId: string, formData: any, formAnalysisUnit:string, iPosition:number, myForm:FormManager){
-            myForm.addToStack({formData:myForm.formData,formId:myForm.formId, analysisUnit: formAnalysisUnit, iPosition: iPosition, scrollY:window.scrollY})
-            var mainForm=document.getElementById(myForm.mainFormHTMLId);
+            var formDisplayElement;
+            if(openInOtherScreen){
+                myForm.addToStack({formData:myForm.formData,formId:myForm.formId, analysisUnit: formAnalysisUnit, iPosition: iPosition, scrollY:window.scrollY})
+                formDisplayElement=document.getElementById(myForm.mainFormHTMLId);
+                window.scrollTo(0,0);
+            }else{
+                clearAllOpenForms();
+                formDisplayElement = document.getElementById('despliegue-formulario-'+formId+'-'+(iPosition).toString());
+            }
             var formManager = new FormManager(myForm.surveyManager, formId, formData, myForm.stack);
             formManager.iPosition=iPosition
             var toDisplay = formManager.display();
             formManager.validateDepot();
             formManager.refreshState();
-            mainForm.innerHTML='';
-            mainForm.appendChild(toDisplay);
-            window.scrollTo(0,0);
+            formDisplayElement.innerHTML='';
+            formDisplayElement.appendChild(toDisplay);
         }
         var createFormButton = function createFormButton(formName:string, buttonDescription:string, myForm:FormManager, rowHijo:any, formAnalysisUnit:string, iPosition:number):HTMLButtonElement{
             var button = html.button({class:'boton-formulario'}, buttonDescription).create();
@@ -646,17 +666,28 @@ export class tipoc_BF extends tipoc_Base{
                 mostrarUnidadesAnalisisEnResumen = false;
             }
         }
+        var createRowView = function createRowView(row:any, iPosition: number){
+            var button = createFormButton(nombreFormulario, nombreFormulario + ' ' + (iPosition+1), myForm, row, formAnalysisUnit, iPosition+1);
+            if(cantResumen){
+                table = completarTablaResumen(table, row, button, cantResumen, mostrarUnidadesAnalisisEnResumen, casillero);
+                var tr = html.tr({class:'row'},[
+                    html.td({id:'despliegue-formulario-'+nombreFormulario+'-'+(iPosition+1).toString(), colspan:(cantResumen+1)}).create()
+                ]).create();
+                table.appendChild(tr);
+            }else{
+                var span = html.span({id:'despliegue-row-hijo-'+nombreFormulario+'-'+(iPosition+1).toString()},[
+                    button,
+                    html.span({id:'despliegue-formulario-'+nombreFormulario+'-'+(iPosition+1).toString()},[]).create(),
+                ]).create();
+                despliegueDiv.appendChild(span);
+            }
+        }
         if(myForm.formData[formAnalysisUnit]){
             if(cantResumen){
-                var table = html.table({class:'resumen'}).create();
+                var table = html.table({id:'resumen-'+nombreFormulario, class:'resumen'}).create();
             }
             myForm.formData[formAnalysisUnit].forEach(function(rowHijo:any, iPosition:number){
-                var button = createFormButton(nombreFormulario, nombreFormulario + ' ' + (iPosition+1), myForm, rowHijo, formAnalysisUnit, iPosition+1);
-                if(cantResumen){
-                    table = completarTablaResumen(table, rowHijo, button, cantResumen, mostrarUnidadesAnalisisEnResumen, casillero);
-                }else{
-                    groupElement.appendChild(button);
-                }
+                createRowView(rowHijo, iPosition);
             });
             if(cantResumen){
                 groupElement.appendChild(table);
@@ -678,11 +709,15 @@ export class tipoc_BF extends tipoc_Base{
                     myForm.formData[formAnalysisUnit].push(newRow);
                     myForm.saveSurvey();
                     var iPosition = myForm.formData[formAnalysisUnit].length-1;
+                    createRowView(newRow, iPosition);
                     loadForm(nombreFormulario, myForm.formData[formAnalysisUnit][iPosition],formAnalysisUnit, iPosition+1,  myForm);
                 }
                 var readybutton = html.button({class:'boton-listo-formulario'}, "Listo ").create();
                 var self = this;
                 readybutton.onclick=function(){
+                    if(!openInOtherScreen){
+                        clearAllOpenForms();
+                    }
                     myForm.formData[self.data.var_name] = 1;
                     myForm.validateDepot();
                     myForm.refreshState();
@@ -971,9 +1006,14 @@ export class FormManager{
                             falla('fuera_de_rango'); 
                         }
                     }else if(estructura.variables[miVariable].tipo=='hora'){
+                        //REVISAR
                         if(!(valor instanceof bestGlobals.timeInterval)){
                             valor = valor?bestGlobals.timeInterval(valor.timeInterval):null;
                         }
+                        /*
+                        if(!(valor instanceof bestGlobals.timeInterval)){
+                            valor = valor?bestGlobals.timeInterval(valor.timeInterval).toHms():null;
+                        }*/
                         valor=this.completarHora(valor);
                         formData[miVariable]=valor;
                         var v1_item=document.getElementById('var_'+miVariable) as HTMLInputElement;
