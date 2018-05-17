@@ -4,9 +4,9 @@ import * as jsToHtml from "js-to-html"
 import {html} from "js-to-html"
 import * as likeAr from "like-ar"
 import * as TypedControls from "typed-controls"
+import * as TypeStore from "type-store"
 import "dialog-promise"
 import * as bestGlobals from "best-globals"
-
 import * as my from "myOwn";
 
 type HtmlAttrs={
@@ -364,19 +364,15 @@ export class tipoc_Base{ // clase base de los tipos de casilleros
         }
         //REVISAR
         if(this.data.tipovar === 'hora' && !(actualValue instanceof bestGlobals.timeInterval)){
-            actualValue = actualValue?bestGlobals.timeInterval(actualValue.timeInterval):null;
+            actualValue = TypeStore.typerFrom(formTypes[this.data.tipovar]).fromString(actualValue);
         }
-        /*if(this.data.tipovar === 'hora' && !(actualValue instanceof bestGlobals.timeInterval)){
-            actualValue = actualValue?bestGlobals.timeInterval(actualValue):null;
-        }
-        */
         control.setTypedValue(actualValue);
         control.myForm=this.myForm;
         control.addEventListener('update', function(var_name){
             return function(){
                 var value = this.getTypedValue();
                 //REVISAR
-                //value = (value instanceof bestGlobals.TimeInterval)?value.toString():value;
+                value = TypeStore.typerFrom(this.controledType.typeInfo).toJson(value);
                 this.myForm.formData[var_name] = value;
                 this.myForm.validateDepot();
                 this.myForm.refreshState();
@@ -1008,12 +1004,8 @@ export class FormManager{
                     }else if(estructura.variables[miVariable].tipo=='hora'){
                         //REVISAR
                         if(!(valor instanceof bestGlobals.timeInterval)){
-                            valor = valor?bestGlobals.timeInterval(valor.timeInterval):null;
+                            valor = TypeStore.typerFrom(formTypes['hora']).fromString(valor);
                         }
-                        /*
-                        if(!(valor instanceof bestGlobals.timeInterval)){
-                            valor = valor?bestGlobals.timeInterval(valor.timeInterval).toHms():null;
-                        }*/
                         valor=this.completarHora(valor);
                         formData[miVariable]=valor;
                         var v1_item=document.getElementById('var_'+miVariable) as HTMLInputElement;
