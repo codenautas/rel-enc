@@ -666,14 +666,14 @@ export class tipoc_BF extends tipoc_Base{
             var button = createFormButton(nombreFormulario, nombreFormulario + ' ' + (iPosition+1), myForm, row, formAnalysisUnit, iPosition+1);
             if(cantResumen){
                 table = completarTablaResumen(table, row, button, cantResumen, mostrarUnidadesAnalisisEnResumen, casillero);
-                var tr = html.tr({class:'row'},[
-                    html.td({id:'despliegue-formulario-'+nombreFormulario+'-'+(iPosition+1).toString(), colspan:(cantResumen+1)}).create()
-                ]).create();
+                var trChild:HTMLTableDataCellElement = openInOtherScreen?null:html.td({id:'despliegue-formulario-'+nombreFormulario+'-'+(iPosition+1).toString(), colspan:(cantResumen+1)}).create();
+                var tr = html.tr({class:'row'},[trChild]).create();
                 table.appendChild(tr);
             }else{
+                var spanChild:HTMLSpanElement = openInOtherScreen?null:html.span({id:'despliegue-formulario-'+nombreFormulario+'-'+(iPosition+1).toString()},[]).create();
                 var span = html.span({id:'despliegue-row-hijo-'+nombreFormulario+'-'+(iPosition+1).toString()},[
                     button,
-                    html.span({id:'despliegue-formulario-'+nombreFormulario+'-'+(iPosition+1).toString()},[]).create(),
+                    spanChild,
                 ]).create();
                 despliegueDiv.appendChild(span);
             }
