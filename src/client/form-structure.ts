@@ -364,7 +364,7 @@ export class tipoc_Base{ // clase base de los tipos de casilleros
         }
         //REVISAR
         if(this.data.tipovar === 'hora' && !(actualValue instanceof bestGlobals.timeInterval)){
-            actualValue = TypeStore.typerFrom(formTypes[this.data.tipovar]).fromString(actualValue);
+            actualValue = actualValue?TypeStore.typerFrom(formTypes[this.data.tipovar]).fromString(actualValue):null;
         }
         control.setTypedValue(actualValue);
         control.myForm=this.myForm;
@@ -1004,7 +1004,7 @@ export class FormManager{
                     }else if(estructura.variables[miVariable].tipo=='hora'){
                         //REVISAR
                         if(!(valor instanceof bestGlobals.timeInterval)){
-                            valor = TypeStore.typerFrom(formTypes['hora']).fromString(valor);
+                            valor = valor?TypeStore.typerFrom(formTypes['hora']).fromString(valor):null;
                         }
                         valor=this.completarHora(valor);
                         formData[miVariable]=valor;

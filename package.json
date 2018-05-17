@@ -12,7 +12,7 @@
   ],
   "dependencies": {
     "@types/node": "~10.1.1",
-    "backend-plus": "~0.20.56",
+    "backend-plus": "~0.20.57",
     "js-to-html": "~1.0.3",
     "types.d.ts": "~0.1.16"
   },
