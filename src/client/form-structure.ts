@@ -1,5 +1,7 @@
 "use strict";
 
+var OPENINOTHERSCREEN=false;
+
 import * as jsToHtml from "js-to-html"
 import {html} from "js-to-html"
 import * as likeAr from "like-ar"
@@ -359,20 +361,15 @@ export class tipoc_Base{ // clase base de los tipos de casilleros
             this.myForm.formData[this.var_name]=null;
         }
         this.myForm.controls[this.var_name] = control;
-        if(this.data.tipovar === 'fecha' && !(actualValue instanceof Date)){
-            actualValue = actualValue?bestGlobals.date.iso(actualValue):null;
-        }
-        //REVISAR
-        if(this.data.tipovar === 'hora' && !(actualValue instanceof bestGlobals.timeInterval)){
-            actualValue = actualValue?TypeStore.typerFrom(formTypes[this.data.tipovar]).fromString(actualValue):null;
+        if(!control.controledType.isDataValid(actualValue)){
+            actualValue = control.controledType.fromPlainJson(actualValue);
         }
         control.setTypedValue(actualValue);
         control.myForm=this.myForm;
         control.addEventListener('update', function(var_name){
             return function(){
                 var value = this.getTypedValue();
-                //REVISAR
-                value = TypeStore.typerFrom(this.controledType.typeInfo).toJson(value);
+                value = control.controledType.toPlainJson(value);
                 this.myForm.formData[var_name] = value;
                 this.myForm.validateDepot();
                 this.myForm.refreshState();
@@ -542,7 +539,7 @@ export class tipoc_BF extends tipoc_Base{
     adaptOptionInput(groupElement:ExtendedHTMLElement){
         var formAnalysisUnit=this.data.unidad_analisis;
         var PuedeAgregarRenglones=true;
-        var openInOtherScreen=true;
+        var openInOtherScreen=OPENINOTHERSCREEN;
         var cantResumen=this.data.cantidad_resumen;
         var mostrarUnidadesAnalisisEnResumen=true;
         var nombreFormulario=this.data.casillero;
@@ -991,32 +988,36 @@ export class FormManager{
                         }else{
                             rta.estados[miVariable]='valida'; 
                         }
-                    }else if(estructura.variables[miVariable].tipo=='fecha'){
-                        try{
-                            if(!(valor instanceof Date)){
-                                valor=bestGlobals.date.iso(valor);
-                            }
-                            formData[miVariable]=valor;
-                            rta.estados[miVariable]='valida'; 
-                        }catch(err){
-                            falla('fuera_de_rango'); 
-                        }
-                    }else if(estructura.variables[miVariable].tipo=='hora'){
-                        //REVISAR
-                        if(!(valor instanceof bestGlobals.timeInterval)){
-                            valor = valor?TypeStore.typerFrom(formTypes['hora']).fromString(valor):null;
-                        }
-                        valor=this.completarHora(valor);
-                        formData[miVariable]=valor;
-                        var v1_item=document.getElementById('var_'+miVariable) as HTMLInputElement;
-                        if(v1_item!=null){
-                            v1_item.value=valor;
-                        }
-                        if(!(/^(1[3-9]|2[0-2])(:[0-5][0-9])?$/.test(valor))){
-                            falla('fuera_de_rango'); 
-                        }else{
-                            rta.estados[miVariable]='valida'; 
-                        }
+                    //}else if(!tiposComunes[estructura.variables[miVariable].tipo]){
+                    //    if(!control.controledType.isDataValid(actualValue)){
+                    //        actualValue = control.controledType.fromPlainJson(actualValue);
+                    //    }
+                    //}else if(estructura.variables[miVariable].tipo=='fecha'){
+                    //    try{
+                    //        if(!(valor instanceof Date)){
+                    //            valor=bestGlobals.date.iso(valor);
+                    //        }
+                    //        formData[miVariable]=valor;
+                    //        rta.estados[miVariable]='valida'; 
+                    //    }catch(err){
+                    //        falla('fuera_de_rango'); 
+                    //    }
+                    //}else if(estructura.variables[miVariable].tipo=='hora'){
+                    //    //REVISAR
+                    //    if(!(valor instanceof bestGlobals.timeInterval)){
+                    //        valor = valor?TypeStore.typerFrom(formTypes['hora']).fromString(valor):null;
+                    //    }
+                    //    valor=this.completarHora(valor);
+                    //    formData[miVariable]=valor;
+                    //    var v1_item=document.getElementById('var_'+miVariable) as HTMLInputElement;
+                    //    if(v1_item!=null){
+                    //        v1_item.value=valor;
+                    //    }
+                    //    if(!(/^(1[3-9]|2[0-2])(:[0-5][0-9])?$/.test(valor))){
+                    //        falla('fuera_de_rango'); 
+                    //    }else{
+                    //        rta.estados[miVariable]='valida'; 
+                    //    }
                     }else{
                         // las de texto o de ingreso libre son válidas si no se invalidaron antes por problemas de flujo
                         rta.estados[miVariable]='valida'; 
