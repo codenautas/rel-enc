@@ -373,6 +373,10 @@ export class tipoc_Base{ // clase base de los tipos de casilleros
                 var value = this.getTypedValue();
                 //REVISAR
                 value = TypeStore.typerFrom(this.controledType.typeInfo).toJson(value);
+                var resumenRowElement = document.getElementById('resumen-'+this.myForm.formId+'-'+this.myForm.iPosition.toString()+'-'+var_name);
+                if(resumenRowElement){
+                    resumenRowElement.textContent=this.controledType.toLocalString(this.getTypedValue());
+                }
                 this.myForm.formData[var_name] = value;
                 this.myForm.validateDepot();
                 this.myForm.refreshState();
@@ -542,7 +546,7 @@ export class tipoc_BF extends tipoc_Base{
     adaptOptionInput(groupElement:ExtendedHTMLElement){
         var formAnalysisUnit=this.data.unidad_analisis;
         var PuedeAgregarRenglones=true;
-        var openInOtherScreen=true;
+        var openInOtherScreen=false;
         var cantResumen=this.data.cantidad_resumen;
         var mostrarUnidadesAnalisisEnResumen=true;
         var nombreFormulario=this.data.casillero;
@@ -580,7 +584,7 @@ export class tipoc_BF extends tipoc_Base{
             };
             return button;
         }
-        var completarTablaResumen = function completarTablaResumen(table: HTMLTableElement, formData: any, navigationButton: HTMLButtonElement, maxFieldsCount: number, mostrarUnidadesAnalisisEnResumen: boolean, searchFormId: string){
+        var completarTablaResumen = function completarTablaResumen(table: HTMLTableElement, formData: any, navigationButton: HTMLButtonElement, maxFieldsCount: number, mostrarUnidadesAnalisisEnResumen: boolean, formId: string, iPosition:number){
             var thArray:HTMLTableHeaderCellElement[]=[];
             thArray.push(html.th({class:'col'}, '').create());
             var tdArray:HTMLTableCellElement[]=[];
@@ -591,7 +595,7 @@ export class tipoc_BF extends tipoc_Base{
                         var buttonsArray:HTMLButtonElement[] = [];
                         if(formData[key].length){
                             formData[key].forEach(function(childFormData:any, index:number){
-                                var infoCasillero = myForm.surveyManager.surveyMetadata.structure[searchFormId];
+                                var infoCasillero = myForm.surveyManager.surveyMetadata.structure[formId];
                                 var button = html.button({class:'boton-formulario'}, infoCasillero.data.casillero + ' ' + (index+1)).create();
                                 button.onclick=function(){
                                     loadForm(infoCasillero.data.casillero, childFormData, formAnalysisUnit, index, myForm);
@@ -604,7 +608,7 @@ export class tipoc_BF extends tipoc_Base{
                     }
                 }else{
                     if(thArray.filter(function(th:HTMLTableHeaderCellElement){return th.getAttribute('element-type') === 'question'}).length < maxFieldsCount){
-                        var infoCasillero = myForm.surveyManager.surveyMetadata.structure[searchFormId];
+                        var infoCasillero = myForm.surveyManager.surveyMetadata.structure[formId];
                         var var_name = key.toString();
                         var searchInfoCasilleroByVarName = function searchInfoCasilleroByVarName(infoCasillero: InfoCasillero, var_name:string): InfoCasillero{
                             for(var i = 0; i < infoCasillero.childs.length; i++) {
@@ -631,11 +635,16 @@ export class tipoc_BF extends tipoc_Base{
                                 });
                                 respuesta = result?result.data.nombre:'';
                             }else{
-                                respuesta = formData[key]?formData[key].toString():'';
+                                respuesta = formData[key]?formData[key]:null;
+                                if(respuesta){
+                                    var typeInfo = formTypes[infoCasillero.data.tipovar];
+                                    var typedValue = respuesta?TypeStore.typerFrom(typeInfo).fromPlainJson(respuesta):null;
+                                    respuesta = typedValue?TypeStore.typerFrom(typeInfo).toLocalString(typedValue):null;
+                                }
                             }
                             var pregunta = infoCasillero.data.nombre;
                             thArray.push(html.th({class:'col', "element-type": "question"}, pregunta).create());
-                            tdArray.push(html.td({class:'col'}, respuesta).create());
+                            tdArray.push(html.td({id:'resumen-'+formId+'-'+(iPosition+1).toString()+'-'+key, class:'col'}, respuesta).create());
                         }
                     }
                 }
@@ -649,9 +658,8 @@ export class tipoc_BF extends tipoc_Base{
             table.appendChild(tr);
             return table
         }
-        var casillero = this.data.casillero;
         var ua = myForm.surveyManager.surveyMetadata.analysisUnitStructure.find(function(analysisUnitStruct){
-            return analysisUnitStruct.casillero_formulario === casillero;
+            return analysisUnitStruct.casillero_formulario === nombreFormulario;
         });
         var uaPadre = myForm.surveyManager.surveyMetadata.analysisUnitStructure.find(function(analysisUnitStruct){
             return analysisUnitStruct.casillero_formulario === myForm.formId;
@@ -665,7 +673,7 @@ export class tipoc_BF extends tipoc_Base{
         var createRowView = function createRowView(row:any, iPosition: number){
             var button = createFormButton(nombreFormulario, nombreFormulario + ' ' + (iPosition+1), myForm, row, formAnalysisUnit, iPosition+1);
             if(cantResumen){
-                table = completarTablaResumen(table, row, button, cantResumen, mostrarUnidadesAnalisisEnResumen, casillero);
+                table = completarTablaResumen(table, row, button, cantResumen, mostrarUnidadesAnalisisEnResumen, nombreFormulario, iPosition);
                 var trChild:HTMLTableDataCellElement = openInOtherScreen?null:html.td({id:'despliegue-formulario-'+nombreFormulario+'-'+(iPosition+1).toString(), colspan:(cantResumen+1)}).create();
                 var tr = html.tr({class:'row'},[trChild]).create();
                 table.appendChild(tr);
