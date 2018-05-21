@@ -369,10 +369,10 @@ export class tipoc_Base{ // clase base de los tipos de casilleros
         control.addEventListener('update', function(var_name){
             return function(){
                 var value = this.getTypedValue();
-                value = control.controledType.toPlainJson(value);
+                value = value?control.controledType.toPlainJson(value):null;
                 var resumenRowElement = document.getElementById('resumen-'+this.myForm.formId+'-'+this.myForm.iPosition.toString()+'-'+var_name);
                 if(resumenRowElement){
-                    resumenRowElement.textContent=this.controledType.toLocalString(this.getTypedValue());
+                    resumenRowElement.textContent=(this.getTypedValue())?this.controledType.toLocalString(this.getTypedValue()):'';
                 }
                 this.myForm.formData[var_name] = value;
                 this.myForm.validateDepot();
