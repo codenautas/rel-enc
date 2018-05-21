@@ -361,7 +361,7 @@ export class tipoc_Base{ // clase base de los tipos de casilleros
             this.myForm.formData[this.var_name]=null;
         }
         this.myForm.controls[this.var_name] = control;
-        if(!control.controledType.isDataValid(actualValue)){
+        if(!control.controledType.isValidTypedData(actualValue)){
             actualValue = control.controledType.fromPlainJson(actualValue);
         }
         control.setTypedValue(actualValue);
