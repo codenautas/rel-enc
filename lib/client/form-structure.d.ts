@@ -194,6 +194,8 @@ export declare class FormManager {
     removeFirstFromStack(): void;
     stackLength(): number;
     display(): HTMLDivElement;
+    searchInfoCasilleroByVarName(infoCasillero: InfoCasillero, var_name: string): InfoCasillero;
+    searchAnswerForInfoCasillero(infoCasillero: InfoCasillero, formData: any, var_name: string): string;
     saveSurvey(): Promise<void>;
     completeCalculatedVars(): void;
     validateDepot(): void;

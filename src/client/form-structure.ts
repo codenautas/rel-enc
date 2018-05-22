@@ -352,32 +352,39 @@ export class tipoc_Base{ // clase base de los tipos de casilleros
         }
     }
     connectControl(control:ExtendedHTMLElement){
+        var myForm = this.myForm;
         if(this.data.despliegue=='calculada'){
             control.disable(true);
         }
-        var actualValue=this.myForm.formData[this.var_name];
+        var actualValue=myForm.formData[this.var_name];
         if(actualValue === undefined){
             actualValue=null;
-            this.myForm.formData[this.var_name]=null;
+            myForm.formData[this.var_name]=null;
         }
-        this.myForm.controls[this.var_name] = control;
+        myForm.controls[this.var_name] = control;
         if(!control.controledType.isValidTypedData(actualValue)){
             actualValue = control.controledType.fromPlainJson(actualValue);
         }
         control.setTypedValue(actualValue);
-        control.myForm=this.myForm;
+        control.myForm=myForm;
         control.addEventListener('update', function(var_name){
             return function(){
                 var value = this.getTypedValue();
                 value = value?control.controledType.toPlainJson(value):null;
-                var resumenRowElement = document.getElementById('resumen-'+this.myForm.formId+'-'+this.myForm.iPosition.toString()+'-'+var_name);
+                myForm.formData[var_name] = value;
+                myForm.validateDepot();
+                myForm.refreshState();
+                myForm.saveSurvey();
+                var resumenRowElement = document.getElementById('resumen-'+myForm.formId+'-'+myForm.iPosition.toString()+'-'+var_name);
                 if(resumenRowElement){
-                    resumenRowElement.textContent=(this.getTypedValue())?this.controledType.toLocalString(this.getTypedValue()):'';
+                    var respuesta: string = '';
+                    var infoCasillero = myForm.surveyManager.surveyMetadata.structure[myForm.formId];
+                    infoCasillero = myForm.searchInfoCasilleroByVarName(infoCasillero, var_name);
+                    if(infoCasillero){
+                        respuesta = myForm.searchAnswerForInfoCasillero(infoCasillero, myForm.formData, var_name);
+                    }
+                    resumenRowElement.textContent=respuesta;
                 }
-                this.myForm.formData[var_name] = value;
-                this.myForm.validateDepot();
-                this.myForm.refreshState();
-                this.myForm.saveSurvey();
             }
         }(this.var_name));
     }
@@ -586,12 +593,16 @@ export class tipoc_BF extends tipoc_Base{
             thArray.push(html.th({class:'col'}, '').create());
             var tdArray:HTMLTableCellElement[]=[];
             tdArray.push(html.td({class:'col'}, [navigationButton]).create());
-            Object.keys(formData).forEach(function(key) {
-                if(Array.isArray(formData[key])){
+            var aUStructures = myForm.surveyManager.surveyMetadata.analysisUnitStructure;
+            var aUStructure = aUStructures.find(function(au){
+                return au.casillero_formulario === formId;
+            })
+            aUStructure.preguntas.forEach(function(pregunta) {
+                if(pregunta.es_unidad_analisis){
                     if(mostrarUnidadesAnalisisEnResumen){
                         var buttonsArray:HTMLButtonElement[] = [];
-                        if(formData[key].length){
-                            formData[key].forEach(function(childFormData:any, index:number){
+                        if(formData[pregunta.var_name].length){
+                            formData[pregunta.var_name].forEach(function(childFormData:any, index:number){
                                 var infoCasillero = myForm.surveyManager.surveyMetadata.structure[formId];
                                 var button = html.button({class:'boton-formulario'}, infoCasillero.data.casillero + ' ' + (index+1)).create();
                                 button.onclick=function(){
@@ -600,48 +611,18 @@ export class tipoc_BF extends tipoc_Base{
                                 buttonsArray.push(button);
                             })
                         }
-                        thArray.push(html.th({class:'col'}, key).create());
+                        thArray.push(html.th({class:'col'}, pregunta.var_name).create());
                         tdArray.push(html.td({class:'col'}, buttonsArray).create());
                     }
                 }else{
                     if(thArray.filter(function(th:HTMLTableHeaderCellElement){return th.getAttribute('element-type') === 'question'}).length < maxFieldsCount){
                         var infoCasillero = myForm.surveyManager.surveyMetadata.structure[formId];
-                        var var_name = key.toString();
-                        var searchInfoCasilleroByVarName = function searchInfoCasilleroByVarName(infoCasillero: InfoCasillero, var_name:string): InfoCasillero{
-                            for(var i = 0; i < infoCasillero.childs.length; i++) {
-                                if (typeof infoCasillero.childs[i] !== "function"){
-                                    var aux = infoCasillero.childs[i].data.var_name;
-                                    if (aux && (var_name === aux || var_name === aux.toUpperCase())) {
-                                        return infoCasillero.childs[i];
-                                    }
-                                }
-                                var result = searchInfoCasilleroByVarName(infoCasillero.childs[i], var_name);
-                                if(result){
-                                    return result;
-                                }
-                            }
-                            return null
-                        }
-                        var infoCasillero = searchInfoCasilleroByVarName(infoCasillero, var_name);
+                        var var_name = pregunta.var_name;
+                        var infoCasillero = myForm.searchInfoCasilleroByVarName(infoCasillero, var_name);
                         if(infoCasillero){
-                            var respuesta:string;
-                            if(infoCasillero.childs.length){
-                                var result = infoCasillero.childs.find(function(option){
-                                    var var_name:string = (formData[key] || '').toString();
-                                    return option.data.casillero === var_name || option.data.casillero === var_name.toUpperCase();
-                                });
-                                respuesta = result?result.data.nombre:'';
-                            }else{
-                                respuesta = formData[key]?formData[key]:null;
-                                if(respuesta){
-                                    var typeInfo = formTypes[infoCasillero.data.tipovar];
-                                    var typedValue = respuesta?TypeStore.typerFrom(typeInfo).fromPlainJson(respuesta):null;
-                                    respuesta = typedValue?TypeStore.typerFrom(typeInfo).toLocalString(typedValue):null;
-                                }
-                            }
-                            var pregunta = infoCasillero.data.nombre;
-                            thArray.push(html.th({class:'col', "element-type": "question"}, pregunta).create());
-                            tdArray.push(html.td({id:'resumen-'+formId+'-'+(iPosition+1).toString()+'-'+key, class:'col'}, respuesta).create());
+                            var respuesta = myForm.searchAnswerForInfoCasillero(infoCasillero, formData, var_name);
+                            thArray.push(html.th({class:'col', "element-type": "question"}, infoCasillero.data.nombre).create());
+                            tdArray.push(html.td({id:'resumen-'+formId+'-'+(iPosition+1).toString()+'-'+var_name, class:'col'}, respuesta).create());
                         }
                     }
                 }
@@ -653,6 +634,12 @@ export class tipoc_BF extends tipoc_Base{
             }
             tr = html.tr({class:'row'}, tdArray).create();
             table.appendChild(tr);
+            if(!openInOtherScreen){
+                var auColumns = aUStructure.preguntas.filter(function(pregunta){return pregunta.es_unidad_analisis === true;}).length;
+                var trChild:HTMLTableDataCellElement = html.td({id:'despliegue-formulario-'+nombreFormulario+'-'+(iPosition+1).toString(), colspan:(cantResumen+1+auColumns)}).create();
+                tr = html.tr({class:'row'},[trChild]).create();
+                table.appendChild(tr);
+            }
             return table
         }
         var ua = myForm.surveyManager.surveyMetadata.analysisUnitStructure.find(function(analysisUnitStruct){
@@ -671,9 +658,6 @@ export class tipoc_BF extends tipoc_Base{
             var button = createFormButton(nombreFormulario, nombreFormulario + ' ' + (iPosition+1), myForm, row, formAnalysisUnit, iPosition+1);
             if(cantResumen){
                 table = completarTablaResumen(table, row, button, cantResumen, mostrarUnidadesAnalisisEnResumen, nombreFormulario, iPosition);
-                var trChild:HTMLTableDataCellElement = openInOtherScreen?null:html.td({id:'despliegue-formulario-'+nombreFormulario+'-'+(iPosition+1).toString(), colspan:(cantResumen+1)}).create();
-                var tr = html.tr({class:'row'},[trChild]).create();
-                table.appendChild(tr);
             }else{
                 var spanChild:HTMLSpanElement = openInOtherScreen?null:html.span({id:'despliegue-formulario-'+nombreFormulario+'-'+(iPosition+1).toString()},[]).create();
                 var span = html.span({id:'despliegue-row-hijo-'+nombreFormulario+'-'+(iPosition+1).toString()},[
@@ -727,7 +711,7 @@ export class tipoc_BF extends tipoc_Base{
                 groupElement.appendChild(div);
             }
         }else{
-            if(ua && ua.unidad_analisis === uaPadre){
+            if(ua && ua.unidad_analisis_padre === uaPadre){
                 groupElement.appendChild(createFormButton(nombreFormulario, nombreFormulario, myForm, myForm.formData, null, null));
             }else{
                 throw new Error('Casillero BF mal definido en ' + this.data.padre);
@@ -816,7 +800,39 @@ export class FormManager{
     display(){
         return html.div({class:'form-content'}, this.content.display()).create()
     }
-
+    searchInfoCasilleroByVarName(infoCasillero: InfoCasillero, var_name:string): InfoCasillero{
+        for(var i = 0; i < infoCasillero.childs.length; i++) {
+            if (typeof infoCasillero.childs[i] !== "function"){
+                var aux = infoCasillero.childs[i].data.var_name;
+                if (aux && (var_name === aux || var_name === aux.toUpperCase())) {
+                    return infoCasillero.childs[i];
+                }
+            }
+            var result = this.searchInfoCasilleroByVarName(infoCasillero.childs[i], var_name);
+            if(result){
+                return result;
+            }
+        }
+        return null
+    }
+    searchAnswerForInfoCasillero(infoCasillero:InfoCasillero, formData:any, var_name:string):string{
+        var respuesta:string;
+        if(infoCasillero.childs.length){
+            var result = infoCasillero.childs.find(function(option){
+                var aux:string = (formData[var_name] || '').toString();
+                return option.data.casillero === aux || option.data.casillero === aux.toUpperCase();
+            });
+            respuesta = result?result.data.nombre:'';
+        }else{
+            respuesta = formData[var_name]?formData[var_name]:null;
+            if(respuesta){
+                var typeInfo = formTypes[infoCasillero.data.tipovar];
+                var typedValue = respuesta?TypeStore.typerFrom(typeInfo).fromPlainJson(respuesta):null;
+                respuesta = typedValue?TypeStore.typerFrom(typeInfo).toLocalString(typedValue):null;
+            }
+        }
+        return respuesta;
+    }
     saveSurvey():Promise<void>{
         return this.surveyManager.saveSurvey();
     }
