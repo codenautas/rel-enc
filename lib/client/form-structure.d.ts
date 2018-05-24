@@ -31,6 +31,7 @@ export declare type InfoCasilleroRegistro = {
     unidad_analisis: string;
     cantidad_resumen: number;
     var_name: string;
+    ultimo_ancestro: string;
 };
 export declare type InfoCasillero = {
     data: InfoCasilleroRegistro;
@@ -196,6 +197,7 @@ export declare class FormManager {
     display(): HTMLDivElement;
     searchInfoCasilleroByVarName(infoCasillero: InfoCasillero, var_name: string): InfoCasillero;
     searchAnswerForInfoCasillero(infoCasillero: InfoCasillero, formData: any, var_name: string): string;
+    searchFormIdForUaInForm(infoCasillero: InfoCasillero, formId: string, analysisUnit: string): string;
     saveSurvey(): Promise<void>;
     completeCalculatedVars(): void;
     validateDepot(): void;
