@@ -1,6 +1,6 @@
 "use strict";
 
-const OPEN_IN_OTHER_SCREEN=false;
+const OPEN_IN_OTHER_SCREEN=true;
 const PUEDE_AGREGAR_RENGLONES=true;
 
 import * as jsToHtml from "js-to-html"
