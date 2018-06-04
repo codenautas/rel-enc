@@ -371,7 +371,7 @@ export class tipoc_Base{ // clase base de los tipos de casilleros
         control.addEventListener('update', function(var_name){
             return function(){
                 var value = this.getTypedValue();
-                value = value?control.controledType.toPlainJson(value):null;
+                value = value != null?control.controledType.toPlainJson(value):null;
                 myForm.formData[var_name] = value;
                 myForm.validateDepot();
                 myForm.refreshState();
@@ -849,7 +849,7 @@ export class FormManager{
             respuesta = result?result.data.nombre:'';
         }else{
             respuesta = formData[var_name]?formData[var_name]:null;
-            if(respuesta){
+            if(respuesta !== null || respuesta !== undefined){
                 var typeInfo = formTypes[infoCasillero.data.tipovar];
                 var typedValue = respuesta?TypeStore.typerFrom(typeInfo).fromPlainJson(respuesta):null;
                 respuesta = typedValue?TypeStore.typerFrom(typeInfo).toLocalString(typedValue):null;
