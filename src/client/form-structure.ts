@@ -588,7 +588,11 @@ export class tipoc_BF extends tipoc_Base{
                     formDisplayElement = document.getElementById('despliegue-formulario-'+nombreFormulario+'-ua-children');
                 }
             }
-            var formManager = new FormManager(myForm.surveyManager, myForm.formId, formData, myForm.stack);
+            var aUStructures = myForm.surveyManager.surveyMetadata.analysisUnitStructure;
+            var aUStructure = aUStructures.find(function(au){
+                return au.casillero_formulario === nombreFormulario;
+            })
+            var formManager = new FormManager(myForm.surveyManager, aUStructure.id_casillero_formulario, formData, myForm.stack);
             formManager.iPosition=iPosition
             var toDisplay = formManager.display();
             formManager.validateDepot();
@@ -619,7 +623,7 @@ export class tipoc_BF extends tipoc_Base{
                             var buttonsArray:HTMLButtonElement[] = [];
                             if(formData[pregunta.var_name].length){
                                 formData[pregunta.var_name].forEach(function(childFormData:any, index:number){
-                                    var infoCasillero = myForm.surveyManager.surveyMetadata.structure[formId];
+                                    var infoCasillero = myForm.surveyManager.surveyMetadata.structure[aUStructure.id_casillero_formulario];
                                     var formIdForUa = myForm.searchFormIdForUaInForm(infoCasillero, infoCasillero.data.casillero, pregunta.var_name)
                                     if(formIdForUa){
                                         var button = html.button({class:'boton-formulario'}, formIdForUa + ' ' + (index+1)).create();
