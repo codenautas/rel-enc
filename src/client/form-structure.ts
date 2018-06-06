@@ -102,6 +102,7 @@ export type Variable={
 
 export type NavigationStack = {
     formData: any
+    formName: string
     formId: string
     analysisUnit:string
     iPosition:number
@@ -117,6 +118,7 @@ export type FormStructureState = {
 
 export type analysisUnitStructure = {
     unidad_analisis: string
+    id_casillero_formulario: string
     casillero_formulario: string
     unidad_analisis_principal: boolean
     unidad_analisis_padre: string
@@ -264,7 +266,12 @@ export class tipoc_Base{ // clase base de los tipos de casilleros
         var groupElement = html.div({class:'tipoc_'+this.data.tipoc},content).create();
         this.adaptOptionInput(groupElement);
         return [groupElement];
-    }       
+    }
+    primerVariableDeDestino(){
+        // fijarse el varname del destino, devolverlo
+        // si no hay ir al primer hijo, agotados todos los hijos se sigue con los hermanos. 
+        // si el primogénito más 
+    }
     createVariable(){
         if((formTypes[this.data.tipovar]||{radio:false}).radio){
             var opciones:{
@@ -401,7 +408,7 @@ export class tipoc_F extends tipoc_Base{
         var myForm = this.myForm;
         if(myForm.stackLength()){
             var firstFromStack = myForm.getFirstFromStack();
-            var button = html.button({class:'boton-formulario'}, "Volver al "+ firstFromStack.formId).create();
+            var button = html.button({class:'boton-formulario'}, "Volver al "+ firstFromStack.formName).create();
             button.onclick=function(){
                 var mainForm=document.getElementById(myForm.mainFormHTMLId);
                 myForm.removeFirstFromStack();
@@ -565,20 +572,23 @@ export class tipoc_BF extends tipoc_Base{
             });
             groupElement.scrollIntoView();
         }
-        var loadForm = function loadForm(formId: string, formData: any, formAnalysisUnit:string, iPosition:number, myForm:FormManager){
+        var loadForm = function loadForm(nombreFormulario: string, formData: any, formAnalysisUnit:string, iPosition:number, myForm:FormManager){
             var formDisplayElement;
             if(openInOtherScreen){
-                myForm.addToStack({formData:myForm.formData,formId:myForm.formId, analysisUnit: formAnalysisUnit, iPosition: iPosition, scrollY:window.scrollY})
+                var formName = myForm.surveyManager.surveyMetadata.analysisUnitStructure.find(function(analysisUnitStruct){
+                    return analysisUnitStruct.id_casillero_formulario === myForm.formId;
+                }).casillero_formulario;
+                myForm.addToStack({formData:myForm.formData,formName:formName, formId:myForm.formId, analysisUnit: formAnalysisUnit, iPosition: iPosition, scrollY:window.scrollY})
                 formDisplayElement=document.getElementById(myForm.mainFormHTMLId);
                 window.scrollTo(0,0);
             }else{
-                clearAllOpenForms(formId);
-                formDisplayElement = document.getElementById('despliegue-formulario-'+formId+'-'+(iPosition).toString());
+                clearAllOpenForms(nombreFormulario);
+                formDisplayElement = document.getElementById('despliegue-formulario-'+nombreFormulario+'-'+(iPosition).toString());
                 if(!formDisplayElement && mostrarUnidadesAnalisisEnResumen){
                     formDisplayElement = document.getElementById('despliegue-formulario-'+nombreFormulario+'-ua-children');
                 }
             }
-            var formManager = new FormManager(myForm.surveyManager, formId, formData, myForm.stack);
+            var formManager = new FormManager(myForm.surveyManager, myForm.formId, formData, myForm.stack);
             formManager.iPosition=iPosition
             var toDisplay = formManager.display();
             formManager.validateDepot();
@@ -627,7 +637,7 @@ export class tipoc_BF extends tipoc_Base{
                         }
                     }else{
                         if(thArray.filter(function(th:HTMLTableHeaderCellElement){return th.getAttribute('element-type') === 'question'}).length < maxFieldsCount){
-                            var infoCasillero = myForm.surveyManager.surveyMetadata.structure[formId];
+                            var infoCasillero = myForm.surveyManager.surveyMetadata.structure[aUStructure.id_casillero_formulario];
                             var var_name = pregunta.var_name;
                             var infoCasillero = myForm.searchInfoCasilleroByVarName(infoCasillero, var_name);
                             if(infoCasillero){
@@ -674,7 +684,7 @@ export class tipoc_BF extends tipoc_Base{
             return analysisUnitStruct.casillero_formulario === nombreFormulario;
         });
         var uaPadre = myForm.surveyManager.surveyMetadata.analysisUnitStructure.find(function(analysisUnitStruct){
-            return analysisUnitStruct.casillero_formulario === myForm.formId;
+            return analysisUnitStruct.id_casillero_formulario === myForm.formId;
         }).unidad_analisis;
         if(!formAnalysisUnit){
             if(ua && ua.unidad_analisis_padre === uaPadre){
@@ -718,10 +728,9 @@ export class tipoc_BF extends tipoc_Base{
                         return auStructure.unidad_analisis === formAnalysisUnit;
                     });
                     estructurasAactualizar.forEach(function(estructuraAactualizar){
-                        var element = document.getElementById('resumen-'+estructuraAactualizar.casillero_formulario);
-                        createRowView(element, estructuraAactualizar.casillero_formulario, newRow, iPosition);
+                        var element = document.getElementById('resumen-'+estructuraAactualizar.id_casillero_formulario);
+                        createRowView(element, estructuraAactualizar.id_casillero_formulario, newRow, iPosition);
                     });
-                    
                     loadForm(nombreFormulario, myForm.formData[formAnalysisUnit][iPosition],formAnalysisUnit, iPosition+1,  myForm);
                 }
                 var readybutton = html.button({class:'boton-listo-formulario'}, "Listo ").create();

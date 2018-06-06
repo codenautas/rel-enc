@@ -67,6 +67,7 @@ export declare type Variable = {
 };
 export declare type NavigationStack = {
     formData: any;
+    formName: string;
     formId: string;
     analysisUnit: string;
     iPosition: number;
@@ -82,6 +83,7 @@ export declare type FormStructureState = {
 };
 export declare type analysisUnitStructure = {
     unidad_analisis: string;
+    id_casillero_formulario: string;
     casillero_formulario: string;
     unidad_analisis_principal: boolean;
     unidad_analisis_padre: string;
@@ -106,6 +108,7 @@ export declare class tipoc_Base {
     displayChilds(): jsToHtml.ArrayContent;
     displayBottomElement(): jsToHtml.HtmlBase[];
     display(special?: boolean): jsToHtml.ArrayContent;
+    primerVariableDeDestino(): void;
     createVariable(): void;
     adaptOptionInput(group: ExtendedHTMLElement): void;
     readonly var_name: string;
