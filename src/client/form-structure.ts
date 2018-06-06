@@ -575,9 +575,7 @@ export class tipoc_BF extends tipoc_Base{
         var loadForm = function loadForm(nombreFormulario: string, formData: any, formAnalysisUnit:string, iPosition:number, myForm:FormManager){
             var formDisplayElement;
             if(openInOtherScreen){
-                var formName = myForm.surveyManager.surveyMetadata.analysisUnitStructure.find(function(analysisUnitStruct){
-                    return analysisUnitStruct.id_casillero_formulario === myForm.formId;
-                }).casillero_formulario;
+                var formName = myForm.surveyManager.searchUaStructureByFormId(myForm.formId).casillero_formulario;
                 myForm.addToStack({formData:myForm.formData,formName:formName, formId:myForm.formId, analysisUnit: formAnalysisUnit, iPosition: iPosition, scrollY:window.scrollY})
                 formDisplayElement=document.getElementById(myForm.mainFormHTMLId);
                 window.scrollTo(0,0);
@@ -588,10 +586,7 @@ export class tipoc_BF extends tipoc_Base{
                     formDisplayElement = document.getElementById('despliegue-formulario-'+nombreFormulario+'-ua-children');
                 }
             }
-            var aUStructures = myForm.surveyManager.surveyMetadata.analysisUnitStructure;
-            var aUStructure = aUStructures.find(function(au){
-                return au.casillero_formulario === nombreFormulario;
-            })
+            var aUStructure = myForm.surveyManager.searchUaStructureByFormName(nombreFormulario);
             var formManager = new FormManager(myForm.surveyManager, aUStructure.id_casillero_formulario, formData, myForm.stack);
             formManager.iPosition=iPosition
             var toDisplay = formManager.display();
@@ -613,10 +608,8 @@ export class tipoc_BF extends tipoc_Base{
                 thArray.push(html.th({class:'col'}, '').create());
                 var tdArray:HTMLTableCellElement[]=[];
                 tdArray.push(html.td({class:'col'}, [navigationButton]).create());
-                var aUStructures = myForm.surveyManager.surveyMetadata.analysisUnitStructure;
-                var aUStructure = aUStructures.find(function(au){
-                    return au.casillero_formulario === formId;
-                })
+                
+                var aUStructure = myForm.surveyManager.searchUaStructureByFormName(formId);
                 aUStructure.preguntas.forEach(function(pregunta) {
                     if(pregunta.es_unidad_analisis){
                         if(mostrarUnidadesAnalisisEnResumen){
@@ -684,12 +677,8 @@ export class tipoc_BF extends tipoc_Base{
         }
         var despliegueDiv = (html.div({id:'despliegue-rows-'+nombreFormulario},[]).create());
         groupElement.appendChild(despliegueDiv);
-        var ua = myForm.surveyManager.surveyMetadata.analysisUnitStructure.find(function(analysisUnitStruct){
-            return analysisUnitStruct.casillero_formulario === nombreFormulario;
-        });
-        var uaPadre = myForm.surveyManager.surveyMetadata.analysisUnitStructure.find(function(analysisUnitStruct){
-            return analysisUnitStruct.id_casillero_formulario === myForm.formId;
-        }).unidad_analisis;
+        var ua = myForm.surveyManager.searchUaStructureByFormName(nombreFormulario);
+        var uaPadre = myForm.surveyManager.searchUaStructureByFormId(myForm.formId).unidad_analisis;
         if(!formAnalysisUnit){
             if(ua && ua.unidad_analisis_padre === uaPadre){
                 formAnalysisUnit = ua.unidad_analisis;
@@ -717,10 +706,7 @@ export class tipoc_BF extends tipoc_Base{
                     myForm.formData[self.data.var_name] = null;
                     myForm.validateDepot();
                     myForm.refreshState();
-                    var aUStructures = myForm.surveyManager.surveyMetadata.analysisUnitStructure;
-                    var aUStructure = aUStructures.find(function(au){
-                        return au.unidad_analisis === formAnalysisUnit;
-                    })
+                    var aUStructure =  myForm.surveyManager.searchUaStructureByUa(formAnalysisUnit);
                     var newRow:any = {};
                     aUStructure.preguntas.forEach(function(pregunta){
                         newRow[pregunta.var_name] = pregunta.es_unidad_analisis?[]:null;
@@ -780,6 +766,21 @@ export class SurveyManager{
             JSON.stringify(this.surveyData)
         );
         return;
+    }
+    searchUaStructureByUa(ua:string):analysisUnitStructure{
+        return this.surveyMetadata.analysisUnitStructure.find(function(au){
+            return au.unidad_analisis === ua;
+        })
+    }
+    searchUaStructureByFormId(formId:string):analysisUnitStructure{
+        return this.surveyMetadata.analysisUnitStructure.find(function(au){
+            return au.id_casillero_formulario === formId;
+        })
+    }
+    searchUaStructureByFormName(formName:string):analysisUnitStructure{
+        return this.surveyMetadata.analysisUnitStructure.find(function(au){
+            return au.casillero_formulario === formName;
+        })
     }
 }
 

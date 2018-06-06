@@ -158,6 +158,9 @@ export declare class SurveyManager {
     displayMainForm(): Promise<FormManager>;
     readonly surveyStructure: SurveyStructure;
     saveSurvey(): Promise<void>;
+    searchUaStructureByUa(ua: string): analysisUnitStructure;
+    searchUaStructureByFormId(formId: string): analysisUnitStructure;
+    searchUaStructureByFormName(formName: string): analysisUnitStructure;
 }
 export declare class FormManager {
     surveyManager: SurveyManager;
