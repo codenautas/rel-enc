@@ -703,9 +703,8 @@ export class tipoc_BF extends tipoc_Base{
             if(PuedeAgregarRenglones){
                 var newButton = html.button({class:'boton-nuevo-formulario'}, "Nuevo " + nombreFormulario).create();
                 newButton.onclick=function(){
-                    myForm.formData[self.data.var_name] = null;
-                    myForm.validateDepot();
-                    myForm.refreshState();
+                    var control = myForm.controls[self.data.var_name];
+                    control.setTypedValue(null, true);
                     var aUStructure =  myForm.surveyManager.searchUaStructureByUa(formAnalysisUnit);
                     var newRow:any = {};
                     aUStructure.preguntas.forEach(function(pregunta){
