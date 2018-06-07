@@ -729,9 +729,8 @@ export class tipoc_BF extends tipoc_Base{
                     if(!openInOtherScreen){
                         clearAllOpenForms(nombreFormulario);
                     }
-                    myForm.formData[self.data.var_name] = 1;
-                    myForm.validateDepot();
-                    myForm.refreshState();
+                    var control = myForm.controls[self.data.var_name];
+                    control.setTypedValue(1, true);
                 }
                 var div = html.div({class:'nuevo-formulario'}, [newButton, readybutton]).create();
                 groupElement.appendChild(div);
