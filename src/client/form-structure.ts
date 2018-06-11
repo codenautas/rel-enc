@@ -909,93 +909,7 @@ export class FormManager{
         return this.surveyManager.saveSurvey();
     }
     completeCalculatedVars(){
-        /*
-        var row=this.depot.row;
-        var controls=this.controls;
-        var calculatedVars=[];*/
         return;
-        /*if(this.depot.formId=='F1'){
-
-            // si no hay datos de la encuesta actual entonces se pone u1 y u2 con los valores por defecto (sacados de 'verveySetup')
-            var surveyId = sessionStorage.getItem('surveyId');
-            var operativo = sessionStorage.getItem('operativo');
-            var currentSurvey = localStorage.getItem(operativo + '_survey_' + surveyId);
-            if (!currentSurvey){
-                var surveySetup = JSON.parse(localStorage.getItem('surveySetup'));        
-                row.u1 = surveySetup.recorrido;
-                row.u2 = surveySetup.tipo_recorrido;
-            }
-
-            var recordables=[
-                {variable: 'u3' },
-                {variable: 'u4' },
-                {variable: 'u21', previa:'u8'},
-                {variable: 'u22', previa:'u8'},
-            ];
-            recordables.forEach(function(recordableDef){
-                var varName=recordableDef.variable;
-                var recordableStorage = localStorage.getItem('recordable_'+varName);
-                if(recordableStorage && !row[varName] && (!recordableDef.previa || row[recordableDef.previa])){
-                    row[varName] = JSON.parse(recordableStorage);
-                }
-                controls[varName].addEventListener('update',function(){
-                    localStorage.setItem('recordable_'+varName, JSON.stringify(this.getTypedValue()));
-                });
-            });
-            row.cant14 = Number(row.cant11)+Number(row.cant12)+Number(row.cant13)||null;
-            row.cant24 = Number(row.cant21)+Number(row.cant22)+Number(row.cant23)||null;
-            row.cant34 = Number(row.cant31)+Number(row.cant32)+Number(row.cant33)||null;
-            row.cant44 = Number(row.cant41)+Number(row.cant42)+Number(row.cant43)||null;
-            row.cant51 = Number(row.cant11)+Number(row.cant21)+Number(row.cant31)+Number(row.cant41)||null;
-            row.cant52 = Number(row.cant12)+Number(row.cant22)+Number(row.cant32)+Number(row.cant42)||null;
-            row.cant53 = Number(row.cant13)+Number(row.cant23)+Number(row.cant33)+Number(row.cant43)||null;
-            row.cant54 = Number(row.cant51)+Number(row.cant52)+Number(row.cant53)||null;
-            calculatedVars = [
-                'cant14',
-                'cant24',
-                'cant34',
-                'cant44',
-                'cant51',
-                'cant52',
-                'cant53',
-                'cant54',
-                'gps',
-                'u1',
-                'u2',
-                'u3',
-                'u4',
-                'u21',
-                'u22'
-            ];
-        }
-        if(this.depot.formId=='F2'){
-            row.p0 = this.depot.innerPk.persona+1;
-            if(this.depot.innerPk.persona == 0){
-                row.p1 = 1;
-            }
-            calculatedVars = [ 'p0', 'p1' ];
-        }
-        if(!"gps habilitado"){
-            if(row.u8 != null && (row.gps == null || !(row.gps.charAt(0) == "{"))){
-                row.gps = "Buscando coordenadas...";
-                if (navigator.geolocation) {
-                        navigator.geolocation.getCurrentPosition(function(position) {
-                            row.gps = JSON.stringify({'Lat': position.coords.latitude, ' Long':position.coords.longitude});
-                            controls.gps.setTypedValue(row.gps);
-                        }, 
-                        function(){
-                            row.gps = "Error al obtener el punto";
-                            controls.gps.setTypedValue(row.gps);
-                        }, 
-                        {enableHighAccuracy: true, maximumAge: 0, timeout: 15000 });
-                }else{
-                    row.gps = "GPS inactivo";
-                }
-            }
-        }
-        calculatedVars.forEach(function(varName){
-            this.controls[varName].setTypedValue(row[varName]);
-        },this)*/
     }
     validateDepot(){
         this.completeCalculatedVars();
@@ -1084,36 +998,6 @@ export class FormManager{
                         }else{
                             rta.estados[miVariable]='valida'; 
                         }
-                    //}else if(!tiposComunes[estructura.variables[miVariable].tipo]){
-                    //    if(!control.controledType.isDataValid(actualValue)){
-                    //        actualValue = control.controledType.fromPlainJson(actualValue);
-                    //    }
-                    //}else if(estructura.variables[miVariable].tipo=='fecha'){
-                    //    try{
-                    //        if(!(valor instanceof Date)){
-                    //            valor=bestGlobals.date.iso(valor);
-                    //        }
-                    //        formData[miVariable]=valor;
-                    //        rta.estados[miVariable]='valida'; 
-                    //    }catch(err){
-                    //        falla('fuera_de_rango'); 
-                    //    }
-                    //}else if(estructura.variables[miVariable].tipo=='hora'){
-                    //    //REVISAR
-                    //    if(!(valor instanceof bestGlobals.timeInterval)){
-                    //        valor = valor?TypeStore.typerFrom(formTypes['hora']).fromString(valor):null;
-                    //    }
-                    //    valor=this.completarHora(valor);
-                    //    formData[miVariable]=valor;
-                    //    var v1_item=document.getElementById('var_'+miVariable) as HTMLInputElement;
-                    //    if(v1_item!=null){
-                    //        v1_item.value=valor;
-                    //    }
-                    //    if(!(/^(1[3-9]|2[0-2])(:[0-5][0-9])?$/.test(valor))){
-                    //        falla('fuera_de_rango'); 
-                    //    }else{
-                    //        rta.estados[miVariable]='valida'; 
-                    //    }
                     }else{
                         // las de texto o de ingreso libre son válidas si no se invalidaron antes por problemas de flujo
                         rta.estados[miVariable]='valida'; 
@@ -1152,35 +1036,6 @@ export class FormManager{
         this.consistencias();
     }
     consistencias(){
-        /*
-        var row=this.depot.row;
-        var myForm=this;
-        function consistir(consistencia, ultima_variable, precondicion, postcondicion){
-            myForm.elements[consistencia].setAttribute(
-                'status-consistencia',
-                !precondicion() || postcondicion()?'consistente':'inconsistente'
-            );
-            // this.state.estados[ultima_variable]='inconsistente';
-        }
-        if(myForm.depot.formId=='F1'){
-            consistir('cant_per','cant54',function(){
-                return row.o3_1;
-            },function(){
-                return row.cant54 === row.u8;
-            });
-            consistir('u6_o_u7','u7',function(){
-                return row.u8 != null;
-            },function(){
-                return row.u6 != null || row.u7 != null;
-            });
-        }
-        if(myForm.depot.formId=='F2'){
-            consistir('referente1','p1',function(){
-                return row.p2 && myForm.depot.innerPk.persona;
-            },function(){
-                return row.p1 > 1;
-            });
-        }*/
     }
     refreshState(){
         var rta = this.state;
