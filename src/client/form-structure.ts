@@ -1205,10 +1205,12 @@ export class FormManager{
     irAlSiguiente(variableActual: string, scrollScreen:boolean){
         var nuevaVariable=this.state.siguientes[variableActual];
         var control=this.controls[nuevaVariable];
-        if(scrollScreen){
-            this.posicionarVentanaVerticalmente(control,100);
+        if(control){
+            if(scrollScreen){
+                this.posicionarVentanaVerticalmente(control,100);
+            }
+            control.focus();
         }
-        control.focus();
     }
     completarHora(value:any){
         return value //TODO
