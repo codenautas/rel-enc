@@ -617,7 +617,7 @@ export class tipoc_BF extends tipoc_Base{
                             if(formData[pregunta.var_name].length){
                                 formData[pregunta.var_name].forEach(function(childFormData:any, index:number){
                                     var infoCasillero = myForm.surveyManager.surveyMetadata.structure[aUStructure.id_casillero_formulario];
-                                    var formIdForUa = myForm.searchFormIdForUaInForm(infoCasillero, infoCasillero.data.casillero, pregunta.var_name)
+                                    var formIdForUa = myForm.searchFormIdForUaInForm(infoCasillero, infoCasillero.data.id_casillero, pregunta.var_name)
                                     if(formIdForUa){
                                         var button = html.button({class:'boton-formulario'}, formIdForUa + ' ' + (index+1)).create();
                                         button.onclick=function(){
@@ -704,7 +704,9 @@ export class tipoc_BF extends tipoc_Base{
                 var newButton = html.button({class:'boton-nuevo-formulario'}, "Nuevo " + nombreFormulario).create();
                 newButton.onclick=function(){
                     var control = myForm.controls[self.data.var_name];
-                    control.setTypedValue(null, true);
+                    if(control){
+                        control.setTypedValue(null, true);
+                    }
                     var aUStructure =  myForm.surveyManager.searchUaStructureByUa(formAnalysisUnit);
                     var newRow:any = {};
                     aUStructure.preguntas.forEach(function(pregunta){
@@ -729,7 +731,9 @@ export class tipoc_BF extends tipoc_Base{
                         clearAllOpenForms(nombreFormulario);
                     }
                     var control = myForm.controls[self.data.var_name];
-                    control.setTypedValue(1, true);
+                    if(control){
+                        control.setTypedValue(1, true);
+                    }
                 }
                 var div = html.div({class:'nuevo-formulario'}, [newButton, readybutton]).create();
                 groupElement.appendChild(div);
