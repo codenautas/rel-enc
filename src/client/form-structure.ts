@@ -886,7 +886,7 @@ export class FormManager{
                     if(data.unidad_analisis){
                         ua = data.unidad_analisis;
                     }else{
-                        var formUA = this.surveyManager.surveyMetadata.structure[data.casillero].data.unidad_analisis;
+                        var formUA = this.surveyManager.surveyMetadata.structure[data.id_casillero].data.unidad_analisis;
                         if(formUA === analysisUnit){
                             ua=analysisUnit;
                         }else{
