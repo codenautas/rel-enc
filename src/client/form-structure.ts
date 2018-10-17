@@ -32,8 +32,8 @@ export var formTypes:{
     decimal : {htmlType:'number', typeName:'decimal'  , validar:'numerico',           },
     opciones: {htmlType:'number', typeName:'bigint'   , validar:'opciones', radio:true},
     texto   : {htmlType:'text'  , typeName:'text'     , validar:'texto'   ,           },
-    fecha   : {htmlType:'text'  , typeName:'date'     , validar:'texto'   ,           },
-    hora    : {htmlType:'text'  , typeName:'interval' , validar:'texto'   ,           },
+    fecha   : {htmlType:'tel'   , typeName:'date'     , validar:'texto'   ,           },
+    hora    : {htmlType:'tel'  , typeName:'interval' , validar:'texto'   ,           },
 };
 
 export interface ExtendedHTMLElement extends HTMLElement{
