@@ -184,6 +184,7 @@ export declare class FormManager {
         [key: string]: ExtendedHTMLElement;
     };
     esModoIngreso: boolean;
+    irAlSiguienteAutomatico: boolean;
     formsButtonZone: {
         [key: string]: ExtendedHTMLElement;
     };
@@ -196,6 +197,7 @@ export declare class FormManager {
         [key: string]: typeof tipoc_Base;
     };
     newInstance(infoCasillero: InfoCasillero): tipoc_Base;
+    setIrAlSiguienteAutomatico(irAlSiguienteAutomatico: boolean): void;
     getFirstFromStack(): NavigationStack;
     addToStack(navigationStack: NavigationStack): void;
     removeFirstFromStack(): void;

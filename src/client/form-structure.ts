@@ -355,7 +355,9 @@ export class tipoc_Base{ // clase base de los tipos de casilleros
         }
         if(typedControlUpdateable!=null){
             typedControlUpdateable.addEventListener('update',function(event){
-                myForm.irAlSiguiente(self.var_name, false);
+                if(myForm.irAlSiguienteAutomatico){
+                    myForm.irAlSiguiente(self.var_name, false);
+                }
             });
         }
     }
@@ -794,6 +796,7 @@ export class FormManager{
     elements:{[key:string]:ExtendedHTMLElement}={}
     controlBox:{[key:string]:ExtendedHTMLElement}={}
     esModoIngreso: boolean=true
+    irAlSiguienteAutomatico: boolean=true
     formsButtonZone:{[key:string]:ExtendedHTMLElement}={}
     state:FormStructureState={}
     mainFormHTMLId = 'main-form'; //Quitar generalizacion
@@ -827,6 +830,9 @@ export class FormManager{
         return new this.factory[infoCasillero.data.tipoc](infoCasillero, myForm);
         //newStructure.myForm=myForm;
         //return newStructure;
+    }
+    setIrAlSiguienteAutomatico(irAlSiguienteAutomatico:boolean){
+        this.irAlSiguienteAutomatico = irAlSiguienteAutomatico;
     }
     getFirstFromStack(){
         return this.stack[0];
