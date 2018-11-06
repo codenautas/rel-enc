@@ -1,28 +1,27 @@
 {
   "name": "rel-enc",
   "description": "Relativo a encuestas",
-  "version": "0.1.57",
+  "version": "0.1.58",
   "author": "Codenautas <codenautas@googlegroups.com>",
   "license": "MIT",
-  "main": "lib/server/rel-enc.js",
-  "types": "lib/server/rel-enc.d.ts",
+  "main": "server/rel-enc.js",
+  "types": "server/rel-enc.d.ts",
   "files": [
-    "lib",
-    "src/client"
+    "client",
+    "server"
   ],
   "dependencies": {
-    "@types/node": "~10.11.7",
-    "backend-plus": "~0.25.32",
-    "js-to-html": "~1.0.3",
+    "operativos": "~0.2.1"
+  },
+  "devDependencies": {
     "types.d.ts": "~0.1.32"
   },
-  "devDependencies": {},
   "engines": {
     "node": ">= 8.0.0"
   },
   "scripts": {
-    "prepublish": "tsc || echo \"continue w/error\" && tsc -p src/client || echo \"continue w/error\"",
-    "xprepublish": "tsc && tsc -p src/client",
+    "prepublish": "npm run build",
+    "build": "(tsc -p tsconfig-client.json || echo \"continue w/error\") && (tsc -p tsconfig-server.json  || echo \"continue w/error\")",
     "test": "mocha --reporter spec --bail --check-leaks test/",
     "test-cov": "istanbul cover node_modules/mocha/bin/_mocha -- --reporter dot --check-leaks test/",
     "start": "node server/server-rel-enc.js"
