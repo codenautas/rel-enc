@@ -741,7 +741,7 @@ export class tipoc_BF extends tipoc_Base{
                 groupElement.appendChild(div);
             }
         }else{
-            if(ua && ua.unidad_analisis_padre === uaPadre){
+            if(ua && ua.unidad_analisis === uaPadre){
                 groupElement.appendChild(createFormButton(nombreFormulario, nombreFormulario, myForm, myForm.formData, null, null));
             }else{
                 throw new Error('Casillero BF mal definido en ' + this.data.padre);
