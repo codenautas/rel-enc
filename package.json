@@ -8,7 +8,8 @@
   "types": "server/rel-enc.d.ts",
   "files": [
     "client",
-    "server"
+    "server",
+    "src"
   ],
   "dependencies": {
     "operativos": "~0.2.4"
