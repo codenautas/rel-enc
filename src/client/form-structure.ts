@@ -385,15 +385,17 @@ export class tipoc_Base{ // clase base de los tipos de casilleros
                 myForm.validateDepot();
                 myForm.refreshState();
                 myForm.saveSurvey();
-                var resumenRowElement = document.getElementById('resumen-'+myForm.formId+'-'+myForm.iPosition.toString()+'-'+var_name);
-                if(resumenRowElement){
-                    var respuesta: string = '';
-                    var infoCasillero = myForm.surveyManager.surveyMetadata.structure[myForm.formId];
-                    infoCasillero = myForm.searchInfoCasilleroByVarName(infoCasillero, var_name);
-                    if(infoCasillero){
-                        respuesta = myForm.searchAnswerForInfoCasillero(infoCasillero, myForm.formData, var_name);
+                if(myForm.iPosition){
+                    var resumenRowElement = document.getElementById('resumen-'+myForm.formId+'-'+myForm.iPosition.toString()+'-'+var_name);
+                    if(resumenRowElement){
+                        var respuesta: string = '';
+                        var infoCasillero = myForm.surveyManager.surveyMetadata.structure[myForm.formId];
+                        infoCasillero = myForm.searchInfoCasilleroByVarName(infoCasillero, var_name);
+                        if(infoCasillero){
+                            respuesta = myForm.searchAnswerForInfoCasillero(infoCasillero, myForm.formData, var_name);
+                        }
+                        resumenRowElement.textContent=respuesta;
                     }
-                    resumenRowElement.textContent=respuesta;
                 }
             }
         }(this.var_name));
