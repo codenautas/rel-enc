@@ -352,7 +352,7 @@ export class tipoc_Base{ // clase base de los tipos de casilleros
                     myForm.validateDepot();
                     setTimeout(function(){
                         myForm.irAlSiguiente(self.var_name, false);
-                    },250);
+                    },50);
                 }
             },false);
         }
