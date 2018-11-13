@@ -348,17 +348,13 @@ export class tipoc_Base{ // clase base de los tipos de casilleros
             inputEntereable.addEventListener('keypress',function(event){
                 var tecla = event.which;
                 if(tecla==13 && !event.shiftKey && !event.ctrlKey && !event.altKey){
-                    myForm.irAlSiguiente(self.var_name, false);
-                    event.preventDefault();
+                    //REVISAR
+                    myForm.validateDepot();
+                    setTimeout(function(){
+                        myForm.irAlSiguiente(self.var_name, false);
+                    },250);
                 }
             },false);
-        }
-        if(typedControlUpdateable!=null){
-            typedControlUpdateable.addEventListener('update',function(event){
-                if(myForm.irAlSiguienteAutomatico){
-                    myForm.irAlSiguiente(self.var_name, false);
-                }
-            });
         }
     }
     connectControl(control:ExtendedHTMLElement){
@@ -798,7 +794,6 @@ export class FormManager{
     elements:{[key:string]:ExtendedHTMLElement}={}
     controlBox:{[key:string]:ExtendedHTMLElement}={}
     esModoIngreso: boolean=true
-    irAlSiguienteAutomatico: boolean=true
     formsButtonZone:{[key:string]:ExtendedHTMLElement}={}
     state:FormStructureState={}
     mainFormHTMLId = 'main-form'; //Quitar generalizacion
@@ -832,9 +827,6 @@ export class FormManager{
         return new this.factory[infoCasillero.data.tipoc](infoCasillero, myForm);
         //newStructure.myForm=myForm;
         //return newStructure;
-    }
-    setIrAlSiguienteAutomatico(irAlSiguienteAutomatico:boolean){
-        this.irAlSiguienteAutomatico = irAlSiguienteAutomatico;
     }
     getFirstFromStack(){
         return this.stack[0];
