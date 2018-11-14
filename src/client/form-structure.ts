@@ -10,11 +10,14 @@ import * as TypedControls from "typed-controls"
 import * as TypeStore from "type-store"
 import "dialog-promise"
 import * as my from "myOwn";
+import { assertLogicalExpression } from "babel-types";
 
 type HtmlAttrs={
     class?:string,
     colspan?:number
 };
+
+export var globalSaltosABotones={};
 
 interface ExtendedHtmlAttrs extends HtmlAttrs{
     "for-value"?:string,
@@ -701,7 +704,8 @@ export class tipoc_BF extends tipoc_Base{
                 table.appendChild(tr);
             }
             if(PuedeAgregarRenglones){
-                var newButton = html.button({class:'boton-nuevo-formulario'}, "Nuevo " + nombreFormulario).create();
+                var newButton = html.button({id:'boton-nuevo-'+nombreFormulario, class:'boton-nuevo-formulario'}, "Nuevo " + nombreFormulario).create();
+                var self = this;
                 newButton.onclick=function(){
                     var control = myForm.controls[self.data.var_name];
                     if(control){
@@ -725,7 +729,6 @@ export class tipoc_BF extends tipoc_Base{
                     loadForm(nombreFormulario, myForm.formData[formAnalysisUnit][iPosition],formAnalysisUnit, iPosition+1,  myForm);
                 }
                 var readybutton = html.button({class:'boton-listo-formulario'}, "Listo ").create();
-                var self = this;
                 readybutton.onclick=function(){
                     if(!openInOtherScreen){
                         clearAllOpenForms(nombreFormulario);
@@ -735,7 +738,7 @@ export class tipoc_BF extends tipoc_Base{
                         control.setTypedValue(1, true);
                     }
                 }
-                var div = html.div({class:'nuevo-formulario'}, [newButton, readybutton]).create();
+                var div = html.div({id:'boton-listo-'+nombreFormulario, class:'nuevo-formulario'}, [newButton, readybutton]).create();
                 groupElement.appendChild(div);
             }
         }else{
@@ -1058,8 +1061,18 @@ export class FormManager{
     }
 
     irAlSiguiente(variableActual: string, scrollScreen:boolean){
-        var nuevaVariable=this.state.siguientes[variableActual];
-        var control=this.controls[nuevaVariable];
+        var control;
+        if(globalSaltosABotones[variableActual] && (
+            globalSaltosABotones[variableActual][this.formData[variableActual]] ||
+            globalSaltosABotones[variableActual].siempre
+        )){
+            var id=globalSaltosABotones[variableActual][this.formData[variableActual]] ||
+            globalSaltosABotones[variableActual].siempre;
+            control=document.getElementById(id);
+        }else{
+            var nuevaVariable=this.state.siguientes[variableActual];
+            control=this.controls[nuevaVariable];
+        }
         if(control){
             if(scrollScreen){
                 this.posicionarVentanaVerticalmente(control,100);
