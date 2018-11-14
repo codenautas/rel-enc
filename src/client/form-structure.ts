@@ -11,6 +11,7 @@ import * as TypeStore from "type-store"
 import "dialog-promise"
 import * as my from "myOwn";
 import { assertLogicalExpression } from "babel-types";
+import { EventEmitter } from "events";
 
 type HtmlAttrs={
     class?:string,
@@ -352,10 +353,11 @@ export class tipoc_Base{ // clase base de los tipos de casilleros
                 var tecla = event.which;
                 if(tecla==13 && !event.shiftKey && !event.ctrlKey && !event.altKey){
                     //REVISAR
-                    myForm.validateDepot();
+                    this.dispatchEvent(new Event('update'));
                     setTimeout(function(){
+                        myForm.validateDepot();
                         myForm.irAlSiguiente(self.var_name, false);
-                    },50);
+                    },20);
                 }
             },false);
         }
