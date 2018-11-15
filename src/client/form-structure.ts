@@ -10,8 +10,6 @@ import * as TypedControls from "typed-controls"
 import * as TypeStore from "type-store"
 import "dialog-promise"
 import * as my from "myOwn";
-import { assertLogicalExpression } from "babel-types";
-import { EventEmitter } from "events";
 
 type HtmlAttrs={
     class?:string,
@@ -117,6 +115,7 @@ export type FormStructureState = {
     estados?:{[key:string]:string}
     siguientes?:any
     actual?:any
+    primeraVacia?:any
     primeraFalla?:any
 };
 
@@ -405,15 +404,15 @@ export class tipoc_Base{ // clase base de los tipos de casilleros
 
 export class tipoc_F extends tipoc_Base{
     displayRef(opts:DisplayOpts={}):jsToHtml.ArrayContent{
-        var button = this.createBackButton();
+        var button = this.createBackButton('top');
         return Array.prototype.concat.apply(super.displayRef(),button);
     };
 
-    createBackButton():HTMLButtonElement[]{
+    createBackButton(position:string):HTMLButtonElement[]{
         var myForm = this.myForm;
         if(myForm.stackLength()){
             var firstFromStack = myForm.getFirstFromStack();
-            var button = html.button({class:'boton-formulario'}, "Volver al "+ firstFromStack.formName).create();
+            var button = html.button({id:'volver-a-'+firstFromStack.formName+'-'+position+'-from-'+myForm.formId, class:'boton-formulario'}, "Volver al "+ firstFromStack.formName).create();
             button.onclick=function(){
                 var mainForm=document.getElementById(myForm.mainFormHTMLId);
                 myForm.removeFirstFromStack();
@@ -430,7 +429,7 @@ export class tipoc_F extends tipoc_Base{
         return [];
     };
     displayBottomElement():jsToHtml.HtmlBase[]{
-        var button = this.createBackButton();
+        var button = this.createBackButton('bottom');
         return Array.prototype.concat.apply(super.displayBottomElement(),[html.div({},button).create()]);
     } 
 }
@@ -599,6 +598,7 @@ export class tipoc_BF extends tipoc_Base{
             formManager.refreshState();
             formDisplayElement.innerHTML='';
             formDisplayElement.appendChild(toDisplay);
+            formManager.irAlSiguienteDespliegue(formManager.state.primeraVacia);
         }
         var createFormButton = function createFormButton(formName:string, buttonDescription:string, myForm:FormManager, rowHijo:any, formAnalysisUnit:string, iPosition:number):HTMLButtonElement{
             var button = html.button({class:'boton-formulario'}, buttonDescription).create();
@@ -968,6 +968,9 @@ export class FormManager{
                     apagada=true;
                     rta.estados[miVariable]='calculada';
                 }else if(valor===null){
+                    if(!rta.primeraVacia){
+                        rta.primeraVacia=miVariable;
+                    }
                     if(!estructura.variables[miVariable].optativa){
                         rta.estados[miVariable]='actual';
                         rta.actual=miVariable;
@@ -1080,6 +1083,57 @@ export class FormManager{
                 this.posicionarVentanaVerticalmente(control,100);
             }
             control.focus();
+        }
+    }
+    irAlSiguienteDespliegue(primeraVariable, elementToFocusIfNotActual?:ExtendedHTMLElement){
+        var actual = primeraVariable;
+        if(actual){
+            var controles = this.controls;
+            var formManager = this;
+            var tieneSiguienteObligatoriaVacia = function tieneSiguienteObligatoriaVacia(variable:string, controles:ExtendedHTMLElement[]){
+                var seguir =true;
+                while(formManager.state.siguientes[variable] && seguir){
+                    var variable=formManager.state.siguientes[variable];
+                    var control=controles[variable];
+                    if(formManager.variables[variable] && !formManager.variables[variable].optativa && !control.getTypedValue()){
+                        seguir = false;
+                    }
+                }
+                return !seguir;
+            }
+            var todasLasVariablesVacias = function todasLasVariablesVacias(variable:string, controles:ExtendedHTMLElement[]){
+                var seguir =true;
+                while(formManager.state.siguientes[variable] && seguir){
+                    var variable=formManager.state.siguientes[variable];
+                    var control=controles[variable];
+                    if(formManager.variables[variable] && control.getTypedValue()){
+                        seguir = false;
+                    }
+                }
+                return seguir;
+            }
+            var control=formManager.controls[actual];
+            if(todasLasVariablesVacias(actual, controles) || !formManager.variables[actual].optativa && !control.getTypedValue()){ 
+                console.log("entra")
+                var focusElement;
+                focusElement = controles[actual];
+                if(focusElement){
+                    focusElement.focus();
+                    this.posicionarVentanaVerticalmente(focusElement,100);
+                }
+            }else{
+                if(formManager.variables[actual].optativa && !tieneSiguienteObligatoriaVacia(actual, controles)){
+                    if(elementToFocusIfNotActual){
+                        focusElement = elementToFocusIfNotActual;
+                        if(focusElement){
+                            focusElement.focus();
+                            this.posicionarVentanaVerticalmente(focusElement,100);
+                        }
+                    }
+                }else{
+                    this.irAlSiguienteDespliegue(this.state.siguientes[actual],elementToFocusIfNotActual);
+                }
+            }
         }
     }
     completarHora(value:any){
