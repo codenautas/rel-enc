@@ -109,6 +109,7 @@ export type NavigationStack = {
     analysisUnit:string
     iPosition:number
     scrollY: number
+    callerElement: HTMLButton;
 }
 
 export type FormStructureState = {
@@ -423,6 +424,7 @@ export class tipoc_F extends tipoc_Base{
                 mainForm.innerHTML='';
                 mainForm.appendChild(toDisplay);
                 window.scrollTo(0,firstFromStack.scrollY);
+                document.getElementById(firstFromStack.callerElement.id).focus();
             };
             return [button];
         }
@@ -576,11 +578,11 @@ export class tipoc_BF extends tipoc_Base{
             });
             groupElement.scrollIntoView();
         }
-        var loadForm = function loadForm(nombreFormulario: string, formData: any, formAnalysisUnit:string, iPosition:number, myForm:FormManager){
+        var loadForm = function loadForm(nombreFormulario: string, formData: any, formAnalysisUnit:string, iPosition:number, myForm:FormManager, callerButton:HTMLButton){
             var formDisplayElement;
             if(openInOtherScreen){
                 var formName = myForm.surveyManager.searchUaStructureByFormId(myForm.formId).casillero_formulario;
-                myForm.addToStack({formData:myForm.formData,formName:formName, formId:myForm.formId, analysisUnit: formAnalysisUnit, iPosition: iPosition, scrollY:window.scrollY})
+                myForm.addToStack({formData:myForm.formData,formName:formName, formId:myForm.formId, analysisUnit: formAnalysisUnit, iPosition: iPosition, scrollY:window.scrollY, callerElement:callerButton})
                 formDisplayElement=document.getElementById(myForm.mainFormHTMLId);
                 window.scrollTo(0,0);
             }else{
@@ -601,9 +603,9 @@ export class tipoc_BF extends tipoc_Base{
             formManager.irAlSiguienteDespliegue(formManager.state.primeraVacia);
         }
         var createFormButton = function createFormButton(formName:string, buttonDescription:string, myForm:FormManager, rowHijo:any, formAnalysisUnit:string, iPosition:number):HTMLButtonElement{
-            var button = html.button({class:'boton-formulario'}, buttonDescription).create();
+            var button = html.button({id:'ver-'+formName+'-'+iPosition, class:'boton-formulario'}, buttonDescription).create();
             button.onclick=function(){
-                loadForm(formName, rowHijo, formAnalysisUnit, iPosition, myForm);
+                loadForm(formName, rowHijo, formAnalysisUnit, iPosition, myForm, button);
             };
             return button;
         }
@@ -624,9 +626,9 @@ export class tipoc_BF extends tipoc_Base{
                                     var infoCasillero = myForm.surveyManager.surveyMetadata.structure[aUStructure.id_casillero_formulario];
                                     var formIdForUa = myForm.searchFormIdForUaInForm(infoCasillero, infoCasillero.data.id_casillero, pregunta.var_name)
                                     if(formIdForUa){
-                                        var button = html.button({class:'boton-formulario'}, formIdForUa + ' ' + (index+1)).create();
+                                        var button = html.button({id:'ver-'+formIdForUa+'-'+(index+1).toString(), class:'boton-formulario'}, formIdForUa + ' ' + (index+1)).create();
                                         button.onclick=function(){
-                                            loadForm(formIdForUa, childFormData, pregunta.var_name, index, myForm);
+                                            loadForm(formIdForUa, childFormData, pregunta.var_name, index, myForm, button);
                                         };
                                         buttonsArray.push(button);
                                     }else{
@@ -728,7 +730,7 @@ export class tipoc_BF extends tipoc_Base{
                         var element = document.getElementById('resumen-'+estructuraAactualizar.id_casillero_formulario);
                         createRowView(element, estructuraAactualizar.id_casillero_formulario, newRow, iPosition);
                     });
-                    loadForm(nombreFormulario, myForm.formData[formAnalysisUnit][iPosition],formAnalysisUnit, iPosition+1,  myForm);
+                    loadForm(nombreFormulario, myForm.formData[formAnalysisUnit][iPosition],formAnalysisUnit, iPosition+1,  myForm, newButton);
                 }
                 var readybutton = html.button({class:'boton-listo-formulario'}, "Listo ").create();
                 readybutton.onclick=function(){
@@ -1114,7 +1116,6 @@ export class FormManager{
             }
             var control=formManager.controls[actual];
             if(todasLasVariablesVacias(actual, controles) || !formManager.variables[actual].optativa && !control.getTypedValue()){ 
-                console.log("entra")
                 var focusElement;
                 focusElement = controles[actual];
                 if(focusElement){
