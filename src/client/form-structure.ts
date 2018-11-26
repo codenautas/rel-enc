@@ -413,7 +413,7 @@ export class tipoc_F extends tipoc_Base{
         var myForm = this.myForm;
         if(myForm.stackLength()){
             var firstFromStack = myForm.getFirstFromStack();
-            var button = html.button({id:'volver-a-'+firstFromStack.formName+'-'+position+'-from-'+myForm.formId, class:'boton-formulario'}, "Volver al "+ firstFromStack.formName).create();
+            var button = html.button({id:'volver-a-'+firstFromStack.formName+'-'+position+'-from-'+myForm.formId, class:'boton-formulario', "enter-clicks":true}, "Volver al "+ firstFromStack.formName).create();
             button.onclick=function(){
                 var mainForm=document.getElementById(myForm.mainFormHTMLId);
                 myForm.removeFirstFromStack();
@@ -708,7 +708,7 @@ export class tipoc_BF extends tipoc_Base{
                 table.appendChild(tr);
             }
             if(PuedeAgregarRenglones){
-                var newButton = html.button({id:'boton-nuevo-'+nombreFormulario, class:'boton-nuevo-formulario'}, "Nuevo " + nombreFormulario).create();
+                var newButton = html.button({id:'boton-nuevo-'+nombreFormulario, class:'boton-nuevo-formulario', "enter-clicks":true}, "Nuevo " + nombreFormulario).create();
                 var self = this;
                 newButton.onclick=function(){
                     var control = myForm.controls[self.data.var_name];
