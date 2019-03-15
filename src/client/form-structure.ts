@@ -8,8 +8,7 @@ import {html} from "js-to-html"
 import * as likeAr from "like-ar"
 import * as TypedControls from "typed-controls"
 import * as TypeStore from "type-store"
-import "dialog-promise"
-import * as my from "myOwn";
+// import "dialog-promise"
 
 type HtmlAttrs={
     class?:string,
@@ -26,7 +25,7 @@ interface ExtendedHtmlAttrs extends HtmlAttrs{
 };
 //GENERALIZAR (sacar de BBDD desde meta-enc)
 export var formTypes:{
-    [key:string]:{htmlType:'text'|'number'  , typeName:'bigint'|'text'|'decimal'|'date'|'interval', validar:'texto'|'opciones'|'numerico', radio?:boolean}
+    [key:string]:{htmlType:'text'|'number'|'tel'  , typeName:'bigint'|'text'|'decimal'|'date'|'interval', validar:'texto'|'opciones'|'numerico', radio?:boolean}
 }={
     si_no_nn: {htmlType:'number', typeName:'bigint'   , validar:'opciones', radio:true},
     si_no   : {htmlType:'number', typeName:'bigint'   , validar:'opciones', radio:true},
@@ -35,7 +34,7 @@ export var formTypes:{
     opciones: {htmlType:'number', typeName:'bigint'   , validar:'opciones', radio:true},
     texto   : {htmlType:'text'  , typeName:'text'     , validar:'texto'   ,           },
     fecha   : {htmlType:'tel'   , typeName:'date'     , validar:'texto'   ,           },
-    hora    : {htmlType:'tel'  , typeName:'interval' , validar:'texto'   ,           },
+    hora    : {htmlType:'tel'   , typeName:'interval' , validar:'texto'   ,           },
 };
 
 export interface ExtendedHTMLElement extends HTMLElement{
@@ -109,7 +108,7 @@ export type NavigationStack = {
     analysisUnit:string
     iPosition:number
     scrollY: number
-    callerElement: HTMLButton;
+    callerElement: HTMLButtonElement
 }
 
 export type FormStructureState = {
@@ -235,11 +234,11 @@ export class tipoc_Base{ // clase base de los tipos de casilleros
         ));
     }
     displayInputForOptions(){
-        var inputAttr:jsToHtml.Attr4HTMLInputElement={
+        var inputAttr={
             class:'typed-control-input-for-options',
             "type":formTypes[this.data.tipovar].htmlType,
             "enter-clicks":"internal"
-        }
+        } as jsToHtml.Attr4HTMLInputElement; 
         if(formTypes[this.data.tipovar].htmlType == 'number'){
             inputAttr["min"]='1';
             inputAttr["max"]=this.childs.length.toString();

@@ -1,0 +1,12 @@
+{
+    "compilerOptions": {
+        "outDir": "server",
+        "module": "none",
+        "target": "es2018",
+        "lib":["es2017", "es2018"]
+    },
+    "include":[
+        "src/server"
+    ], 
+    "extends": "src/server/tsconfig.json"
+}
