@@ -1,12 +1,11 @@
 {
     "compilerOptions": {
-        "outDir": "client",
-        "module": "umd",
-        "target": "es5",
-        "lib":["es5", "dom"]
+        "outDir": "../../dist/client",
+        "typeRoots" : ["node_modules/@types", "../../node_modules/types.d.ts/modules"],
+        "lib": ["es5", "dom"]
     },
     "include":[
         "."
     ],
-    "extends": "../tsconfig-common.json"
+    "extends": "../../tsconfig-common.json"
 }

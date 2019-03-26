@@ -1,16 +1,17 @@
 {
     "compilerOptions": {
         "declaration": true,
-        "outDir": "x:\this-dir-must-not-be-created",
+        "outDir": "x:\\this-dir-must-not-be-created",
         "inlineSourceMap": true,
         "inlineSources": true,
         "moduleResolution": "node",
         "lib":["es2015"],
-        "target": "es2017",
+        "target": "es5",
+        "strict": true, // por ahora lo dejamos deshabilitado aunque sirve activarlo antes de pushear para ver algunos posibles errores.
+        "skipLibCheck": true, //para que no haga chequeo de tipos en los declaration files dentro de node-modules(pg-promise-strict, express, node)
         "module": "umd",
-        "strict": true,
         "typeRoots" : ["node_modules/@types", "node_modules/types.d.ts/modules"],
-        "skipLibCheck": true, // para que no chequee los tipos de node_modules
+        "declarationMap": true,
         "noImplicitAny": true,
         "alwaysStrict": true,
         "noUnusedLocals": true,
@@ -18,8 +19,4 @@
         "noImplicitReturns": true, /* Report error when not all code paths in function return a value. */
         "noFallthroughCasesInSwitch": true
     },
-    "include": [
-        "src",
-        "test"
-    ]
 }
