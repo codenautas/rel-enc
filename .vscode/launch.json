@@ -10,7 +10,7 @@
             "request": "launch",
             "name": "Launch Program",
             "preLaunchTask": "build-all",
-            "program": "${workspaceFolder}/server/server-rel-enc.js",
+            "program": "${workspaceFolder}/dist/server/server-rel-enc.js",
             "outFiles": [
                 "${workspaceFolder}/**/*.js"
             ]
@@ -20,7 +20,7 @@
             "request": "launch",
             "name": "dumpDb",
             "preLaunchTask": "tsc-server",
-            "program": "${workspaceFolder}/server/server-rel-enc.js",
+            "program": "${workspaceFolder}/dist/server/server-rel-enc.js",
             "args": [
                 "--dump-db"
             ],
