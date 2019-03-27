@@ -8,7 +8,11 @@ export function emergeAppRelEnc<T extends Constructor<operativos.AppOperativosTy
     return class AppRelEnc extends Base{
         constructor(...args:any[]){ 
             super(args);    
-            this.allClientFileNames.push({type:'js', module: 'rel-enc', modPath: '../client', file: 'form-structure.js', path: 'client_modules', ts:{url:'client', path:'client'}})
+        }
+        clientIncludes(req:Request, hideBEPlusInclusions:boolean){
+            return super.clientIncludes(req, hideBEPlusInclusions).concat([
+                {type:'js', module: 'rel-enc', modPath: '../client', file: 'form-structure.js', path: 'client_modules'}
+            ]);
         }
     }
 }
