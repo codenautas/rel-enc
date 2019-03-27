@@ -1,7 +1,6 @@
 "use strict";
-
 import * as operativos from "operativos";
-export * from "operativos";
+export * from "./types-rel-enc";
 export type Constructor<T> = new(...args: any[]) => T;
 
 export function emergeAppRelEnc<T extends Constructor<operativos.AppOperativosType>>(Base:T){
