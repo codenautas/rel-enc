@@ -752,7 +752,14 @@ export class tipoc_BF extends tipoc_Base{
             }
         }
         myForm.formsButtonZone[this.data.casillero]=groupElement;
-    }    
+    }
+    displayInput(){
+        var span = super.displayInput();
+        if(span){
+            span.setAttribute('hide-input','true');
+        }
+        return span
+    }
 }
 
 export type SurveyData=any;
