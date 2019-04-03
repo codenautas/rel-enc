@@ -47,21 +47,21 @@ export interface ExtendedHTMLElement extends HTMLElement{
 export type InfoCasilleroRegistro={
     tipoc:string
     id_casillero:string
-    ver_id:string
+    ver_id:string|null
     casillero:string
-    tipovar:string
-    longitud:number
+    tipovar:string|null
+    longitud:number|null
     optativo:boolean
-    salto:string
-    despliegue:string
+    salto:string|null
+    despliegue:string|null
     nombre:string
     tipoe:string
-    aclaracion:string
-    padre:string
+    aclaracion:string|null
+    padre:string|null
     unidad_analisis: string
-    cantidad_resumen: number
-    var_name: string
-    ultimo_ancestro: string
+    cantidad_resumen: number|null
+    var_name: string|null
+    ultimo_ancestro: string|null
 }
 
 export type InfoCasillero={
@@ -87,18 +87,18 @@ export type SurveyStructure={
 export type Variable={
     calculada:boolean
     optativa:boolean
-    salto:string
-    saltoNsNr:string
+    salto:string|null
+    saltoNsNr:string|null
     opciones?:{
         [key:string]:{
             salto:string
         }
     }
     tipo:string
-    maximo:string
-    minimo:string
-    subordinadaVar:string
-    subordinadaValor:any
+    maximo:string|null
+    minimo:string|null
+    subordinadaVar:string|null
+    subordinadaValor:any|null
 }
 
 export type NavigationStack = {
@@ -134,8 +134,9 @@ export type analysisUnitStructure = {
 
 export class tipoc_Base{ // clase base de los tipos de casilleros
     childs:tipoc_Base[]=[]
-    data:InfoCasilleroRegistro
+    private data:InfoCasilleroRegistro
     inTable:boolean=false
+    parent:tipoc_Base|null=null
     constructor(infoCasillero:InfoCasillero, public myForm:FormManager){
         this.data=infoCasillero.data;
         this.setChilds(infoCasillero.childs)
@@ -146,8 +147,11 @@ export class tipoc_Base{ // clase base de los tipos de casilleros
         }
     }
     setChilds(childsInfo:InfoCasillero[]){
+        var base=this;
         this.childs = childsInfo.map(function(childInfo){
-            return this.myForm.newInstance(childInfo);
+            var child = base.myForm.newInstance(childInfo);
+            child.parent = base;
+            return child;
         },this);
     }
     displayRef(opts:DisplayOpts={}):jsToHtml.ArrayContent{
@@ -182,9 +186,9 @@ export class tipoc_Base{ // clase base de los tipos de casilleros
         } as ExtendedHtmlAttrs).create();
         TypedControls.adaptElement(control,formTypes[this.data.tipovar]);
         this.myForm.variables[this.var_name]={
-            optativa:this.data.optativo || /_esp/.test(this.var_name),
-            salto:(this.data.salto||'').toLowerCase(),
-            saltoNsNr:null && this.data.salto,
+            optativa:this.data.optativo/* || /_esp/.test(this.var_name)*/,
+            salto:this.myForm.searchCasilleroByIdCasillero(this.data.salto).data.var_name,
+            saltoNsNr:this.myForm.searchCasilleroByIdCasillero(this.data.salto).data.var_name,
             tipo:formTypes[this.data.tipovar].validar, // numerico, hora
             maximo:null,
             minimo:null,
@@ -192,6 +196,12 @@ export class tipoc_Base{ // clase base de los tipos de casilleros
             subordinadaVar:null,
             subordinadaValor:null
         };
+        if(this.parent && this.parent.data.tipoc=='O'){
+            if(this.parent.parent && this.parent.parent.data.var_name){
+                this.myForm.variables[this.var_name].subordinadaVar=this.parent.parent.data.var_name;
+                this.myForm.variables[this.var_name].subordinadaValor=this.parent.data.casillero;
+            }
+        }
         this.connectControl(control as ExtendedHTMLElement);
         this.assignEnterKeyAndUpdateEvents(control, control);
         if(direct){
@@ -276,15 +286,18 @@ export class tipoc_Base{ // clase base de los tipos de casilleros
         // si el primogénito más 
     }
     createVariable(){
+        var base = this;
         if((formTypes[this.data.tipovar]||{radio:false}).radio){
             var opciones:{
                 [key:string]:{salto:null|string}
             }={};
-            this.childs.forEach(function(child){ opciones[child.data.casillero]={salto:(child.data.salto||'').toLowerCase()};});
+            this.childs.forEach(function(child){ 
+                opciones[child.data.casillero]={salto:base.myForm.searchCasilleroByIdCasillero(child.data.salto).data.var_name};
+            });
             this.myForm.variables[this.var_name]={
                 optativa:false,
-                salto:(this.data.salto||'').toLowerCase(),
-                saltoNsNr:null && this.data.salto,
+                salto:this.myForm.searchCasilleroByIdCasillero(this.data.salto).data.var_name,
+                saltoNsNr:this.myForm.searchCasilleroByIdCasillero(this.data.salto).data.var_name,
                 tipo:formTypes[this.data.tipovar].validar, // numerico, hora
                 maximo:null,
                 minimo:null,
@@ -856,6 +869,28 @@ export class FormManager{
     display(){
         return html.div({class:'form-content'}, this.content.display()).create()
     }
+    infoCasilleroVacio():InfoCasillero{
+        return {data:{salto:null}}
+    }
+    searchCasilleroByIdCasillero(id_casillero:string|null, insider?:boolean, infoCasillero?: InfoCasillero): InfoCasillero{
+        infoCasillero = insider?infoCasillero:this.surveyManager.surveyMetadata.structure[this.formId];
+        if(!infoCasillero || !id_casillero){
+            return this.infoCasilleroVacio();
+        }
+        for(var i = 0; i < infoCasillero.childs.length; i++) {
+            if (typeof infoCasillero.childs[i] !== "function"){
+                var aux = infoCasillero.childs[i].data.id_casillero;
+                if (aux && (id_casillero === aux || id_casillero === aux.toUpperCase())) {
+                    return infoCasillero.childs[i];
+                }
+            }
+            var result = this.searchCasilleroByIdCasillero(id_casillero, true, infoCasillero.childs[i]);
+            if(result.data.id_casillero){
+                return result;
+            }
+        }
+        return this.infoCasilleroVacio();
+    }
     searchInfoCasilleroByVarName(infoCasillero: InfoCasillero, var_name:string): InfoCasillero{
         for(var i = 0; i < infoCasillero.childs.length; i++) {
             if (typeof infoCasillero.childs[i] !== "function"){
@@ -968,7 +1003,11 @@ export class FormManager{
                 && formData[estructura.variables[miVariable].subordinadaVar]!=estructura.variables[miVariable].subordinadaValor
             ){
                 apagada=true;
-                rta.estados[miVariable]='salteada';
+                if(valor===null){
+                    rta.estados[miVariable]='salteada';
+                }else{
+                    falla('fuera_de_flujo_por_salto');
+                }
             }else{
                 // no estoy en una variable salteada y estoy dentro del flujo normal (no hubo omitidas hasta ahora). 
                 enSaltoAVariable=null; // si estaba en un salto acá se acaba

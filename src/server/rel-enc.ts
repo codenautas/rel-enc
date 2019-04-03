@@ -10,7 +10,10 @@ export function emergeAppRelEnc<T extends Constructor<operativos.AppOperativosTy
         }
         clientIncludes(req:Request, hideBEPlusInclusions:boolean){
             return super.clientIncludes(req, hideBEPlusInclusions).concat([
-                {type:'js', module: 'rel-enc', modPath: '../client', file: 'form-structure.js', path: 'client_modules'}
+                {type:'js', module: 'rel-enc', modPath: '../client', file: 'form-structure.js', path: 'client_modules'},
+                { type: 'css', module:'rel-enc',  modPath: '../client/css', file: 'formularios.css', path:'rel-enc' },
+                { type: 'css', module:'rel-enc',  modPath: '../client/css', file: 'estados.css', path:'rel-enc' },
+                { type: 'css', module:'rel-enc',  modPath: '../client/css', file: 'my-things2.css', path:'rel-enc' }
             ]);
         }
     }
