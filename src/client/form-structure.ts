@@ -581,43 +581,10 @@ export class tipoc_BF extends tipoc_Base{
         var mostrarUnidadesAnalisisEnResumen=true;
         var nombreFormulario=this.data.casillero;
         var myForm=this.myForm;
-        var clearAllOpenForms = function clearAllOpenForms(nombreFormulario:string){
-            myForm.formData[formAnalysisUnit].forEach(function(rowHijo:any, iPosition:number){
-                var element = document.getElementById('despliegue-formulario-'+nombreFormulario+'-'+(iPosition+1).toString());
-                if(element){
-                    element.innerHTML='';
-                }
-            });
-            groupElement.scrollIntoView();
-        }
-        var loadForm = function loadForm(nombreFormulario: string, formData: any, formAnalysisUnit:string, iPosition:number, myForm:FormManager, callerButton:HTMLButton){
-            var formDisplayElement;
-            if(openInOtherScreen){
-                var formName = myForm.surveyManager.searchUaStructureByFormId(myForm.formId).casillero_formulario;
-                myForm.addToStack({formData:myForm.formData,formName:formName, formId:myForm.formId, analysisUnit: formAnalysisUnit, iPosition: iPosition, scrollY:window.scrollY, callerElement:callerButton})
-                formDisplayElement=document.getElementById(myForm.mainFormHTMLId);
-                window.scrollTo(0,0);
-            }else{
-                clearAllOpenForms(nombreFormulario);
-                formDisplayElement = document.getElementById('despliegue-formulario-'+nombreFormulario+'-'+(iPosition).toString());
-                if(!formDisplayElement && mostrarUnidadesAnalisisEnResumen){
-                    formDisplayElement = document.getElementById('despliegue-formulario-'+nombreFormulario+'-ua-children');
-                }
-            }
-            var aUStructure = myForm.surveyManager.searchUaStructureByFormName(nombreFormulario);
-            var formManager = new FormManager(myForm.surveyManager, aUStructure.id_casillero_formulario, formData, myForm.stack);
-            formManager.iPosition=iPosition
-            var toDisplay = formManager.display();
-            formManager.validateDepot();
-            formManager.refreshState();
-            formDisplayElement.innerHTML='';
-            formDisplayElement.appendChild(toDisplay);
-            formManager.irAlSiguienteDespliegue(formManager.state.primeraVacia);
-        }
         var createFormButton = function createFormButton(formName:string, buttonDescription:string, myForm:FormManager, rowHijo:any, formAnalysisUnit:string, iPosition:number):HTMLButtonElement{
             var button = html.button({id:'ver-'+formName+'-'+iPosition, class:'boton-formulario'}, buttonDescription).create();
             button.onclick=function(){
-                loadForm(formName, rowHijo, formAnalysisUnit, iPosition, myForm, button);
+                myForm.loadForm(formName, rowHijo, formAnalysisUnit, iPosition, myForm, button);
             };
             return button;
         }
@@ -640,7 +607,7 @@ export class tipoc_BF extends tipoc_Base{
                                     if(formIdForUa){
                                         var button = html.button({id:'ver-'+formIdForUa+'-'+(index+1).toString(), class:'boton-formulario'}, formIdForUa + ' ' + (index+1)).create();
                                         button.onclick=function(){
-                                            loadForm(formIdForUa, childFormData, pregunta.var_name, index, myForm, button);
+                                            myForm.loadForm(formIdForUa, childFormData, pregunta.var_name, index, myForm, button);
                                         };
                                         buttonsArray.push(button);
                                     }else{
@@ -723,18 +690,13 @@ export class tipoc_BF extends tipoc_Base{
                 var newButton = html.button({id:'boton-nuevo-'+nombreFormulario, class:'boton-nuevo-formulario', "enter-clicks":true}, "Nuevo " + nombreFormulario).create();
                 var self = this;
                 newButton.onclick=function(){
+                    var newRow = myForm.createAndAddAnalysisUnit(formAnalysisUnit);
                     var control = myForm.controls[self.data.var_name];
                     if(control){
                         control.setTypedValue(null, true);
                     }
-                    var aUStructure =  myForm.surveyManager.searchUaStructureByUa(formAnalysisUnit);
-                    var newRow:any = {};
-                    aUStructure.preguntas.forEach(function(pregunta){
-                        newRow[pregunta.var_name] = pregunta.es_unidad_analisis?[]:null;
-                    });
-                    myForm.formData[formAnalysisUnit].push(newRow);
-                    myForm.saveSurvey();
                     var iPosition = myForm.formData[formAnalysisUnit].length-1;
+                    myForm.loadForm(nombreFormulario, myForm.formData[formAnalysisUnit][iPosition],formAnalysisUnit, iPosition+1,  myForm, newButton);
                     var estructurasAactualizar = myForm.surveyManager.surveyMetadata.analysisUnitStructure.filter(function(auStructure){
                         return auStructure.unidad_analisis === formAnalysisUnit;
                     });
@@ -742,12 +704,11 @@ export class tipoc_BF extends tipoc_Base{
                         var element = document.getElementById('resumen-'+estructuraAactualizar.id_casillero_formulario);
                         createRowView(element, estructuraAactualizar.id_casillero_formulario, newRow, iPosition);
                     });
-                    loadForm(nombreFormulario, myForm.formData[formAnalysisUnit][iPosition],formAnalysisUnit, iPosition+1,  myForm, newButton);
                 }
                 var readybutton = html.button({class:'boton-listo-formulario'}, "Listo ").create();
                 readybutton.onclick=function(){
                     if(!openInOtherScreen){
-                        clearAllOpenForms(nombreFormulario);
+                        myForm.clearAllOpenForms(nombreFormulario,formAnalysisUnit);
                     }
                     var control = myForm.controls[self.data.var_name];
                     if(control){
@@ -868,6 +829,51 @@ export class FormManager{
     }
     display(){
         return html.div({class:'form-content'}, this.content.display()).create()
+    }
+    clearAllOpenForms(nombreFormulario:string, formAnalysisUnit:string){
+        var myForm = this;
+        myForm.formData[formAnalysisUnit].forEach(function(rowHijo:any, iPosition:number){
+            var element = document.getElementById('despliegue-formulario-'+nombreFormulario+'-'+(iPosition+1).toString());
+            if(element){
+                element.innerHTML='';
+            }
+        });
+    }
+    loadForm(nombreFormulario: string, formData: any, formAnalysisUnit:string, iPosition:number, myForm:FormManager, callerButton:HTMLButton){
+        var mostrarUnidadesAnalisisEnResumen=true;
+        var formDisplayElement;
+        if(OPEN_IN_OTHER_SCREEN){
+            var formName = myForm.surveyManager.searchUaStructureByFormId(myForm.formId).casillero_formulario;
+            myForm.addToStack({formData:myForm.formData,formName:formName, formId:myForm.formId, analysisUnit: formAnalysisUnit, iPosition: iPosition, scrollY:window.scrollY, callerElement:callerButton})
+            formDisplayElement=document.getElementById(myForm.mainFormHTMLId);
+            window.scrollTo(0,0);
+        }else{
+            this.clearAllOpenForms(nombreFormulario, formAnalysisUnit);
+            formDisplayElement = document.getElementById('despliegue-formulario-'+nombreFormulario+'-'+(iPosition).toString());
+            if(!formDisplayElement && mostrarUnidadesAnalisisEnResumen){
+                formDisplayElement = document.getElementById('despliegue-formulario-'+nombreFormulario+'-ua-children');
+            }
+        }
+        var aUStructure = myForm.surveyManager.searchUaStructureByFormName(nombreFormulario);
+        var formManager = new FormManager(myForm.surveyManager, aUStructure.id_casillero_formulario, formData, myForm.stack);
+        formManager.iPosition=iPosition
+        var toDisplay = formManager.display();
+        formManager.validateDepot();
+        formManager.refreshState();
+        formDisplayElement.innerHTML='';
+        formDisplayElement.appendChild(toDisplay);
+        formManager.irAlSiguienteDespliegue(formManager.state.primeraVacia);
+    }
+    createAndAddAnalysisUnit(analysisUnit:string):any{
+        var myForm = this;
+        var aUStructure =  myForm.surveyManager.searchUaStructureByUa(analysisUnit);
+        var newRow:any = {};
+        aUStructure.preguntas.forEach(function(pregunta){
+            newRow[pregunta.var_name] = pregunta.es_unidad_analisis?[]:null;
+        });
+        myForm.formData[analysisUnit].push(newRow);
+        myForm.saveSurvey();
+        return newRow;
     }
     infoCasilleroVacio():InfoCasillero{
         return {data:{salto:null}}
