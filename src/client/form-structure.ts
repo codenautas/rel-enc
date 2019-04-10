@@ -256,7 +256,8 @@ export class tipoc_Base{ // clase base de los tipos de casilleros
         var inputAttr={
             class:'typed-control-input-for-options',
             "type":formTypes[this.data.tipovar].htmlType,
-            "enter-clicks":"internal"
+            "enter-clicks":"internal",
+            "is-mobile":myOwn.config.useragent.isMobile.toString()
         } as jsToHtml.Attr4HTMLInputElement; 
         if(formTypes[this.data.tipovar].htmlType == 'number'){
             inputAttr["min"]='1';
