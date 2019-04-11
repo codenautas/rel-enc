@@ -287,6 +287,7 @@ export class tipoc_Base{ // clase base de los tipos de casilleros
             return content;
         }
         var groupElement = html.div({id:this.data.id_casillero, class:'tipoc_'+this.data.tipoc},content).create();
+        this.myForm.casillerosById[this.data.id_casillero]=groupElement;
         this.adaptOptionInput(groupElement);
         return [groupElement];
     }
@@ -683,7 +684,9 @@ export class tipoc_O extends tipoc_Base{
         if(special){
             return {tds:content};
         }
-        return html.tr({id:this.data.id_casillero, class:"tipoc_O"},content);
+        var tr = html.tr({id:this.data.id_casillero, class:"tipoc_O"},content).create();
+        this.myForm.casillerosById[this.data.id_casillero]=tr;
+        return tr;
     }
 }
 
@@ -705,12 +708,14 @@ export class tipoc_OM extends tipoc_Base{
             }))
         )).create();
         this.adaptOptionInput(trOM);
-        return [trOM].concat(
+        var element = [trOM].concat(
             Array.prototype.concat.apply([],this.childs.map(function(child){
                 child.inTable=true;
                 return child.display(true).slice(1);
             }))
         );
+        this.myForm.casillerosById[this.data.id_casillero]=trOM;
+        return element
     }
     displayChilds(){
         return this.childs?[html.table({class:"hijos"},Array.prototype.concat.apply([],this.childs.map(function(child){
@@ -847,6 +852,7 @@ export class FormManager{
     controlBox:{[key:string]:ExtendedHTMLElement}={}
     esModoIngreso: boolean=true
     formsButtonZone:{[key:string]:ExtendedHTMLElement}={}
+    casillerosById:{[key:string]:ExtendedHTMLElement}={}
     state:FormStructureState={}
     mainFormHTMLId = 'main-form'; //Quitar generalizacion
     iPosition:number=1
