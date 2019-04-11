@@ -821,17 +821,17 @@ export class SurveyManager{
         );
         return;
     }
-    searchUaStructureByUa(ua:string):analysisUnitStructure{
+    searchUaStructureByUa(ua:string):analysisUnitStructure|undefined{
         return this.surveyMetadata.analysisUnitStructure.find(function(au){
             return au.unidad_analisis === ua;
         })
     }
-    searchUaStructureByFormId(formId:string):analysisUnitStructure{
+    searchUaStructureByFormId(formId:string):analysisUnitStructure|undefined{
         return this.surveyMetadata.analysisUnitStructure.find(function(au){
             return au.id_casillero_formulario === formId;
         })
     }
-    searchUaStructureByFormName(formName:string):analysisUnitStructure{
+    searchUaStructureByFormName(formName:string):analysisUnitStructure|undefined{
         return this.surveyMetadata.analysisUnitStructure.find(function(au){
             return au.casillero_formulario === formName;
         })
