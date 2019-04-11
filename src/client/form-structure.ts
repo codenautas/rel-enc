@@ -1014,7 +1014,7 @@ export class FormManager{
             if (typeof infoCasillero.childs[i] !== "function"){
                 var data = infoCasillero.childs[i].data;
                 if(data.tipoc === 'BF' && data.ultimo_ancestro === formId){
-                    var ua:string = null; 
+                    var ua:string|null = null; 
                     if(data.unidad_analisis){
                         ua = data.unidad_analisis;
                     }else{
