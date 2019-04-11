@@ -896,6 +896,7 @@ export class FormManager{
         if(this.stackLength()==0){
             sessionStorage.removeItem('ultimo-formulario-cargado');
         }
+        my.currentFormManager = this;
         return html.div({class:'form-content'}, this.content.display()).create()
     }
     clearAllOpenForms(nombreFormulario:string, formAnalysisUnit:string){
@@ -941,6 +942,7 @@ export class FormManager{
         formDisplayElement.innerHTML='';
         formDisplayElement.appendChild(toDisplay);
         formManager.irAlSiguienteDespliegue(formManager.state.primeraVacia);
+        my.currentFormManager = formManager;
     }
     createAndAddAnalysisUnit(analysisUnit:string):any{
         var myForm = this;
