@@ -286,7 +286,7 @@ export class tipoc_Base{ // clase base de los tipos de casilleros
         if(this.inTable){
             return content;
         }
-        var groupElement = html.div({class:'tipoc_'+this.data.tipoc},content).create();
+        var groupElement = html.div({id:this.data.id_casillero, class:'tipoc_'+this.data.tipoc},content).create();
         this.adaptOptionInput(groupElement);
         return [groupElement];
     }
@@ -683,7 +683,7 @@ export class tipoc_O extends tipoc_Base{
         if(special){
             return {tds:content};
         }
-        return html.tr({class:"tipoc_O"},content);
+        return html.tr({id:this.data.id_casillero, class:"tipoc_O"},content);
     }
 }
 
@@ -694,7 +694,7 @@ export class tipoc_OM extends tipoc_Base{
             input = this.displayInputForOptions();
         }
         this.createVariable();
-        var trOM=html.tr({class:"tipoc_OM"},[].concat(
+        var trOM=html.tr({id:this.data.id_casillero, class:"tipoc_OM"},[].concat(
             html.td({class:'casillero'},this.displayRef()),
             html.td({class:'vacio'}),
             html.td({class:'nombre'},this.displayMainText())
