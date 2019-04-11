@@ -975,7 +975,7 @@ export class FormManager{
         }
         return this.infoCasilleroVacio();
     }
-    searchInfoCasilleroByVarName(infoCasillero: InfoCasillero, var_name:string): InfoCasillero{
+    searchInfoCasilleroByVarName(infoCasillero: InfoCasillero, var_name:string): InfoCasillero|null{
         for(var i = 0; i < infoCasillero.childs.length; i++) {
             if (typeof infoCasillero.childs[i] !== "function"){
                 var aux = infoCasillero.childs[i].data.var_name;
@@ -1009,7 +1009,7 @@ export class FormManager{
         return respuesta;
     }
     //COMPLETAR
-    searchFormIdForUaInForm(infoCasillero:InfoCasillero, formId:string, analysisUnit:string):string{
+    searchFormIdForUaInForm(infoCasillero:InfoCasillero, formId:string, analysisUnit:string):string|null{
         for(var i = 0; i < infoCasillero.childs.length; i++) {
             if (typeof infoCasillero.childs[i] !== "function"){
                 var data = infoCasillero.childs[i].data;
@@ -1052,7 +1052,7 @@ export class FormManager{
         var yaPasoLaActual=false;
         var enSaltoAVariable=null; // null si no estoy saltando y el destino del salto si estoy dentro de un salto. 
         var conOmitida=false;
-        var miVariable:string=null; // variable actual del ciclo
+        var miVariable:string|null=null; // variable actual del ciclo
         var falla=function(estado:string){
             rta.estados[miVariable]=estado;
             if(!rta.primeraFalla){
