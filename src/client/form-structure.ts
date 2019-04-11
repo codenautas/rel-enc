@@ -143,7 +143,7 @@ export type analysisUnitStructure = {
 
 export class tipoc_Base{ // clase base de los tipos de casilleros
     childs:tipoc_Base[]=[]
-    private data:InfoCasilleroRegistro
+    public data:InfoCasilleroRegistro
     inTable:boolean=false
     parent:tipoc_Base|null=null
     constructor(infoCasillero:InfoCasillero, public myForm:FormManager){
@@ -785,7 +785,7 @@ export class tipoc_BF extends tipoc_Base{
             }
         }else{
             if(ua && ua.unidad_analisis === uaPadre){
-                groupElement.appendChild(createFormButton(nombreFormulario, nombreFormulario, myForm, myForm.formData, null, null));
+                groupElement.appendChild(this.createFormButton(nombreFormulario, nombreFormulario, myForm, myForm.formData, null, null));
             }else{
                 throw new Error('Casillero BF mal definido en ' + this.data.padre);
             }
