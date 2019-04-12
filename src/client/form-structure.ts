@@ -816,6 +816,9 @@ export class SurveyManager{
     static performCustomActionForNewFormManager(formManager:FormManager){
         //Implementar en appFinal
     }
+    static performCustomActionForLoadedFormManager(formManager:FormManager){
+        //Implementar en appFinal
+    }
     async displayMainForm():Promise<FormManager>{
         return new FormManager(this, this.surveyMetadata.mainForm, this.surveyData, []);
     }
@@ -951,6 +954,7 @@ export class FormManager{
         formDisplayElement.innerHTML='';
         formDisplayElement.appendChild(toDisplay);
         formManager.irAlSiguienteDespliegue(formManager.state.primeraVacia);
+        SurveyManager.performCustomActionForLoadedFormManager(formManager);
     }
     createAndAddAnalysisUnit(analysisUnit:string):any{
         var myForm = this;
