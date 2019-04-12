@@ -813,6 +813,9 @@ export type SurveyId=any;
 export class SurveyManager{
     constructor(public surveyMetadata:SurveyMetadata, public surveyId:SurveyId, public surveyData:SurveyData){
     }
+    static performCustomActionForNewFormManager(formManager:FormManager){
+        //Implementar en appFinal
+    }
     async displayMainForm():Promise<FormManager>{
         return new FormManager(this, this.surveyMetadata.mainForm, this.surveyData, []);
     }
@@ -859,7 +862,7 @@ export class FormManager{
     constructor (public surveyManager:SurveyManager, public formId:string, public formData:FormData, public stack:NavigationStack[]){
         this.content = this.newInstance(surveyManager.surveyStructure[formId]);
         this.adaptStructure();
-        my.currentFormManager = this;
+        SurveyManager.performCustomActionForNewFormManager(this);
     }
     adaptStructure():void{}
     get factory():{[key:string]:typeof tipoc_Base}{
