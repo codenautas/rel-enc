@@ -859,6 +859,7 @@ export class FormManager{
     constructor (public surveyManager:SurveyManager, public formId:string, public formData:FormData, public stack:NavigationStack[]){
         this.content = this.newInstance(surveyManager.surveyStructure[formId]);
         this.adaptStructure();
+        my.currentFormManager = this;
     }
     adaptStructure():void{}
     get factory():{[key:string]:typeof tipoc_Base}{
@@ -902,7 +903,6 @@ export class FormManager{
         if(this.stackLength()==0){
             sessionStorage.removeItem('ultimo-formulario-cargado');
         }
-        my.currentFormManager = this;
         return html.div({class:'form-content'}, this.content.display()).create()
     }
     clearAllOpenForms(nombreFormulario:string, formAnalysisUnit:string){
@@ -948,7 +948,6 @@ export class FormManager{
         formDisplayElement.innerHTML='';
         formDisplayElement.appendChild(toDisplay);
         formManager.irAlSiguienteDespliegue(formManager.state.primeraVacia);
-        my.currentFormManager = formManager;
     }
     createAndAddAnalysisUnit(analysisUnit:string):any{
         var myForm = this;
