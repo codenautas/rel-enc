@@ -576,6 +576,7 @@ export class tipoc_F extends tipoc_Base{
                 formManager.refreshState();
                 mainForm.innerHTML='';
                 mainForm.appendChild(toDisplay);
+                SurveyManager.performCustomActionForLoadedFormManager(formManager);
                 window.scrollTo(0,firstFromStack.scrollY);
                 var caller = document.getElementById(firstFromStack.callerElement.id);
                 if(caller){
@@ -928,7 +929,7 @@ export class FormManager{
             var formName = searchResult.casillero_formulario;
             var analysisUnit = searchResult.unidad_analisis;
             if(pushInNavigationStack){
-                myForm.addToStack({formData:myForm.formData,formName:formName, formId:myForm.formId, analysisUnit: analysisUnit, iPosition: iPosition, scrollY:window.scrollY, callerElement:callerButton, varname:listoVarname})
+                myForm.addToStack({formData:myForm.formData,formName:formName, formId:myForm.formId, analysisUnit: analysisUnit, iPosition: iPosition, scrollY:window.scrollY, callerElement:callerButton, varname:listoVarname});
             }
             formDisplayElement=document.getElementById(myForm.mainFormHTMLId);
             window.scrollTo(0,0);
