@@ -16,7 +16,8 @@
     "operativos": "~0.5.14"
   },
   "devDependencies": {
-    "types.d.ts": "~0.4.1"
+    "types.d.ts": "~0.4.1",
+    "cpy-cli": "~2.0.0"
   },
   "engines": {
     "node": ">= 8.0.0"
