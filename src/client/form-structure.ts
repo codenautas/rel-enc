@@ -428,7 +428,7 @@ export class tipoc_Base{ // clase base de los tipos de casilleros
         var self = this;
         var button = html.button({id:'ver-'+formName+'-'+iPosition, class:'boton-formulario'}, buttonDescription).create();
         button.onclick=function(){
-            myForm.loadForm(formName, rowHijo, formAnalysisUnit, iPosition, myForm, button, self.data.var_name);
+            FormManager.loadForm(formName, rowHijo, formAnalysisUnit, iPosition, myForm, button, self.data.var_name);
         };
         return button;
     }
@@ -454,7 +454,7 @@ export class tipoc_Base{ // clase base de los tipos de casilleros
                                     if(formIdForUa){
                                         var button = html.button({id:'ver-'+formIdForUa+'-'+(index+1).toString(), class:'boton-formulario'}, formIdForUa + ' ' + (index+1)).create();
                                         button.onclick=function(){
-                                            myForm.loadForm(formIdForUa, childFormData, pregunta.var_name, index, myForm, button, self.data.var_name);
+                                            FormManager.loadForm(formIdForUa, childFormData, pregunta.var_name, index, myForm, button, self.data.var_name);
                                         };
                                         buttonsArray.push(button);
                                     }else{
@@ -545,7 +545,7 @@ export class tipoc_F extends tipoc_Base{
                 var iPosition = formManager.formData[ultimoFormCargado.unidadAnalisis].length-1;
                 var pushInNavigationStack = false;
                 var varname = myForm.searchCasilleroByIdCasillero(self.data.casillero)
-                myForm.loadForm(ultimoFormCargado.nombreFormulario, newRow,ultimoFormCargado.unidadAnalisis, iPosition+1,  formManager, firstFromStack.callerElement, varname, pushInNavigationStack);
+                FormManager.loadForm(ultimoFormCargado.nombreFormulario, newRow,ultimoFormCargado.unidadAnalisis, iPosition+1,  formManager, firstFromStack.callerElement, varname, pushInNavigationStack);
                 self.updateSummary(newRow, ultimoFormCargado.unidadAnalisis, iPosition);
             };
             return newbutton;
@@ -576,6 +576,10 @@ export class tipoc_F extends tipoc_Base{
                 formManager.refreshState();
                 mainForm.innerHTML='';
                 mainForm.appendChild(toDisplay);
+                var operativo = sessionStorage.getItem('operativo');
+                var idCaso = sessionStorage.getItem('surveyId');
+                var parameters = '&operativo='+operativo+'&idCaso='+idCaso+'&formId='+firstFromStack.formId+'&navigationStack='+JSON.stringify(formManager.stack);
+                history.replaceState(null, null, location.origin+location.pathname+my.menuSeparator+'w=loadForm'+parameters);
                 SurveyManager.performCustomActionForLoadedFormManager(formManager);
                 window.scrollTo(0,firstFromStack.scrollY);
                 var caller = document.getElementById(firstFromStack.callerElement.id);
@@ -774,7 +778,7 @@ export class tipoc_BF extends tipoc_Base{
                     var iPosition = myForm.formData[formAnalysisUnit].length-1;
                     self.createRowView(document.getElementById('resumen-'+nombreFormulario), nombreFormulario, newRow, iPosition, formAnalysisUnit);
                     self.updateSummary(newRow, formAnalysisUnit, iPosition);
-                    myForm.loadForm(nombreFormulario, myForm.formData[formAnalysisUnit][iPosition],formAnalysisUnit, iPosition+1,  myForm, newButton, self.data.var_name);
+                    FormManager.loadForm(nombreFormulario, myForm.formData[formAnalysisUnit][iPosition],formAnalysisUnit, iPosition+1,  myForm, newButton, self.data.var_name);
                 }
                 var readybutton = html.button({class:'boton-listo-formulario'}, "Listo ").create();
                 readybutton.onclick=function(){
@@ -863,6 +867,47 @@ export class FormManager{
     state:FormStructureState={}
     mainFormHTMLId = 'main-form'; //Quitar generalizacion
     iPosition:number=1
+    
+    static loadForm(targetFormName: string, targetFormData: any, targetAnalysisUnit:string, targetIPosition:number, sourceFormManager:FormManager, callerButton:HTMLButtonElement, sourceListoVarname:string, pushInNavigationStack: boolean= true){
+        var mostrarUnidadesAnalisisEnResumen=true;
+        var formDisplayElement;
+        var aUStructure = sourceFormManager.surveyManager.searchUaStructureByFormName(targetFormName);
+        var ultimoFormularioCargado:LastLoadedForm = {
+            nombreFormulario: targetFormName,
+            idFormulario: aUStructure.id_casillero_formulario,
+            unidadAnalisis: targetAnalysisUnit
+        }
+        if(OPEN_IN_OTHER_SCREEN){
+            var searchResult:analysisUnitStructure = sourceFormManager.surveyManager.searchUaStructureByFormId(sourceFormManager.formId);
+            var formName = searchResult.casillero_formulario;
+            var analysisUnit = searchResult.unidad_analisis;
+            if(pushInNavigationStack){
+                sourceFormManager.addToStack({formData:sourceFormManager.formData,formName:formName, formId:sourceFormManager.formId, analysisUnit: analysisUnit, iPosition: targetIPosition, scrollY:window.scrollY, callerElement:callerButton, varname:sourceListoVarname});
+            }
+            formDisplayElement=document.getElementById(sourceFormManager.mainFormHTMLId);
+            var operativo = sessionStorage.getItem('operativo');
+            var idCaso = sessionStorage.getItem('surveyId');
+            var parameters = '&operativo='+operativo+'&idCaso='+idCaso+'&formId='+aUStructure.id_casillero_formulario+'&navigationStack='+JSON.stringify(sourceFormManager.stack)+'&unidadAnalisis='+targetAnalysisUnit+'&iPosition='+targetIPosition;
+            history.replaceState(null, null, location.origin+location.pathname+my.menuSeparator+'w=loadForm'+parameters);
+            window.scrollTo(0,0);
+        }else{
+            this.clearAllOpenForms(targetFormName, targetAnalysisUnit);
+            formDisplayElement = document.getElementById('despliegue-formulario-'+targetFormName+'-'+(targetIPosition).toString());
+            if(!formDisplayElement && mostrarUnidadesAnalisisEnResumen){
+                formDisplayElement = document.getElementById('despliegue-formulario-'+targetFormName+'-ua-children');
+            }
+        }
+        sessionStorage.setItem('ultimo-formulario-cargado', JSON.stringify(ultimoFormularioCargado));
+        var formManager = new FormManager(sourceFormManager.surveyManager, aUStructure.id_casillero_formulario, targetFormData, sourceFormManager.stack);
+        formManager.iPosition=targetIPosition
+        var toDisplay = formManager.display();
+        formManager.validateDepot();
+        formManager.refreshState();
+        formDisplayElement.innerHTML='';
+        formDisplayElement.appendChild(toDisplay);
+        formManager.irAlSiguienteDespliegue(formManager.state.primeraVacia);
+        SurveyManager.performCustomActionForLoadedFormManager(formManager);
+    }
     constructor (public surveyManager:SurveyManager, public formId:string, public formData:FormData, public stack:NavigationStack[]){
         this.content = this.newInstance(surveyManager.surveyStructure[formId]);
         this.adaptStructure();
@@ -920,42 +965,6 @@ export class FormManager{
                 element.innerHTML='';
             }
         });
-    }
-    loadForm(nombreFormulario: string, formData: any, formAnalysisUnit:string, iPosition:number, myForm:FormManager, callerButton:HTMLButton, listoVarname:string, pushInNavigationStack: boolean= true){
-        var mostrarUnidadesAnalisisEnResumen=true;
-        var formDisplayElement;
-        if(OPEN_IN_OTHER_SCREEN){
-            var searchResult:analysisUnitStructure = myForm.surveyManager.searchUaStructureByFormId(myForm.formId);
-            var formName = searchResult.casillero_formulario;
-            var analysisUnit = searchResult.unidad_analisis;
-            if(pushInNavigationStack){
-                myForm.addToStack({formData:myForm.formData,formName:formName, formId:myForm.formId, analysisUnit: analysisUnit, iPosition: iPosition, scrollY:window.scrollY, callerElement:callerButton, varname:listoVarname});
-            }
-            formDisplayElement=document.getElementById(myForm.mainFormHTMLId);
-            window.scrollTo(0,0);
-        }else{
-            this.clearAllOpenForms(nombreFormulario, formAnalysisUnit);
-            formDisplayElement = document.getElementById('despliegue-formulario-'+nombreFormulario+'-'+(iPosition).toString());
-            if(!formDisplayElement && mostrarUnidadesAnalisisEnResumen){
-                formDisplayElement = document.getElementById('despliegue-formulario-'+nombreFormulario+'-ua-children');
-            }
-        }
-        var aUStructure = myForm.surveyManager.searchUaStructureByFormName(nombreFormulario);
-        var ultimoFormularioCargado:LastLoadedForm = {
-            nombreFormulario: nombreFormulario,
-            idFormulario: aUStructure.id_casillero_formulario,
-            unidadAnalisis: formAnalysisUnit
-        }
-        sessionStorage.setItem('ultimo-formulario-cargado', JSON.stringify(ultimoFormularioCargado));
-        var formManager = new FormManager(myForm.surveyManager, aUStructure.id_casillero_formulario, formData, myForm.stack);
-        formManager.iPosition=iPosition
-        var toDisplay = formManager.display();
-        formManager.validateDepot();
-        formManager.refreshState();
-        formDisplayElement.innerHTML='';
-        formDisplayElement.appendChild(toDisplay);
-        formManager.irAlSiguienteDespliegue(formManager.state.primeraVacia);
-        SurveyManager.performCustomActionForLoadedFormManager(formManager);
     }
     createAndAddAnalysisUnit(analysisUnit:string):any{
         var myForm = this;
