@@ -540,7 +540,9 @@ export class tipoc_F extends tipoc_Base{
                 var firstFromStack = myForm.getFirstFromStack();
                 //instancio un form manager con el form padre agregarle otra unidad de analisis
                 var formManager = new FormManager(myForm.surveyManager, firstFromStack.formId, firstFromStack.formData, myForm.stack);
-                formManager.formData[firstFromStack.varname]=null;
+                if(firstFromStack.varname){
+                    formManager.formData[firstFromStack.varname]=null;
+                }
                 var newRow = formManager.createAndAddAnalysisUnit(ultimoFormCargado.unidadAnalisis);
                 var iPosition = formManager.formData[ultimoFormCargado.unidadAnalisis].length-1;
                 var pushInNavigationStack = false;
