@@ -10,6 +10,7 @@ import {html} from "js-to-html"
 import * as likeAr from "like-ar"
 import * as TypedControls from "typed-controls"
 import * as TypeStore from "type-store"
+import { URL } from "url";
 // import "dialog-promise"
 
 type HtmlAttrs={
@@ -103,15 +104,18 @@ export type Variable={
     subordinadaValor:any|null
 }
 
-export type NavigationStack = {
-    formData: any
+export type URLNavigationStack = {
     formName: string
     formId: string
     analysisUnit:string
     iPosition:number
     scrollY: number
-    callerElement: HTMLButtonElement
     varname: string
+}
+
+export type NavigationStack = URLNavigationStack & {
+    formData: any
+    callerElement: HTMLButtonElement|null;
 }
 
 export type LastLoadedForm = {
@@ -580,13 +584,15 @@ export class tipoc_F extends tipoc_Base{
                 mainForm.appendChild(toDisplay);
                 var operativo = sessionStorage.getItem('operativo');
                 var idCaso = sessionStorage.getItem('surveyId');
-                var parameters = '&operativo='+operativo+'&idCaso='+idCaso+'&formId='+firstFromStack.formId+'&navigationStack='+JSON.stringify(formManager.stack);
+                var parameters = '&operativo='+operativo+'&idCaso='+idCaso+'&formId='+firstFromStack.formId+'&navigationStack='+JSON.stringify(formManager.getURLNavigationStack());
                 history.replaceState(null, null, location.origin+location.pathname+my.menuSeparator+'w=loadForm'+parameters);
                 SurveyManager.performCustomActionForLoadedFormManager(formManager);
                 window.scrollTo(0,firstFromStack.scrollY);
-                var caller = document.getElementById(firstFromStack.callerElement.id);
-                if(caller){
-                    caller.focus();
+                if(firstFromStack.callerElement){
+                    var caller = document.getElementById(firstFromStack.callerElement.id);
+                    if(caller){
+                        caller.focus();
+                    }
                 }
             };
             return button;
@@ -889,7 +895,7 @@ export class FormManager{
             formDisplayElement=document.getElementById(sourceFormManager.mainFormHTMLId);
             var operativo = sessionStorage.getItem('operativo');
             var idCaso = sessionStorage.getItem('surveyId');
-            var parameters = '&operativo='+operativo+'&idCaso='+idCaso+'&formId='+aUStructure.id_casillero_formulario+'&navigationStack='+JSON.stringify(sourceFormManager.stack)+'&unidadAnalisis='+targetAnalysisUnit+'&iPosition='+targetIPosition;
+            var parameters = '&operativo='+operativo+'&idCaso='+idCaso+'&formId='+aUStructure.id_casillero_formulario+'&navigationStack='+JSON.stringify(sourceFormManager.getURLNavigationStack())+'&unidadAnalisis='+targetAnalysisUnit+'&iPosition='+targetIPosition;
             history.replaceState(null, null, location.origin+location.pathname+my.menuSeparator+'w=loadForm'+parameters);
             window.scrollTo(0,0);
         }else{
@@ -943,6 +949,18 @@ export class FormManager{
     }
     getFirstFromStack(){
         return this.stack[0];
+    }
+    getURLNavigationStack():URLNavigationStack[]{
+        return this.stack.map(function(element){
+            return {
+                formName: element.formName,
+                formId: element.formId,
+                analysisUnit: element.analysisUnit,
+                iPosition: element.iPosition,
+                scrollY: element.scrollY,
+                varname: element.varname
+            }
+        })
     }
     addToStack(navigationStack:NavigationStack){
         this.stack = [navigationStack].concat(this.stack);
