@@ -584,7 +584,7 @@ export class tipoc_F extends tipoc_Base{
                 mainForm.appendChild(toDisplay);
                 var operativo = sessionStorage.getItem('operativo');
                 var idCaso = sessionStorage.getItem('surveyId');
-                var parameters = '&operativo='+operativo+'&idCaso='+idCaso+'&formId='+firstFromStack.formId+'&navigationStack='+JSON.stringify(formManager.getURLNavigationStack());
+                var parameters = '&operativo='+operativo+'&idCaso='+idCaso+'&formId='+firstFromStack.formId+'&navigationStack='+JSON.stringify(formManager.getURLNavigationStack())+'&unidadAnalisis='+firstFromStack.analysisUnit+'&iPosition='+firstFromStack.iPosition;
                 history.replaceState(null, null, location.origin+location.pathname+my.menuSeparator+'w=loadForm'+parameters);
                 SurveyManager.performCustomActionForLoadedFormManager(formManager);
                 window.scrollTo(0,firstFromStack.scrollY);
