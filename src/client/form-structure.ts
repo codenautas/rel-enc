@@ -550,7 +550,7 @@ export class tipoc_F extends tipoc_Base{
                 var newRow = formManager.createAndAddAnalysisUnit(ultimoFormCargado.unidadAnalisis);
                 var iPosition = formManager.formData[ultimoFormCargado.unidadAnalisis].length-1;
                 var pushInNavigationStack = false;
-                var varname = myForm.searchCasilleroByIdCasillero(self.data.casillero)
+                var varname = myForm.searchCasilleroByIdCasillero(self.data.casillero).data.var_name;
                 FormManager.loadForm(ultimoFormCargado.nombreFormulario, newRow,ultimoFormCargado.unidadAnalisis, iPosition+1,  formManager, firstFromStack.callerElement, varname, pushInNavigationStack);
                 self.updateSummary(newRow, ultimoFormCargado.unidadAnalisis, iPosition);
             };
