@@ -876,7 +876,7 @@ export class FormManager{
     mainFormHTMLId = 'main-form'; //Quitar generalizacion
     iPosition:number=1
     
-    static loadForm(targetFormName: string, targetFormData: any, targetAnalysisUnit:string, targetIPosition:number, sourceFormManager:FormManager, callerButton:HTMLButtonElement, sourceListoVarname:string, pushInNavigationStack: boolean= true){
+    static loadForm(targetFormName: string, targetFormData: any, targetAnalysisUnit:string, targetIPosition:number, sourceFormManager:FormManager, callerButton:HTMLButtonElement, sourceListoVarname:string|null, pushInNavigationStack: boolean= true){
         var mostrarUnidadesAnalisisEnResumen=true;
         var formDisplayElement;
         var aUStructure = sourceFormManager.surveyManager.searchUaStructureByFormName(targetFormName);
