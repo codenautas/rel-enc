@@ -65,6 +65,9 @@ export type InfoCasilleroRegistro={
     cantidad_resumen: number|null
     var_name: string|null
     ultimo_ancestro: string|null
+    expresion_habilitar: string|null
+    valor_ns_nc: string|null
+    valor_sin_dato: string|null
 }
 
 export type InfoCasillero={
@@ -198,6 +201,12 @@ export class tipoc_Base{ // clase base de los tipos de casilleros
             "type":formTypes[this.data.tipovar].htmlType,
         } as ExtendedHtmlAttrs).create();
         TypedControls.adaptElement(control,formTypes[this.data.tipovar]);
+        if(this.data.valor_ns_nc){
+            control.controledType.typeInfo.valueNoData=this.data.valor_ns_nc;
+        }
+        if(this.data.valor_sin_dato){
+            control.controledType.typeInfo.valueUnknownData=this.data.valor_sin_dato;
+        }
         this.myForm.variables[this.var_name]={
             optativa:this.data.optativo/* || /_esp/.test(this.var_name)*/,
             salto:this.myForm.searchCasilleroByIdCasillero(this.data.salto).data.var_name,
