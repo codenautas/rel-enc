@@ -464,6 +464,12 @@ export class tipoc_Base{ // clase base de los tipos de casilleros
         if(!control.controledType.isValidTypedData(actualValue)){
             actualValue = control.controledType.fromPlainJson(actualValue);
         }
+        if(this.data.valor_ns_nc){
+            control.controledType.typeInfo['valueNoData']=this.data.valor_ns_nc;
+        }
+        if(this.data.valor_sin_dato){
+            control.controledType.typeInfo['valueUnknownData']=this.data.valor_sin_dato;
+        }
         control.setTypedValue(actualValue);
         control.myForm=myForm;
         control.addEventListener('update', function(var_name){
