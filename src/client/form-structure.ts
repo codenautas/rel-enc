@@ -957,7 +957,7 @@ export class FormManager{
             var formName = searchResult.casillero_formulario;
             var analysisUnit = searchResult.unidad_analisis;
             if(pushInNavigationStack){
-                sourceFormManager.addToStack({formData:sourceFormManager.formData,formName:formName, formId:sourceFormManager.formId, analysisUnit: analysisUnit, iPosition: targetIPosition, scrollY:window.scrollY, callerElement:callerButton, varname:sourceListoVarname});
+                sourceFormManager.addToStack({formData:sourceFormManager.formData,formName:formName, formId:sourceFormManager.formId, analysisUnit: analysisUnit, iPosition: sourceFormManager.iPosition, scrollY:window.scrollY, callerElement:callerButton, varname:sourceListoVarname});
             }
             formDisplayElement=document.getElementById(sourceFormManager.mainFormHTMLId);
             var operativo = sessionStorage.getItem('operativo');
