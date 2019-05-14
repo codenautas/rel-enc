@@ -89,19 +89,23 @@ export var formTypes:{
     hora    : {htmlType:'tel'   , typeName:'interval' , validar:'texto'   ,           },
 };
 
+/*
 export interface ExtendedHTMLElement extends HTMLElement{
     // myForm:FormManager,
     getTypedValue:()=>any,
     setTypedValue:(value:any, fromUserInteraction?:boolean)=>void,
     disable:(disabled?:boolean)=>void,
 }
+ as TypedControls.TypedControl<HTMLInputElement>
+*/
 
+type ExtendedHTMLElement = TypedControls.TypedControl<any> & { myForm?:FormManager }
+    
 export type InfoCasilleroRegistro={
     tipoc:string
     id_casillero:string
     ver_id:string|null
     casillero:string
-    tipovar:string|null
     longitud:number|null
     optativo:boolean
     salto:string|null
@@ -112,12 +116,17 @@ export type InfoCasilleroRegistro={
     padre:string|null
     unidad_analisis: string
     cantidad_resumen: number|null
-    var_name: string|null
     ultimo_ancestro: string|null
     expresion_habilitar: string|null
     valor_ns_nc: string|null
     valor_sin_dato: string|null
-}
+} & ({
+    tipovar:null
+    var_name:null
+}|{
+    tipovar:string
+    var_name:string
+})
 
 export type InfoCasillero={
     data:InfoCasilleroRegistro,
@@ -403,6 +412,9 @@ export class tipoc_Base{ // clase base de los tipos de casilleros
     }
     adaptOptionInput(group:ExtendedHTMLElement){
         var self = this;
+        if(!('controledType' in group)){
+            throw new Error('debe haber controles type en adaptOptionInput');
+        }
         this.myForm.elements[this.data.casillero]=group;
         if(this.data.tipovar){
             this.myForm.controlBox[this.var_name]=group;
@@ -446,7 +458,7 @@ export class tipoc_Base{ // clase base de los tipos de casilleros
         }
     }    
     get var_name():string{
-        if(!this.data.tipovar){
+        if(this.data.tipovar==null){
             throw new Error(this.data.tipovar+' no es un tipo');
         }
         return this.data.var_name;
@@ -472,6 +484,7 @@ export class tipoc_Base{ // clase base de los tipos de casilleros
     }
     connectControl(control:ExtendedHTMLElement){
         var myForm = this.myForm;
+        if(!('controledType' in control)){ throw new Error('Falta adaptar el control') };
         if(this.data.despliegue=='calculada'){
             control.disable(true);
         }
@@ -494,6 +507,7 @@ export class tipoc_Base{ // clase base de los tipos de casilleros
         control.myForm=myForm;
         control.addEventListener('update', function(var_name){
             return function(){
+                // @ts-ignore  // no reconoce el this
                 var value = this.getTypedValue();
                 value = value != null?control.controledType.toPlainJson(value):null;
                 myForm.formData[var_name] = value;
@@ -504,7 +518,7 @@ export class tipoc_Base{ // clase base de los tipos de casilleros
                     var resumenRowElement = document.getElementById('resumen-'+myForm.formId+'-'+myForm.iPosition.toString()+'-'+var_name);
                     if(resumenRowElement){
                         var respuesta: string = '';
-                        var infoCasillero = myForm.surveyManager.surveyMetadata.structure[myForm.formId];
+                        var infoCasillero:InfoCasillero|null = myForm.surveyManager.surveyMetadata.structure[myForm.formId];
                         infoCasillero = myForm.searchInfoCasilleroByVarName(infoCasillero, var_name);
                         if(infoCasillero){
                             respuesta = myForm.searchAnswerForInfoCasillero(infoCasillero, myForm.formData, var_name);
@@ -534,41 +548,43 @@ export class tipoc_Base{ // clase base de los tipos de casilleros
                 tdArray.push(html.td({class:'col'}, [navigationButton]).create());
                 
                 var aUStructure = myForm.surveyManager.searchUaStructureByFormName(formId);
-                aUStructure.preguntas.forEach(function(pregunta) {
-                    if(pregunta.es_unidad_analisis){
-                        if(mostrarUnidadesAnalisisEnResumen){
-                            var buttonsArray:HTMLButtonElement[] = [];
-                            if(formData[pregunta.var_name].length){
-                                formData[pregunta.var_name].forEach(function(childFormData:any, index:number){
-                                    var infoCasillero = myForm.surveyManager.surveyMetadata.structure[aUStructure.id_casillero_formulario];
-                                    var formIdForUa = myForm.searchFormIdForUaInForm(infoCasillero, infoCasillero.data.id_casillero, pregunta.var_name)
-                                    if(formIdForUa){
-                                        var button = html.button({id:'ver-'+formIdForUa+'-'+(index+1).toString(), class:'boton-formulario'}, formIdForUa + ' ' + (index+1)).create();
-                                        button.onclick=function(){
-                                            FormManager.loadForm(formIdForUa, childFormData, pregunta.var_name, index, myForm, button, self.data.var_name);
-                                        };
-                                        buttonsArray.push(button);
-                                    }else{
-                                        throw new Error("Falta BF hacia UA '" + pregunta.var_name + "' dentro de F '"+ infoCasillero.data.casillero + "'");
-                                    }
-                                })
+                if(aUStructure){
+                    aUStructure.preguntas.forEach(function(pregunta) {
+                        if(pregunta.es_unidad_analisis){
+                            if(mostrarUnidadesAnalisisEnResumen){
+                                var buttonsArray:HTMLButtonElement[] = [];
+                                if(formData[pregunta.var_name].length){
+                                    formData[pregunta.var_name].forEach(function(childFormData:any, index:number){
+                                        var infoCasillero = myForm.surveyManager.surveyMetadata.structure[aUStructure.id_casillero_formulario];
+                                        var formIdForUa = myForm.searchFormIdForUaInForm(infoCasillero, infoCasillero.data.id_casillero, pregunta.var_name)
+                                        if(formIdForUa){
+                                            var button = html.button({id:'ver-'+formIdForUa+'-'+(index+1).toString(), class:'boton-formulario'}, formIdForUa + ' ' + (index+1)).create();
+                                            button.onclick=function(){
+                                                FormManager.loadForm(formIdForUa, childFormData, pregunta.var_name, index, myForm, button, self.data.var_name);
+                                            };
+                                            buttonsArray.push(button);
+                                        }else{
+                                            throw new Error("Falta BF hacia UA '" + pregunta.var_name + "' dentro de F '"+ infoCasillero.data.casillero + "'");
+                                        }
+                                    })
+                                }
+                                thArray.push(html.th({class:'col'}, pregunta.var_name).create());
+                                tdArray.push(html.td({class:'col'}, buttonsArray).create());
                             }
-                            thArray.push(html.th({class:'col'}, pregunta.var_name).create());
-                            tdArray.push(html.td({class:'col'}, buttonsArray).create());
-                        }
-                    }else{
-                        if(thArray.filter(function(th:HTMLTableHeaderCellElement){return th.getAttribute('element-type') === 'question'}).length < maxFieldsCount){
-                            var infoCasillero = myForm.surveyManager.surveyMetadata.structure[aUStructure.id_casillero_formulario];
-                            var var_name = pregunta.var_name;
-                            var infoCasillero = myForm.searchInfoCasilleroByVarName(infoCasillero, var_name);
-                            if(infoCasillero){
-                                var respuesta = myForm.searchAnswerForInfoCasillero(infoCasillero, formData, var_name);
-                                thArray.push(html.th({class:'col', "element-type": "question"}, infoCasillero.data.nombre).create());
-                                tdArray.push(html.td({id:'resumen-'+formId+'-'+(iPosition+1).toString()+'-'+var_name, class:'col'}, respuesta).create());
+                        }else{
+                            if(thArray.filter(function(th:HTMLTableHeaderCellElement){return th.getAttribute('element-type') === 'question'}).length < maxFieldsCount){
+                                var infoCasillero = myForm.surveyManager.surveyMetadata.structure[aUStructure.id_casillero_formulario];
+                                var var_name = pregunta.var_name;
+                                var infoCasillero = myForm.searchInfoCasilleroByVarName(infoCasillero, var_name);
+                                if(infoCasillero){
+                                    var respuesta = myForm.searchAnswerForInfoCasillero(infoCasillero, formData, var_name);
+                                    thArray.push(html.th({class:'col', "element-type": "question"}, infoCasillero.data.nombre).create());
+                                    tdArray.push(html.td({id:'resumen-'+formId+'-'+(iPosition+1).toString()+'-'+var_name, class:'col'}, respuesta).create());
+                                }
                             }
                         }
-                    }
-                });
+                    });
+                }
                 var tr;
                 if(table.children.length === 0){
                     tr = html.tr({class:'row'}, thArray).create();
