@@ -267,10 +267,10 @@ export class tipoc_Base{ // clase base de los tipos de casilleros
             throw new Error('no se pudo adaptar el elemento');
         }
         if(this.data.valor_ns_nc){
-            control.controledType.typeInfo.valueNoData=this.data.valor_ns_nc;
+            control.controledType.typeInfo.valueUnknownData=this.data.valor_ns_nc;
         }
         if(this.data.valor_sin_dato){
-            control.controledType.typeInfo.valueUnknownData=this.data.valor_sin_dato;
+            control.controledType.typeInfo.valueNoData=this.data.valor_sin_dato;
         }
         this.myForm.variables[this.var_name]={
             optativa:this.data.optativo/* || /_esp/.test(this.var_name)*/,
@@ -498,10 +498,10 @@ export class tipoc_Base{ // clase base de los tipos de casilleros
             actualValue = control.controledType.fromPlainJson(actualValue);
         }
         if(this.data.valor_ns_nc){
-            control.controledType.typeInfo['valueNoData']=this.data.valor_ns_nc;
+            control.controledType.typeInfo['valueNoData']=this.data.valor_sin_dato;
         }
         if(this.data.valor_sin_dato){
-            control.controledType.typeInfo['valueUnknownData']=this.data.valor_sin_dato;
+            control.controledType.typeInfo['valueUnknownData']=this.data.valor_ns_nc;
         }
         control.setTypedValue(actualValue);
         control.myForm=myForm;
