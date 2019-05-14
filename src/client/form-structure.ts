@@ -548,7 +548,7 @@ export class tipoc_Base{ // clase base de los tipos de casilleros
                 tdArray.push(html.td({class:'col'}, [navigationButton]).create());
                 
                 var aUStructure = myForm.surveyManager.searchUaStructureByFormName(formId);
-                if(aUStructure){
+                if(aUStructure != null){
                     aUStructure.preguntas.forEach(function(pregunta) {
                         if(pregunta.es_unidad_analisis){
                             if(mostrarUnidadesAnalisisEnResumen){

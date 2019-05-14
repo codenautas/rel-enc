@@ -12,11 +12,11 @@
     "unlogged"
   ],
   "dependencies": {
-    "js-to-html": "^1.0.6",
+    "js-to-html": "^1.0.5",
     "operativos": "~0.6.1"
   },
   "devDependencies": {
-    "types.d.ts": "~0.4.2",
+    "types.d.ts": "~0.4.3",
     "cpy-cli": "~2.0.0"
   },
   "engines": {
