@@ -27,7 +27,7 @@ const helpersHabilitar={
         }
         return posibleNull;
     },
-    div0err(numerador:number, denominador:number, pk){
+    div0err(numerador:number, denominador:number, pk:string){
         if(denominador==0){
             throw new Error("Error en "+pk+" division por cero de "+numerador);
         }
@@ -90,10 +90,10 @@ export var formTypes:{
 };
 
 export interface ExtendedHTMLElement extends HTMLElement{
-    myForm?:FormManager,
-    getTypedValue?:()=>any,
-    setTypedValue?:(value:any, fromUserInteraction?:boolean)=>void,
-    disable?:(disabled?:boolean)=>void,
+    // myForm:FormManager,
+    getTypedValue:()=>any,
+    setTypedValue:(value:any, fromUserInteraction?:boolean)=>void,
+    disable:(disabled?:boolean)=>void,
 }
 
 export type InfoCasilleroRegistro={
@@ -234,23 +234,29 @@ export class tipoc_Base{ // clase base de los tipos de casilleros
         }
         return [html.span(attr,value)];
     }
-    displayInput(direct=false){
+    displayInput(direct=false):HTMLElement|null{
         var attr:HtmlAttrs={};
         if(this.inTable){
             attr.colspan=90;
+        }
+        if(this.data.tipovar==null){
+            throw new Error('tipovar no especificado para '+this.data.nombre);
         }
         if(!formTypes[this.data.tipovar]){
             throw new Error(this.data.tipovar+' no existe como tipo');
         }
         if(formTypes[this.data.tipovar].radio){
-            return undefined;
+            return null;
         }
         var control = html.input({
             "tipo-var":this.data.tipovar||'unknown', 
             "longitud-var":this.data.longitud||'unknown',
             "type":formTypes[this.data.tipovar].htmlType,
-        } as ExtendedHtmlAttrs).create();
+        } as ExtendedHtmlAttrs).create() as TypedControls.TypedControl<HTMLInputElement>;
         TypedControls.adaptElement(control,formTypes[this.data.tipovar]);
+        if(!('controledType' in control)){
+            throw new Error('no se pudo adaptar el elemento');
+        }
         if(this.data.valor_ns_nc){
             control.controledType.typeInfo.valueNoData=this.data.valor_ns_nc;
         }
@@ -286,7 +292,7 @@ export class tipoc_Base{ // clase base de los tipos de casilleros
             return html.span(attr,[control]).create();
         }
     }
-    displayMainText(opts:DisplayOpts={}){
+    displayMainText(opts:DisplayOpts={}):jsToHtml.ArrayContent{
         var attr:jsToHtml.Attr4HTMLElement={class:"nombre"};
         if(opts.forValue){
             (attr as ExtendedHtmlAttrs)["for-value"]=opts.forValue;
@@ -309,14 +315,17 @@ export class tipoc_Base{ // clase base de los tipos de casilleros
             this.data.tipovar && !this.inTable?this.displayInput():null
         ];
     }
-    displayTopElements(special=false){
-        return html[this.inTable?'tr':'div']({class:"propios"},[].concat(
+    displayTopElements(_special=false){
+        return html[this.inTable?'tr':'div']({class:"propios"},([] as jsToHtml.ArrayContent).concat(
             this.displayRef(),
             this.displayMainText(),
             (this.data.tipovar && this.inTable?this.displayInput():null)
         ));
     }
     displayInputForOptions(){
+        if(this.data.tipovar == null){
+            throw new Error('tipovar tiene que existir en displayInputForOptions');
+        }
         var inputAttr={
             class:'typed-control-input-for-options',
             "type":formTypes[this.data.tipovar].htmlType,
@@ -340,9 +349,9 @@ export class tipoc_Base{ // clase base de los tipos de casilleros
     displayBottomElement():jsToHtml.HtmlBase[]{
         return [];
     } 
-    display(special:boolean=false):jsToHtml.ArrayContent{
+    display(_special:boolean=false):jsToHtml.ArrayContent{
         this.createVariable();
-        var content=[].concat(
+        var content=([] as jsToHtml.ArrayContent).concat(
             this.displayTopElements(),
             this.displayChilds(),
             this.displayBottomElement()
@@ -362,12 +371,20 @@ export class tipoc_Base{ // clase base de los tipos de casilleros
     }
     createVariable(){
         var base = this;
+        if(this.data.tipovar==null){
+            throw new Error('debe exisitir tipovar en createVariable');
+        }
         if((formTypes[this.data.tipovar]||{radio:false}).radio){
             var opciones:{
-                [key:string]:{salto:null|string}
+                [key:string]:{salto?:string}
             }={};
             this.childs.forEach(function(child){ 
-                opciones[child.data.casillero]={salto:base.myForm.searchCasilleroByIdCasillero(child.data.salto).data.var_name};
+                var salto=base.myForm.searchCasilleroByIdCasillero(child.data.salto).data.var_name;
+                if(salto){
+                    opciones[child.data.casillero]={salto};
+                }else{
+                    opciones[child.data.casillero]={};
+                }
             });
             this.myForm.variables[this.var_name]={
                 optativa:false,
@@ -389,6 +406,9 @@ export class tipoc_Base{ // clase base de los tipos de casilleros
         this.myForm.elements[this.data.casillero]=group;
         if(this.data.tipovar){
             this.myForm.controlBox[this.var_name]=group;
+        }
+        if(this.data.tipovar==null){
+            throw new Error('debe exisitir tipovar en adaptOptionInput');
         }
         if((formTypes[this.data.tipovar]||{radio:false}).radio){
             var casillerosElement = group.querySelectorAll('.casillero');
@@ -431,7 +451,7 @@ export class tipoc_Base{ // clase base de los tipos de casilleros
         }
         return this.data.var_name;
     }
-    assignEnterKeyAndUpdateEvents(inputEntereable:HTMLElement, typedControlUpdateable:HTMLElement){
+    assignEnterKeyAndUpdateEvents(inputEntereable:HTMLElement|null, typedControlUpdateable:HTMLElement|null){
         var self = this;
         var myForm = this.myForm;
         if(inputEntereable!=null){
@@ -929,6 +949,142 @@ export class SurveyManager{
     }
 }
 
+    function rowValidator(estructura, formData){
+        var rta:FormStructureState={estados:{}, siguientes:{}, actual:null, primeraFalla:null};
+        var variableAnterior=null;
+        var yaPasoLaActual=false;  // si ya vi la variable "actual"
+        var enSaltoAVariable=null; // null si no estoy saltando y el destino del salto si estoy dentro de un salto. 
+        var conOmitida=false;  // para poner naranja
+        var miVariable:string; // variable actual del ciclo
+        var falla=function(estado:string){
+            rta.estados[miVariable]=estado;
+            if(!rta.primeraFalla){
+                rta.primeraFalla=miVariable;
+            }
+        };
+        for(miVariable in estructura.variables){
+            let apagada:boolean=false;
+            var revisar_saltos_especiales= false;
+            var valor=formData[miVariable];
+            const estructuraVar = estructura.variables[miVariable];
+            if(conOmitida){
+                falla('fuera_de_flujo_por_omitida');
+            }else if(enSaltoAVariable && miVariable!=enSaltoAVariable){
+                apagada=true;
+                // estoy dentro de un salto válido, no debería haber datos ingresados.
+                if(valor===null){
+                    rta.estados[miVariable]='salteada';
+                }else{
+                    falla('fuera_de_flujo_por_salto');
+                }
+            }else if(yaPasoLaActual){
+                if(valor===null){
+                    rta.estados[miVariable]='todavia_no';
+                }else{
+                    conOmitida=true;
+                    if(!rta.primeraFalla){
+                        rta.primeraFalla=rta.actual;
+                    }
+                    falla('fuera_de_flujo_por_omitida');
+                }
+            }else if(
+                /* caso 1 */
+                estructuraVar.subordinadaVar!=null 
+                  && formData[estructuraVar.subordinadaVar]!=estructuraVar.subordinadaValor 
+                || /* caso 2*/
+                estructuraVar.funcionHabilitar 
+                  && !getFuncionHabilitar(estructuraVar.funcionHabilitar)(formData)
+            ){  // la variable está inhabilitada ya sea por:
+                //   1) está subordinada y no es el valor que la activa
+                //   2) la expresión habilitar falla
+                apagada=true;
+                if(valor===null){
+                    rta.estados[miVariable]='salteada';
+                }else{
+                    falla('fuera_de_flujo_por_salto');
+                }
+            }else{
+                // no estoy en una variable salteada y estoy dentro del flujo normal (no hubo omitidas hasta ahora). 
+                enSaltoAVariable=null; // si estaba en un salto acá se acaba
+                if(estructuraVar.calculada){
+                    apagada=true;
+                    rta.estados[miVariable]='calculada';
+                }else if(valor===null){
+                    if(!rta.primeraVacia){
+                        rta.primeraVacia=miVariable;
+                    }
+                    if(!estructuraVar.optativa){
+                        rta.estados[miVariable]='actual';
+                        rta.actual=miVariable;
+                        yaPasoLaActual=miVariable!==null;
+                    }else{
+                        rta.estados[miVariable]='optativa_sd';
+                        if(estructuraVar.salto){
+                            enSaltoAVariable=estructuraVar.salto;
+                        }
+                    }
+                }else if(valor==-9){
+                    rta.estados[miVariable]='valida';
+                    if(estructuraVar.saltoNsNr){
+                        enSaltoAVariable=estructuraVar.saltoNsNr;
+                    }
+                    revisar_saltos_especiales=true;
+                }else{
+                    // hay algo ingresado hay que validarlo
+                    if(estructuraVar.tipo=='opciones'){
+                        if(estructuraVar.opciones[valor]){
+                            rta.estados[miVariable]='valida'; 
+                            if(estructuraVar.opciones[valor].salto){
+                                enSaltoAVariable=estructuraVar.opciones[valor].salto;
+                            }
+                        }else{
+                            falla('invalida'); 
+                        }
+                    }else if(estructuraVar.tipo=='numerico'){
+                        valor=Number(valor);
+                        if(estructuraVar.maximo && valor > estructuraVar.maximo
+                            || 'minimo' in estructuraVar && valor < estructuraVar.minimo){
+                            falla('fuera_de_rango'); 
+                        }else{
+                            rta.estados[miVariable]='valida'; 
+                        }
+                    }else{
+                        // las de texto o de ingreso libre son válidas si no se invalidaron antes por problemas de flujo
+                        rta.estados[miVariable]='valida'; 
+                    }
+                    if(estructuraVar.salto){
+                        enSaltoAVariable=estructuraVar.salto;
+                    }
+                    revisar_saltos_especiales=true;
+                }
+                if (revisar_saltos_especiales){
+                }    
+            }
+            if(rta.estados[miVariable]==null){
+                throw ('No se pudo validar la variable '+miVariable);
+            }
+            if(!apagada){
+                if(variableAnterior && !rta.siguientes[variableAnterior]){
+                    rta.siguientes[variableAnterior]=miVariable;
+                }
+                variableAnterior=miVariable;
+            }
+            rta.siguientes[miVariable]=enSaltoAVariable; // es null si no hay salto (o sea sigue con la próxima o es la última)
+        }
+        if(conOmitida){
+            for(miVariable in rta.estados){
+                if(rta.estados[miVariable]=='actual'){
+                    rta.estados[miVariable]='omitida';
+                }else if(rta.estados[miVariable]=='todavia_no'){
+                    rta.estados[miVariable]='fuera_de_flujo_por_omitida';
+                }else if(rta.estados[miVariable]=='fuera_de_flujo_por_omitida'){
+                    break;
+                }
+            }
+        }
+        return rta;
+    }
+
 export class FormManager{
     static controlRepetidos:{[key:string]:any}={};
     content:tipoc_Base; // el elemento raíz
@@ -1156,141 +1312,7 @@ export class FormManager{
     }
     validateDepot(){
         this.completeCalculatedVars();
-        var estructura={variables:this.variables};
-        var formData=this.formData;
-        var rta:FormStructureState={estados:{}, siguientes:{}, actual:null, primeraFalla:null};
-        var variableAnterior=null;
-        var yaPasoLaActual=false;  // si ya vi la variable "actual"
-        var enSaltoAVariable=null; // null si no estoy saltando y el destino del salto si estoy dentro de un salto. 
-        var conOmitida=false;  // para poner naranja
-        var miVariable:string; // variable actual del ciclo
-        var falla=function(estado:string){
-            rta.estados[miVariable]=estado;
-            if(!rta.primeraFalla){
-                rta.primeraFalla=miVariable;
-            }
-        };
-        for(miVariable in estructura.variables){
-            let apagada:boolean=false;
-            var revisar_saltos_especiales= false;
-            var valor=formData[miVariable];
-            const estructuraVar = estructura.variables[miVariable];
-            if(conOmitida){
-                falla('fuera_de_flujo_por_omitida');
-            }else if(enSaltoAVariable && miVariable!=enSaltoAVariable){
-                apagada=true;
-                // estoy dentro de un salto válido, no debería haber datos ingresados.
-                if(valor===null){
-                    rta.estados[miVariable]='salteada';
-                }else{
-                    falla('fuera_de_flujo_por_salto');
-                }
-            }else if(yaPasoLaActual){
-                if(valor===null){
-                    rta.estados[miVariable]='todavia_no';
-                }else{
-                    conOmitida=true;
-                    if(!rta.primeraFalla){
-                        rta.primeraFalla=rta.actual;
-                    }
-                    falla('fuera_de_flujo_por_omitida');
-                }
-            }else if(
-                /* caso 1 */
-                estructuraVar.subordinadaVar!=null 
-                  && formData[estructuraVar.subordinadaVar]!=estructuraVar.subordinadaValor 
-                || /* caso 2*/
-                estructuraVar.funcionHabilitar 
-                  && !getFuncionHabilitar(estructuraVar.funcionHabilitar)(formData)
-            ){  // la variable está inhabilitada ya sea por:
-                //   1) está subordinada y no es el valor que la activa
-                //   2) la expresión habilitar falla
-                apagada=true;
-                if(valor===null){
-                    rta.estados[miVariable]='salteada';
-                }else{
-                    falla('fuera_de_flujo_por_salto');
-                }
-            }else{
-                // no estoy en una variable salteada y estoy dentro del flujo normal (no hubo omitidas hasta ahora). 
-                enSaltoAVariable=null; // si estaba en un salto acá se acaba
-                if(estructuraVar.calculada){
-                    apagada=true;
-                    rta.estados[miVariable]='calculada';
-                }else if(valor===null){
-                    if(!rta.primeraVacia){
-                        rta.primeraVacia=miVariable;
-                    }
-                    if(!estructuraVar.optativa){
-                        rta.estados[miVariable]='actual';
-                        rta.actual=miVariable;
-                        yaPasoLaActual=miVariable!==null;
-                    }else{
-                        rta.estados[miVariable]='optativa_sd';
-                        if(estructuraVar.salto){
-                            enSaltoAVariable=estructuraVar.salto;
-                        }
-                    }
-                }else if(valor==-9){
-                    rta.estados[miVariable]='valida';
-                    if(estructuraVar.saltoNsNr){
-                        enSaltoAVariable=estructuraVar.saltoNsNr;
-                    }
-                    revisar_saltos_especiales=true;
-                }else{
-                    // hay algo ingresado hay que validarlo
-                    if(estructuraVar.tipo=='opciones'){
-                        if(estructuraVar.opciones[valor]){
-                            rta.estados[miVariable]='valida'; 
-                            if(estructuraVar.opciones[valor].salto){
-                                enSaltoAVariable=estructuraVar.opciones[valor].salto;
-                            }
-                        }else{
-                            falla('invalida'); 
-                        }
-                    }else if(estructuraVar.tipo=='numerico'){
-                        valor=Number(valor);
-                        if(estructuraVar.maximo && valor > estructuraVar.maximo
-                            || 'minimo' in estructuraVar && valor < estructuraVar.minimo){
-                            falla('fuera_de_rango'); 
-                        }else{
-                            rta.estados[miVariable]='valida'; 
-                        }
-                    }else{
-                        // las de texto o de ingreso libre son válidas si no se invalidaron antes por problemas de flujo
-                        rta.estados[miVariable]='valida'; 
-                    }
-                    if(estructuraVar.salto){
-                        enSaltoAVariable=estructuraVar.salto;
-                    }
-                    revisar_saltos_especiales=true;
-                }
-                if (revisar_saltos_especiales){
-                }    
-            }
-            if(rta.estados[miVariable]==null){
-                throw ('No se pudo validar la variable '+miVariable);
-            }
-            if(!apagada){
-                if(variableAnterior && !rta.siguientes[variableAnterior]){
-                    rta.siguientes[variableAnterior]=miVariable;
-                }
-                variableAnterior=miVariable;
-            }
-            rta.siguientes[miVariable]=enSaltoAVariable; // es null si no hay salto (o sea sigue con la próxima o es la última)
-        }
-        if(conOmitida){
-            for(miVariable in rta.estados){
-                if(rta.estados[miVariable]=='actual'){
-                    rta.estados[miVariable]='omitida';
-                }else if(rta.estados[miVariable]=='todavia_no'){
-                    rta.estados[miVariable]='fuera_de_flujo_por_omitida';
-                }else if(rta.estados[miVariable]=='fuera_de_flujo_por_omitida'){
-                    break;
-                }
-            }
-        }
-        this.state = rta;
+        this.state = rowValidator({variables:this.variables}, this.formData);;
         this.consistencias();
     }
     consistencias(){
