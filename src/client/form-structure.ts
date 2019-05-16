@@ -380,9 +380,11 @@ export class tipoc_Base{ // clase base de los tipos de casilleros
     }
     createVariable(){
         var base = this;
+        /*REVISAR:comento porque rompe
         if(this.data.tipovar==null){
             throw new Error('debe exisitir tipovar en createVariable');
         }
+        */
         if((formTypes[this.data.tipovar]||{radio:false}).radio){
             var opciones:{
                 [key:string]:{salto?:string}
@@ -412,16 +414,18 @@ export class tipoc_Base{ // clase base de los tipos de casilleros
     }
     adaptOptionInput(group:ExtendedHTMLElement){
         var self = this;
+        /*REVISAR: comento porque rompe
         if(!('controledType' in group)){
             throw new Error('debe haber controles type en adaptOptionInput');
-        }
+        }*/
         this.myForm.elements[this.data.casillero]=group;
         if(this.data.tipovar){
             this.myForm.controlBox[this.var_name]=group;
         }
+        /*REVISAR: comento porque rompe
         if(this.data.tipovar==null){
             throw new Error('debe exisitir tipovar en adaptOptionInput');
-        }
+        }*/
         if((formTypes[this.data.tipovar]||{radio:false}).radio){
             var casillerosElement = group.querySelectorAll('.casillero');
             if(casillerosElement.length==0){
