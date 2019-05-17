@@ -2,7 +2,7 @@
 
 const OPEN_IN_OTHER_SCREEN=true;
 const PUEDE_AGREGAR_RENGLONES=true;
-const PUEDE_AGREGAR_OTRO_IGUAL=true;
+
 var mostrarUnidadesAnalisisEnResumen=true;
 
 import * as jsToHtml from "js-to-html"
@@ -645,7 +645,7 @@ export class tipoc_F extends tipoc_Base{
         var myForm = this.myForm;
         var self = this;
         var ultimoFormCargado:LastLoadedForm = JSON.parse(sessionStorage.getItem('ultimo-formulario-cargado'));
-        if(ultimoFormCargado && PUEDE_AGREGAR_OTRO_IGUAL){
+        if(ultimoFormCargado && myForm.puedeAgregarOtroIgual){
             var newbutton = html.button({class:'boton-formulario', "enter-clicks":true}, "Crear otro igual").create();
             newbutton.onclick=function(){
                 var firstFromStack = myForm.getFirstFromStack();
@@ -1118,8 +1118,9 @@ export class FormManager{
     state:FormStructureState={}
     mainFormHTMLId = 'main-form'; //Quitar generalizacion
     iPosition:number=1
+    puedeAgregarOtroIgual:boolean
     
-    static loadForm(targetFormName: string, targetFormData: any, targetAnalysisUnit:string, targetIPosition:number, sourceFormManager:FormManager, callerButton:HTMLButtonElement, sourceListoVarname:string|null, pushInNavigationStack: boolean= true){
+    static loadForm(targetFormName: string, targetFormData: any, targetAnalysisUnit:string, targetIPosition:number, sourceFormManager:FormManager, callerButton:HTMLButtonElement, sourceListoVarname:string|null, pushInNavigationStack: boolean= true, puedeAgregarOtroIgual:boolean=true){
         var mostrarUnidadesAnalisisEnResumen=true;
         var formDisplayElement;
         var aUStructure = sourceFormManager.surveyManager.searchUaStructureByFormName(targetFormName);
@@ -1150,6 +1151,7 @@ export class FormManager{
         }
         sessionStorage.setItem('ultimo-formulario-cargado', JSON.stringify(ultimoFormularioCargado));
         var formManager = new FormManager(sourceFormManager.surveyManager, aUStructure.id_casillero_formulario, targetFormData, sourceFormManager.stack);
+        formManager.puedeAgregarOtroIgual=puedeAgregarOtroIgual;
         formManager.iPosition=targetIPosition
         var toDisplay = formManager.display();
         formManager.validateDepot();
@@ -1161,6 +1163,7 @@ export class FormManager{
     }
     constructor (public surveyManager:SurveyManager, public formId:string, public formData:FormData, public stack:NavigationStack[]){
         this.content = this.newInstance(surveyManager.surveyStructure[formId]);
+        this.puedeAgregarOtroIgual=true;
         this.adaptStructure();
         SurveyManager.performCustomActionForNewFormManager(this);
     }
