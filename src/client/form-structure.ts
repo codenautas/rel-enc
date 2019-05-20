@@ -10,6 +10,7 @@ import {html} from "js-to-html"
 import * as likeAr from "like-ar"
 import * as TypedControls from "typed-controls"
 import * as TypeStore from "type-store"
+import {changing} from "best-globals";
 import { URL } from "url";
 // import "dialog-promise"
 
@@ -262,18 +263,14 @@ export class tipoc_Base{ // clase base de los tipos de casilleros
             "longitud-var":this.data.longitud||'unknown',
             "type":formTypes[this.data.tipovar].htmlType,
         } as ExtendedHtmlAttrs).create() as TypedControls.TypedControl<HTMLInputElement>;
-        TypedControls.adaptElement(control,formTypes[this.data.tipovar]);
+        TypedControls.adaptElement(control,changing(formTypes[this.data.tipovar],{}));
         if(!('controledType' in control)){
             throw new Error('no se pudo adaptar el elemento');
         }
         if(this.data.valor_ns_nc){
-            //Instancio otro typerform para que el valor por defecto solo aplique a este control
-            control.controledType.typeInfo=TypeStore.typerFrom(control.controledType.typeInfo);
             control.controledType.typeInfo.valueUnknownData=this.data.valor_ns_nc;
         }
         if(this.data.valor_sin_dato){
-            //Instancio otro typerform para que el valor por defecto solo aplique a este control
-            control.controledType.typeInfo=TypeStore.typerFrom(control.controledType.typeInfo);
             control.controledType.typeInfo.valueNoData=this.data.valor_sin_dato;
         }
         this.myForm.variables[this.var_name]={
@@ -507,13 +504,13 @@ export class tipoc_Base{ // clase base de los tipos de casilleros
         }
         if(this.data.valor_ns_nc){
             //Instancio otro typerform para que el valor por defecto solo aplique a este control
-            control.controledType.typeInfo=TypeStore.typerFrom(control.controledType.typeInfo);
-            control.controledType.typeInfo['valueUnknownData']=this.data.valor_ns_nc;
+            // control.controledType.typeInfo=TypeStore.typerFrom(control.controledType.typeInfo);
+            control.controledType.typeInfo.valueUnknownData=this.data.valor_ns_nc;
         }
         if(this.data.valor_sin_dato){
             //Instancio otro typerform para que el valor por defecto solo aplique a este control
-            control.controledType.typeInfo=TypeStore.typerFrom(control.controledType.typeInfo);
-            control.controledType.typeInfo['valueNoData']=this.data.valor_sin_dato;
+            // control.controledType.typeInfo=TypeStore.typerFrom(control.controledType.typeInfo);
+            control.controledType.typeInfo.valueNoData=this.data.valor_sin_dato;
         }
         control.setTypedValue(actualValue);
         control.myForm=myForm;
