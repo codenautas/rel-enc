@@ -361,6 +361,32 @@ export class tipoc_Base{ // clase base de los tipos de casilleros
     } 
     display(_special:boolean=false):jsToHtml.ArrayContent{
         this.createVariable();
+        if((formTypes[this.data.tipovar]||{radio:false}).radio){
+            this.childs.push(
+                new this.myForm.factory.O({
+                    data: {
+                        tipoc:'O',
+                        id_casillero:this.data.id_casillero+'__UNKNOWN_DATA',
+                        nombre:'ns/nc',
+                        casillero:this.data.valor_ns_nc||'-9',
+                        despliegue:'ocultar-inactiva'
+                    },
+                    childs:[]
+                }, this.myForm);
+            )
+            this.childs.push(
+                new this.myForm.factory.O({
+                    data: {
+                        tipoc:'O',
+                        id_casillero:this.data.id_casillero+'__NO_DATA',
+                        nombre:'sin dato',
+                        casillero:this.data.valor_sin_dato||'-1',
+                        despliegue:'ocultar-inactiva'
+                    },
+                    childs:[]
+                }, this.myForm);
+            )
+        }
         var content=([] as jsToHtml.ArrayContent).concat(
             this.displayTopElements(),
             this.displayChilds(),
@@ -809,7 +835,7 @@ export class tipoc_O extends tipoc_Base{
         if(special){
             return {tds:content};
         }
-        var tr = html.tr({id:this.data.id_casillero, class:"tipoc_O"},content).create();
+        var tr = html.tr({id:this.data.id_casillero, class:"tipoc_O", "display-if-active": this.data.despliegue=='ocultar-inactiva'?'1':'0'},content).create();
         this.myForm.elementsByIdCasillero[this.data.id_casillero]=tr;
         return tr;
     }
