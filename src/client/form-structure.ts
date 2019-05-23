@@ -544,7 +544,7 @@ export class tipoc_Base{ // clase base de los tipos de casilleros
             return function(){
                 // @ts-ignore  // no reconoce el this
                 var value = this.getTypedValue();
-                value = value != null?control.controledType.toPlainJson(value):null;
+                //value = value != null?control.controledType.toPlainJson(value):null;
                 myForm.formData[var_name] = value;
                 myForm.validateDepot();
                 myForm.refreshState();
@@ -1170,7 +1170,9 @@ export class FormManager{
             formDisplayElement=document.getElementById(sourceFormManager.mainFormHTMLId);
             var operativo = sessionStorage.getItem('operativo');
             var idCaso = sessionStorage.getItem('surveyId');
-            var parameters = '&operativo='+operativo+'&idCaso='+idCaso+'&formId='+aUStructure.id_casillero_formulario+'&navigationStack='+JSON.stringify(sourceFormManager.getURLNavigationStack())+'&unidadAnalisis='+targetAnalysisUnit+'&iPosition='+targetIPosition;
+            var myAnalysisUnit = targetAnalysisUnit?targetAnalysisUnit:analysisUnit;
+            var myPosition = targetIPosition?targetIPosition:sourceFormManager.iPosition;
+            var parameters = '&operativo='+operativo+'&idCaso='+idCaso+'&formId='+aUStructure.id_casillero_formulario+'&navigationStack='+JSON.stringify(sourceFormManager.getURLNavigationStack())+'&unidadAnalisis='+myAnalysisUnit+'&iPosition='+myPosition;
             history.replaceState(null, null, location.origin+location.pathname+my.menuSeparator+'w=loadForm'+parameters);
             window.scrollTo(0,0);
         }else{
