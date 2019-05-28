@@ -372,7 +372,7 @@ export class tipoc_Base{ // clase base de los tipos de casilleros
                         despliegue:'ocultar-inactiva'
                     },
                     childs:[]
-                }, this.myForm);
+                }, this.myForm)
             )
             this.childs.push(
                 new this.myForm.factory.O({
@@ -384,7 +384,7 @@ export class tipoc_Base{ // clase base de los tipos de casilleros
                         despliegue:'ocultar-inactiva'
                     },
                     childs:[]
-                }, this.myForm);
+                }, this.myForm)
             )
         }
         var content=([] as jsToHtml.ArrayContent).concat(
