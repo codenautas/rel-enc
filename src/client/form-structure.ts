@@ -544,7 +544,7 @@ export class tipoc_Base{ // clase base de los tipos de casilleros
             return function(){
                 // @ts-ignore  // no reconoce el this
                 var value = this.getTypedValue();
-                //value = value != null?control.controledType.toPlainJson(value):null;
+                value = value != null?control.controledType.toPlainJson(value):null;
                 myForm.formData[var_name] = value;
                 myForm.validateDepot();
                 myForm.refreshState();
