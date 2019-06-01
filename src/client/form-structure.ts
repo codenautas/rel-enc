@@ -232,7 +232,7 @@ export class tipoc_Base{ // clase base de los tipos de casilleros
     }
     displayRef(opts:DisplayOpts={}):jsToHtml.ArrayContent{
         var opts = opts || {};
-        var hasValue=this.data.ver_id!='-';
+        var hasValue=true || this.data.ver_id!='-';
         var attr:jsToHtml.Attr4HTMLElement={class:hasValue?"casillero":"vacio"};
         var value = hasValue?this.data.ver_id||this.data.casillero:null;
         if(opts.forValue){
@@ -1281,6 +1281,9 @@ export class FormManager{
     }
     searchCasilleroByIdCasillero(id_casillero:string|null, insider?:boolean, infoCasillero?: InfoCasillero): InfoCasillero{
         infoCasillero = insider?infoCasillero:this.surveyManager.surveyMetadata.structure[this.formId];
+        if(id_casillero=='Fin'){
+            return {data:{var_name:'Fin'}};
+        }
         if(!infoCasillero || !id_casillero){
             return this.infoCasilleroVacio();
         }
