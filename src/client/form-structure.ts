@@ -173,6 +173,7 @@ export type URLNavigationStack = {
     analysisUnit:string
     iPosition:number
     scrollY: number
+    scrollX: number
     varname: string
 }
 
@@ -725,7 +726,7 @@ export class tipoc_F extends tipoc_Base{
                 var parameters = '&operativo='+operativo+'&idCaso='+idCaso+'&formId='+firstFromStack.formId+'&navigationStack='+JSON.stringify(formManager.getURLNavigationStack())+'&unidadAnalisis='+firstFromStack.analysisUnit+'&iPosition='+firstFromStack.iPosition;
                 history.replaceState(null, null, location.origin+location.pathname+my.menuSeparator+'w=loadForm'+parameters);
                 SurveyManager.performCustomActionForLoadedFormManager(formManager);
-                window.scrollTo(0,firstFromStack.scrollY);
+                window.scrollTo(firstFromStack.scrollX,firstFromStack.scrollY);
                 if(firstFromStack.callerElement){
                     var caller = document.getElementById(firstFromStack.callerElement.id);
                     if(caller){
@@ -1165,7 +1166,7 @@ export class FormManager{
             var formName = searchResult.casillero_formulario;
             var analysisUnit = searchResult.unidad_analisis;
             if(pushInNavigationStack){
-                sourceFormManager.addToStack({formData:sourceFormManager.formData,formName:formName, formId:sourceFormManager.formId, analysisUnit: analysisUnit, iPosition: sourceFormManager.iPosition, scrollY:window.scrollY, callerElement:callerButton, varname:sourceListoVarname});
+                sourceFormManager.addToStack({formData:sourceFormManager.formData,formName:formName, formId:sourceFormManager.formId, analysisUnit: analysisUnit, iPosition: sourceFormManager.iPosition, scrollY:window.scrollY, scrollX:window.scrollX, callerElement:callerButton, varname:sourceListoVarname});
             }
             formDisplayElement=document.getElementById(sourceFormManager.mainFormHTMLId);
             var operativo = sessionStorage.getItem('operativo');
@@ -1237,6 +1238,7 @@ export class FormManager{
                 analysisUnit: element.analysisUnit,
                 iPosition: element.iPosition,
                 scrollY: element.scrollY,
+                scrollX: element.scrollX,
                 varname: element.varname
             }
         })
