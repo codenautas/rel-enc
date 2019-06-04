@@ -477,7 +477,10 @@ export class tipoc_Base{ // clase base de los tipos de casilleros
                         {value:'delete', img:my.path.img+'delete.png', label:'borrar respuesta', doneFun:function(){
                             group.setTypedValue(null, true);
                         }},
-                    ],{reject:false, underElement:casillerosElement[0]});
+                        {value:'nsnc', img:my.path.img+'nsnc.png', label:'no sabe/no contesta', doneFun:function(){
+                            group.setTypedValue(Number(group.controledType.typeInfo.valueUnknownData||TypedControls.VALUE_UNKNOWN_DATA), true);
+                        }},
+                    ],{reject:false, underElement:casillerosElement[0], setAttrs:{'dialog-relenc':'var-opt'}});
                 });
             }
             group.setAttribute('typed-controls-option-group','simple-option');
