@@ -680,7 +680,7 @@ export class tipoc_F extends tipoc_Base{
         var myForm = this.myForm;
         var self = this;
         var ultimoFormCargado:LastLoadedForm = JSON.parse(sessionStorage.getItem('ultimo-formulario-cargado'));
-        if(ultimoFormCargado && myForm.puedeAgregarOtroIgual){
+        if(ultimoFormCargado && ultimoFormCargado.unidadAnalisis && myForm.puedeAgregarOtroIgual){
             var newbutton = html.button({class:'boton-formulario', "enter-clicks":true}, "Crear otro igual").create();
             newbutton.onclick=function(){
                 var firstFromStack = myForm.getFirstFromStack();
