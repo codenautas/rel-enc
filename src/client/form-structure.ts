@@ -579,7 +579,8 @@ export class tipoc_Base{ // clase base de los tipos de casilleros
         return button;
     }
     createReadyButton(nombreFormulario,formAnalysisUnit,openInOtherScreen):HTMLButtonElement{
-        var myForm = this;
+        var myForm = this.myForm;
+        var self = this;
         var readyButton = html.button({class:'boton-listo-formulario'}, "Listo ").create();
         readyButton.onclick=function(){
             if(!openInOtherScreen){
@@ -946,14 +947,14 @@ export class tipoc_BF extends tipoc_Base{
                     self.updateSummary(newRow, formAnalysisUnit, iPosition);
                     FormManager.loadForm(nombreFormulario, myForm.formData[formAnalysisUnit][iPosition],formAnalysisUnit, iPosition+1,  myForm, newButton, self.data.var_name);
                 }
-                var readyButton = this.createReadyButton()
+                var readyButton = this.createReadyButton(nombreFormulario,formAnalysisUnit,openInOtherScreen)
                 var div = html.div({id:'boton-listo-'+nombreFormulario, class:'nuevo-formulario'}, [newButton, readyButton]).create();
                 groupElement.appendChild(div);
             }
         }else{
             if(ua && ua.unidad_analisis === uaPadre){
                 var newButton = this.createFormButton(nombreFormulario, nombreFormulario, myForm, myForm.formData, null, null);
-                var readyButton = this.createReadyButton();
+                var readyButton = this.createReadyButton(nombreFormulario,formAnalysisUnit,openInOtherScreen);
                 var div = html.div({id:'boton-listo-'+nombreFormulario, class:'nuevo-formulario'}, [newButton, readyButton]).create();
                 groupElement.appendChild(div)
             }else{
@@ -1190,7 +1191,7 @@ export class FormManager{
             history.replaceState(null, null, location.origin+location.pathname+my.menuSeparator+'w=loadForm'+parameters);
             window.scrollTo(0,0);
         }else{
-            this.clearAllOpenForms(targetFormName, targetAnalysisUnit);
+            sourceFormManager.clearAllOpenForms(targetFormName, targetAnalysisUnit);
             formDisplayElement = document.getElementById('despliegue-formulario-'+targetFormName+'-'+(targetIPosition).toString());
             if(!formDisplayElement && mostrarUnidadesAnalisisEnResumen){
                 formDisplayElement = document.getElementById('despliegue-formulario-'+targetFormName+'-ua-children');
