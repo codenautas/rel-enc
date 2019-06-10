@@ -12,6 +12,7 @@ import * as TypedControls from "typed-controls"
 import * as TypeStore from "type-store"
 import {changing} from "best-globals";
 import { URL } from "url";
+import { read } from "fs";
 // import "dialog-promise"
 
 var reemplazosHabilitar:{[key:string]:string}={
@@ -570,11 +571,26 @@ export class tipoc_Base{ // clase base de los tipos de casilleros
     }
     createFormButton(formName:string, buttonDescription:string, myForm:FormManager, rowHijo:any, formAnalysisUnit:string, iPosition:number):HTMLButtonElement{
         var self = this;
-        var button = html.button({id:'ver-'+formName+'-'+iPosition, class:'boton-formulario'}, buttonDescription).create();
+        var pos = iPosition?('-'+iPosition):'';
+        var button = html.button({id:'ver-'+formName+pos, class:'boton-formulario'}, buttonDescription).create();
         button.onclick=function(){
             FormManager.loadForm(formName, rowHijo, formAnalysisUnit, iPosition, myForm, button, self.data.var_name);
         };
         return button;
+    }
+    createReadyButton(nombreFormulario,formAnalysisUnit,openInOtherScreen):HTMLButtonElement{
+        var myForm = this;
+        var readyButton = html.button({class:'boton-listo-formulario'}, "Listo ").create();
+        readyButton.onclick=function(){
+            if(!openInOtherScreen){
+                myForm.clearAllOpenForms(nombreFormulario,formAnalysisUnit);
+            }
+            var control = myForm.controls[self.data.var_name];
+            if(control){
+                control.setTypedValue(1, true);
+            }
+        }
+        return readyButton
     }
     createRowView(element:HTMLElement, nombreFormulario:string, row:any, iPosition: number, formAnalysisUnit:string):HTMLElement|null{
         var myForm = this.myForm;
@@ -930,22 +946,16 @@ export class tipoc_BF extends tipoc_Base{
                     self.updateSummary(newRow, formAnalysisUnit, iPosition);
                     FormManager.loadForm(nombreFormulario, myForm.formData[formAnalysisUnit][iPosition],formAnalysisUnit, iPosition+1,  myForm, newButton, self.data.var_name);
                 }
-                var readybutton = html.button({class:'boton-listo-formulario'}, "Listo ").create();
-                readybutton.onclick=function(){
-                    if(!openInOtherScreen){
-                        myForm.clearAllOpenForms(nombreFormulario,formAnalysisUnit);
-                    }
-                    var control = myForm.controls[self.data.var_name];
-                    if(control){
-                        control.setTypedValue(1, true);
-                    }
-                }
-                var div = html.div({id:'boton-listo-'+nombreFormulario, class:'nuevo-formulario'}, [newButton, readybutton]).create();
+                var readyButton = this.createReadyButton()
+                var div = html.div({id:'boton-listo-'+nombreFormulario, class:'nuevo-formulario'}, [newButton, readyButton]).create();
                 groupElement.appendChild(div);
             }
         }else{
             if(ua && ua.unidad_analisis === uaPadre){
-                groupElement.appendChild(this.createFormButton(nombreFormulario, nombreFormulario, myForm, myForm.formData, null, null));
+                var newButton = this.createFormButton(nombreFormulario, nombreFormulario, myForm, myForm.formData, null, null);
+                var readyButton = this.createReadyButton();
+                var div = html.div({id:'boton-listo-'+nombreFormulario, class:'nuevo-formulario'}, [newButton, readyButton]).create();
+                groupElement.appendChild(div)
             }else{
                 throw new Error('Casillero BF mal definido en ' + this.data.padre);
             }
