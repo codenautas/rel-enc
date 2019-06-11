@@ -427,7 +427,7 @@ export class tipoc_Base{ // clase base de los tipos de casilleros
                 }
             });
             this.myForm.variables[this.var_name]={
-                optativa:false,
+                optativa:this.data.optativo,
                 salto:this.myForm.searchCasilleroByIdCasillero(this.data.salto).data.var_name,
                 saltoNsNr:this.myForm.searchCasilleroByIdCasillero(this.data.salto).data.var_name,
                 tipo:formTypes[this.data.tipovar].validar, // numerico, hora
