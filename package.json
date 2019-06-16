@@ -1,23 +1,21 @@
 {
   "name": "rel-enc",
   "description": "Relativo a encuestas",
-  "version": "0.7.13",
+  "version": "0.7.14",
   "author": "Codenautas <codenautas@googlegroups.com>",
   "license": "MIT",
   "main": "dist/server/rel-enc.js",
   "types": "dist/server/rel-enc.d.ts",
   "files": [
-    "dist",
-    "install",
-    "unlogged"
+    "dist"
   ],
   "dependencies": {
     "js-to-html": "^1.0.5",
-    "operativos": "~0.7.0",
-    "type-store": "^0.2.32"
+    "operativos": "~0.7.3",
+    "type-store": "^0.2.33"
   },
   "devDependencies": {
-    "types.d.ts": "~0.4.3",
+    "types.d.ts": "~0.4.4",
     "mixin-patch": "~0.2.0"
   },
   "engines": {
