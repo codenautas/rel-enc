@@ -22,6 +22,22 @@ var reemplazosHabilitar:{[key:string]:string}={
     "<>": '!=',
 };
 
+function extenderElementoAlContenido(esto:HTMLTextAreaElement, noAchicar?:boolean){
+    if(!noAchicar){
+        while (
+            esto.rows > 1 &&
+            esto.scrollHeight < esto.offsetHeight
+        ){
+            esto.rows--;
+        }
+    }
+    var h=0;
+    while (esto.scrollHeight > esto.offsetHeight && h!==esto.offsetHeight){
+        h=esto.offsetHeight;
+        esto.rows++;
+    }
+}
+
 const helpersHabilitar={
     null2zero(posibleNull:any){
         if(posibleNull==null){
@@ -210,6 +226,12 @@ export type analysisUnitStructure = {
     }[]
 }
 
+var vaTextAreaSegunLongitud:{[key:string]:'textarea'}={
+    x_pagina:'textarea',
+    x_medio:'textarea',
+    x_largo:'textarea',
+}
+
 export class tipoc_Base{ // clase base de los tipos de casilleros
     childs:tipoc_Base[]=[]
     public data:InfoCasilleroRegistro
@@ -260,12 +282,31 @@ export class tipoc_Base{ // clase base de los tipos de casilleros
         if(formTypes[this.data.tipovar].radio){
             return null;
         }
-        var control = html.input({
+        var attrInput={
             "tipo-var":this.data.tipovar||'unknown', 
             "longitud-var":this.data.longitud||'unknown',
-            "type":formTypes[this.data.tipovar].htmlType,
-        } as ExtendedHtmlAttrs).create() as TypedControls.TypedControl<HTMLInputElement>;
+        };
+        var tagName:'textarea'|'input'=vaTextAreaSegunLongitud[this.data.longitud]||'input';
+        if(tagName=='textarea'){
+            attrInput.rows=1;
+        }else{
+            attrInput.type=formTypes[this.data.tipovar].htmlType;
+        }
+        var control = html[tagName](attrInput as ExtendedHtmlAttrs).create() as TypedControls.TypedControl<HTMLInputElement>;
+        control.onblur=function(){
+            extenderElementoAlContenido(control);
+        }
         TypedControls.adaptElement(control,changing(formTypes[this.data.tipovar],{}));
+        var savedSetTypedValue = control.setTypedValue;
+        control.onblur=function(){
+            extenderElementoAlContenido(control);
+        }
+        control.setTypedValue = function setTypedValue(value, human){
+            if(!human){
+                extenderElementoAlContenido(control);
+            }
+            savedSetTypedValue.call(control, value, human)
+        }
         if(!('controledType' in control)){
             throw new Error('no se pudo adaptar el elemento');
         }
