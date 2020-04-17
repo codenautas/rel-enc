@@ -1,7 +1,7 @@
 {
   "name": "rel-enc",
   "description": "Relativo a encuestas",
-  "version": "0.7.19",
+  "version": "0.7.20",
   "author": "Codenautas <codenautas@googlegroups.com>",
   "license": "MIT",
   "main": "dist/server/rel-enc.js",
@@ -10,11 +10,11 @@
     "dist"
   ],
   "dependencies": {
-    "operativos": "~0.7.13"
+    "operativos": "~0.7.20"
   },
   "devDependencies": {
-    "types.d.ts": "~0.4.10",
-    "mixin-patch": "~0.3.1"
+    "types.d.ts": "~0.4.15",
+    "mixin-patch": "~0.3.3"
   },
   "engines": {
     "node": ">= 8.0.0"
@@ -24,7 +24,7 @@
     "build": "(tsc -p tsconfig-client.json || echo \"continue w/error\") && (tsc -p tsconfig-server.json  || echo \"continue w/error\") && mixin-patch",
     "test": "mocha --reporter spec --bail --check-leaks test/",
     "test-cov": "istanbul cover node_modules/mocha/bin/_mocha -- --reporter dot --check-leaks test/",
-    "start": "node server/dist/server-rel-enc.js"
+    "start": "node dist/server/server-rel-enc.js"
   },
   "qa-control": {
     "package-version": "0.3.0",
