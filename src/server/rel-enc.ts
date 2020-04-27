@@ -1,5 +1,6 @@
 "use strict";
 import * as operativos from "operativos";
+import { Request, OptsClientPage } from "operativos";
 export * from "./types-rel-enc";
 export type Constructor<T> = new(...args: any[]) => T;
 import {changing} from "best-globals";
