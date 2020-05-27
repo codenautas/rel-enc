@@ -11,8 +11,8 @@ import * as likeAr from "like-ar"
 import * as TypedControls from "typed-controls"
 import * as TypeStore from "type-store"
 import {changing} from "best-globals";
-import { URL } from "url";
-import { read } from "fs";
+import { getRowValidator } from "row-validator";
+
 // import "dialog-promise"
 
 var reemplazosHabilitar:{[key:string]:string}={
@@ -177,8 +177,8 @@ export type Variable={
         }
     }
     tipo:string
-    maximo:string|null
-    minimo:string|null
+    maximo:number|null
+    minimo:number|null
     subordinadaVar:string|null
     subordinadaValor:any|null
     funcionHabilitar:string|null
@@ -1056,141 +1056,7 @@ export class SurveyManager{
     }
 }
 
-    function rowValidator(estructura, formData){
-        var rta:FormStructureState={estados:{}, siguientes:{}, actual:null, primeraFalla:null};
-        var variableAnterior=null;
-        var yaPasoLaActual=false;  // si ya vi la variable "actual"
-        var enSaltoAVariable=null; // null si no estoy saltando y el destino del salto si estoy dentro de un salto. 
-        var conOmitida=false;  // para poner naranja
-        var miVariable:string; // variable actual del ciclo
-        var falla=function(estado:string){
-            rta.estados[miVariable]=estado;
-            if(!rta.primeraFalla){
-                rta.primeraFalla=miVariable;
-            }
-        };
-        for(miVariable in estructura.variables){
-            let apagada:boolean=false;
-            var revisar_saltos_especiales= false;
-            var valor=formData[miVariable];
-            const estructuraVar = estructura.variables[miVariable];
-            if(conOmitida){
-                falla('fuera_de_flujo_por_omitida');
-            }else if(enSaltoAVariable && miVariable!=enSaltoAVariable){
-                apagada=true;
-                // estoy dentro de un salto válido, no debería haber datos ingresados.
-                if(valor===null){
-                    rta.estados[miVariable]='salteada';
-                }else{
-                    falla('fuera_de_flujo_por_salto');
-                }
-            }else if(yaPasoLaActual){
-                if(valor===null){
-                    rta.estados[miVariable]='todavia_no';
-                }else{
-                    conOmitida=true;
-                    if(!rta.primeraFalla){
-                        rta.primeraFalla=rta.actual;
-                    }
-                    falla('fuera_de_flujo_por_omitida');
-                }
-            }else if(
-                /* caso 1 */
-                estructuraVar.subordinadaVar!=null 
-                  && formData[estructuraVar.subordinadaVar]!=estructuraVar.subordinadaValor 
-                || /* caso 2*/
-                estructuraVar.funcionHabilitar 
-                  && !getFuncionHabilitar(estructuraVar.funcionHabilitar)(formData)
-            ){  // la variable está inhabilitada ya sea por:
-                //   1) está subordinada y no es el valor que la activa
-                //   2) la expresión habilitar falla
-                apagada=true;
-                if(valor===null){
-                    rta.estados[miVariable]='salteada';
-                }else{
-                    falla('fuera_de_flujo_por_salto');
-                }
-            }else{
-                // no estoy en una variable salteada y estoy dentro del flujo normal (no hubo omitidas hasta ahora). 
-                enSaltoAVariable=null; // si estaba en un salto acá se acaba
-                if(estructuraVar.calculada){
-                    apagada=true;
-                    rta.estados[miVariable]='calculada';
-                }else if(valor===null){
-                    if(!rta.primeraVacia){
-                        rta.primeraVacia=miVariable;
-                    }
-                    if(!estructuraVar.optativa){
-                        rta.estados[miVariable]='actual';
-                        rta.actual=miVariable;
-                        yaPasoLaActual=miVariable!==null;
-                    }else{
-                        rta.estados[miVariable]='optativa_sd';
-                        if(estructuraVar.salto){
-                            enSaltoAVariable=estructuraVar.salto;
-                        }
-                    }
-                }else if(valor==-9){
-                    rta.estados[miVariable]='valida';
-                    if(estructuraVar.saltoNsNr){
-                        enSaltoAVariable=estructuraVar.saltoNsNr;
-                    }
-                    revisar_saltos_especiales=true;
-                }else{
-                    // hay algo ingresado hay que validarlo
-                    if(estructuraVar.tipo=='opciones'){
-                        if(estructuraVar.opciones[valor]){
-                            rta.estados[miVariable]='valida'; 
-                            if(estructuraVar.opciones[valor].salto){
-                                enSaltoAVariable=estructuraVar.opciones[valor].salto;
-                            }
-                        }else{
-                            falla('invalida'); 
-                        }
-                    }else if(estructuraVar.tipo=='numerico'){
-                        valor=Number(valor);
-                        if(estructuraVar.maximo && valor > estructuraVar.maximo
-                            || 'minimo' in estructuraVar && valor < estructuraVar.minimo){
-                            falla('fuera_de_rango'); 
-                        }else{
-                            rta.estados[miVariable]='valida'; 
-                        }
-                    }else{
-                        // las de texto o de ingreso libre son válidas si no se invalidaron antes por problemas de flujo
-                        rta.estados[miVariable]='valida'; 
-                    }
-                    if(estructuraVar.salto){
-                        enSaltoAVariable=estructuraVar.salto;
-                    }
-                    revisar_saltos_especiales=true;
-                }
-                if (revisar_saltos_especiales){
-                }    
-            }
-            if(rta.estados[miVariable]==null){
-                throw ('No se pudo validar la variable '+miVariable);
-            }
-            if(!apagada){
-                if(variableAnterior && !rta.siguientes[variableAnterior]){
-                    rta.siguientes[variableAnterior]=miVariable;
-                }
-                variableAnterior=miVariable;
-            }
-            rta.siguientes[miVariable]=enSaltoAVariable; // es null si no hay salto (o sea sigue con la próxima o es la última)
-        }
-        if(conOmitida){
-            for(miVariable in rta.estados){
-                if(rta.estados[miVariable]=='actual'){
-                    rta.estados[miVariable]='omitida';
-                }else if(rta.estados[miVariable]=='todavia_no'){
-                    rta.estados[miVariable]='fuera_de_flujo_por_omitida';
-                }else if(rta.estados[miVariable]=='fuera_de_flujo_por_omitida'){
-                    break;
-                }
-            }
-        }
-        return rta;
-    }
+var rowValidator = getRowValidator({getFuncionHabilitar:getFuncionHabilitar});
 
 export class FormManager{
     static controlRepetidos:{[key:string]:any}={};
