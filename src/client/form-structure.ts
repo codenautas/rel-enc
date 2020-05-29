@@ -1294,7 +1294,7 @@ export class FormManager{
     }
     validateDepot(){
         this.completeCalculatedVars();
-        this.state = rowValidator({variables:this.variables}, this.formData);;
+        this.state = rowValidator({variables:this.variables}, this.formData);
         this.consistencias();
     }
     consistencias(){
@@ -1309,6 +1309,13 @@ export class FormManager{
                     myForm.controlBox[variable].setAttribute('state-var',estado);
                 }
             }
+        });
+        this.refreshGlobalState();
+    }
+    refreshGlobalState(){
+        var mainDivs=document.getElementsByClassName('prueba-despliegue');
+        Array.prototype.forEach.call(mainDivs,(mainDiv)=>{
+            mainDiv.setAttribute('row-validator-state',this.state.primeraFalla?'falla':(this.state.actual?'incompleto':'ok'));
         });
     }
     posicionarVentanaVerticalmente(control:HTMLElement, y:number){
