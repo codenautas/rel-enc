@@ -323,7 +323,7 @@ export class tipoc_Base{ // clase base de los tipos de casilleros
             tipo:formTypes[this.data.tipovar].validar, // numerico, hora
             maximo:null,
             minimo:null,
-            calculada:this.data.despliegue=='calculada',
+            calculada:this.data.despliegue=='calculada' || this.data.despliegue=='libre',
             subordinadaVar:null,
             subordinadaValor:null,
             funcionHabilitar:this.data.expresion_habilitar
@@ -475,7 +475,7 @@ export class tipoc_Base{ // clase base de los tipos de casilleros
                 maximo:null,
                 minimo:null,
                 opciones:opciones,
-                calculada:this.data.despliegue=='calculada',
+                calculada:this.data.despliegue=='calculada' || this.data.despliegue=='libre',
                 subordinadaVar:null,
                 subordinadaValor:null,
                 funcionHabilitar:this.data.expresion_habilitar
@@ -1057,6 +1057,9 @@ export class SurveyManager{
 }
 
 var rowValidator = getRowValidator({getFuncionHabilitar:getFuncionHabilitar});
+if(window){
+    window.rowValidator = rowValidator;
+}
 
 export class FormManager{
     static controlRepetidos:{[key:string]:any}={};
