@@ -1,7 +1,7 @@
 {
   "name": "rel-enc",
   "description": "Relativo a encuestas",
-  "version": "1.2.2",
+  "version": "1.2.3",
   "author": "Codenautas <codenautas@googlegroups.com>",
   "license": "MIT",
   "main": "dist/server/rel-enc.js",
