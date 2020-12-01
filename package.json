@@ -21,11 +21,16 @@
     "node": ">= 8.0.0"
   },
   "scripts": {
-    "prepublish": "npm run build",
-    "build": "(tsc -p tsconfig-client.json || echo \"continue w/error\") && (tsc -p tsconfig-server.json  || echo \"continue w/error\") && mixin-patch",
+    "//prebuild:force": "(tsc -p src/client & tsc -p src/server || echo \"continue w/error\")",
+    "//build:force": "npm run //prebuild:force && mixin-patch",
+    "prepare": "npm run build",
+    "prebuild": "tsc -b src/server src/client",
+    "build": "npm run prebuild && mixin-patch",
     "test": "mocha --reporter spec --bail --check-leaks test/",
     "test-cov": "istanbul cover node_modules/mocha/bin/_mocha -- --reporter dot --check-leaks test/",
-    "start": "node dist/server/server-rel-enc.js"
+    "start": "node dist/server/server-rel-enc.js",
+    "git-commit": "git add package.json && (git commit -m \"upgrading stack dependencies\" || true)",
+    "push-publish": "npm version patch && ncu -u && npm run git-commit && npm publish && git push"
   },
   "qa-control": {
     "package-version": "0.3.0",
