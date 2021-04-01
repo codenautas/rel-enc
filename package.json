@@ -1,7 +1,7 @@
 {
   "name": "rel-enc",
   "description": "Relativo a encuestas",
-  "version": "1.2.4",
+  "version": "1.3.0",
   "author": "Codenautas <codenautas@googlegroups.com>",
   "license": "MIT",
   "main": "dist/server/rel-enc.js",
@@ -10,22 +10,19 @@
     "dist"
   ],
   "dependencies": {
-    "operativos": "^1.1.6",
-    "row-validator": "^0.6.1"
+    "operativos": "^1.3.0",
+    "row-validator": "^0.7.1"
   },
   "devDependencies": {
-    "types.d.ts": "~0.5.0",
-    "mixin-patch": "~0.3.3"
+    "types.d.ts": "~0.6.1",
+    "mixin-patch": "~0.3.4"
   },
   "engines": {
-    "node": ">= 8.0.0"
+    "node": ">= 12.0.0"
   },
   "scripts": {
-    "//prebuild:force": "(tsc -p src/client & tsc -p src/server || echo \"continue w/error\")",
-    "//build:force": "npm run //prebuild:force && mixin-patch",
     "prepare": "npm run build",
-    "prebuild": "tsc -b src/server src/client",
-    "build": "npm run prebuild && mixin-patch",
+    "build": "(tsc -p src/client  || echo \"continue w/error\") & (tsc -p src/server || echo \"continue w/error\") && mixin-patch",
     "test": "mocha --reporter spec --bail --check-leaks test/",
     "test-cov": "istanbul cover node_modules/mocha/bin/_mocha -- --reporter dot --check-leaks test/",
     "start": "node dist/server/server-rel-enc.js",
