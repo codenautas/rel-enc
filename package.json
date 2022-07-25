@@ -10,12 +10,12 @@
     "dist"
   ],
   "dependencies": {
-    "operativos": "^1.3.6",
-    "row-validator": "^0.7.1"
+    "operativos": "^1.3.12",
+    "row-validator": "^0.7.4"
   },
   "devDependencies": {
-    "types.d.ts": "~0.6.4",
-    "mixin-patch": "~0.3.7"
+    "types.d.ts": "~0.6.7",
+    "mixin-patch": "~0.4.0"
   },
   "engines": {
     "node": ">= 12.0.0"
