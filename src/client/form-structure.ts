@@ -1251,7 +1251,7 @@ export class FormManager{
             });
             respuesta = result?result.data.nombre:'';
         }else{
-            respuesta = formData[var_name]?formData[var_name]:null;
+            respuesta = formData[var_name] != null?formData[var_name]:null;
             if(respuesta !== null || respuesta !== undefined){
                 var typeInfo = formTypes[infoCasillero.data.tipovar];
                 var typedValue = respuesta?TypeStore.typerFrom(typeInfo).fromPlainJson(respuesta):null;
