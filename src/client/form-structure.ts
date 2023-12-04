@@ -1254,8 +1254,8 @@ export class FormManager{
             respuesta = formData[var_name] != null?formData[var_name]:null;
             if(respuesta !== null || respuesta !== undefined){
                 var typeInfo = formTypes[infoCasillero.data.tipovar];
-                var typedValue = respuesta?TypeStore.typerFrom(typeInfo).fromPlainJson(respuesta):null;
-                respuesta = typedValue?TypeStore.typerFrom(typeInfo).toLocalString(typedValue):null;
+                var typedValue = TypeStore.typerFrom(typeInfo).fromPlainJson(respuesta);
+                respuesta = TypeStore.typerFrom(typeInfo).toLocalString(typedValue);
             }
         }
         return respuesta;
