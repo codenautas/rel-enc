@@ -10,12 +10,14 @@
     "dist"
   ],
   "dependencies": {
-    "operativos": "^1.3.23",
+    "operativos": "^1.4.0",
     "row-validator": "^0.7.4"
   },
   "devDependencies": {
-    "types.d.ts": "~0.6.7",
+    "@types/mocha": "^10.0.10",
     "mixin-patch": "~0.4.0",
+    "mocha": "^11.8.0",
+    "types.d.ts": "~0.6.7",
     "typescript": "^5.8.3"
   },
   "engines": {
@@ -24,11 +26,8 @@
   "scripts": {
     "prepare": "npm run build",
     "build": "(tsc -p src/client  || echo \"continue w/error\") & (tsc -p src/server || echo \"continue w/error\") && mixin-patch",
-    "test": "mocha --reporter spec --bail --check-leaks test/",
-    "test-cov": "istanbul cover node_modules/mocha/bin/_mocha -- --reporter dot --check-leaks test/",
-    "start": "node dist/server/server-rel-enc.js",
-    "git-commit": "git add package.json && (git commit -m \"upgrading stack dependencies\" || true)",
-    "push-publish": "npm version patch && ncu -u && npm run git-commit && npm publish && git push"
+    "test": "tsc -p src/tests && mocha --reporter spec --bail --check-leaks compile-for-test/tests/*.js",
+    "start": "node dist/server/server-rel-enc.js"
   },
   "qa-control": {
     "package-version": "0.3.0",

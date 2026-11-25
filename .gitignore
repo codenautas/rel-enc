@@ -68,3 +68,4 @@ local-*
 /dist
 
 *.bak
+compile-for-test/

@@ -12,7 +12,7 @@ export function emergeAppRelEnc<T extends Constructor<operativos.AppOperativosTy
         constructor(...args:any[]){ 
             super(args);    
         }
-        clientIncludes(req:Request, hideBEPlusInclusions:OptsClientPage){
+        clientIncludes(req:Request|null, hideBEPlusInclusions:OptsClientPage){
             return super.clientIncludes(req, hideBEPlusInclusions).concat([
                 {type:'js', module: 'row-validator', file: 'row-validator.js', path: 'client_modules'},
                 {type:'js', module: 'rel-enc', modPath: '../client', file: 'form-structure.js', path: 'client_modules'},
