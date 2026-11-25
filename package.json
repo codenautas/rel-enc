@@ -4,6 +4,7 @@
   "version": "1.3.19",
   "author": "Codenautas <codenautas@googlegroups.com>",
   "license": "MIT",
+  "repository": "codenautas/rel-enc",
   "main": "dist/server/rel-enc.js",
   "types": "dist/server/rel-enc.d.ts",
   "files": [
